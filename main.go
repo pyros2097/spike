@@ -196,16 +196,21 @@ func Save() {
 func Pause() {
 	log.Info("Pausing")
 	pauseState = true
-	if currentScene.onPause != nil {
-		currentScene.onPause()
+	// musicPause()
+	// soundPause()
+	// unloadAll()
+	if currentScene.OnPause != nil {
+		currentScene.OnPause()
 	}
 }
 
 func Resume() {
 	log.Info("Resuming")
 	pauseState = false
-	if currentScene.onResume != nil {
-		currentScene.onResume()
+	// musicResume()
+	// soundResume()
+	if currentScene.OnResume != nil {
+		currentScene.OnResume()
 	}
 }
 
@@ -219,9 +224,8 @@ func Resume() {
 func Exit() {
 	log.Info("Exiting")
 	running = false
-	if currentScene.onExit != nil {
-		currentScene.onExit()
-		// currentScene.onPause()
+	if currentScene.OnPause != nil {
+		currentScene.OnPause()
 	}
 }
 

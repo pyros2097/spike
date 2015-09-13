@@ -1,22 +1,13 @@
-/*******************************************************************************
- * Copyright 2015 See AUTHORS file.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use self file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+// Copyright 2015 pyros2097. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package scene2d
 
-type IActor interface {
-}
+import (
+	"github.com/pyros2097/gdx/graphics"
+	"github.com/pyros2097/gdx/utils"
+)
 
 /** 2D scene graph node. An actor has a position, rectangular size, origin, scale, rotation, Z index, and color. The position
  * corresponds to the unrotated, unscaled bottom left corner of the actor. The position is relative to the actor's parent. The
@@ -36,6 +27,17 @@ type IActor interface {
  * or pinch.
  * @author mzechner
  * @author Nathan Sweet */
+type IActor interface {
+	Draw(batch Batch, parentAlpha float32)
+	Act(delta float32)
+	RemoveActor()
+	AddAction(action Action)
+	RemoveAction(action Action)
+	GetActions() []*Action
+	HasActions() bool
+	ClearActions()
+}
+
 type Actor struct {
 	name             string
 	x, y             float32
@@ -48,6 +50,7 @@ type Actor struct {
 	parent           *Actor
 	touchable        Touchable
 	userObject       interface{}
+	color            *graphics.Color // make this 1 1 1 1
 }
 
 type Batch interface {
@@ -154,7 +157,7 @@ func (self *Actor) HasParent() bool {
 }
 
 // Returns the parent actor, or null if not in a group.
-func (self *Actor) getParent() *Actor {
+func (self *Actor) GetParent() *Actor {
 	return self.parent
 }
 
@@ -165,27 +168,51 @@ func (self *Actor) SetParent(parent *Actor) {
 }
 
 // Returns true if input events are processed by self actor.
-func (self *Actor) isTouchable() {
-	// return touchable == Touchable.enabled;
+func (self *Actor) IsTouchable() bool {
+	return self.touchable == TouchableEnabled
 }
 
-func (self *Actor) getTouchable() Touchable {
+func (self *Actor) GetTouchable() Touchable {
 	return self.touchable
 }
 
 //  Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}.
-func (self *Actor) setTouchable(touchable Touchable) {
+func (self *Actor) SetTouchable(touchable Touchable) {
 	self.touchable = touchable
 }
 
-//   /** Returns an application specific object for convenience, or null. */
+// Returns an application specific object for convenience, or null.
 func (self *Actor) GetUserObject() interface{} {
 	return self.userObject
 }
 
-/** Sets an application specific object for convenience. */
+// Sets an application specific object for convenience.
 func (self *Actor) SetUserObject(userObject interface{}) {
 	self.userObject = userObject
+}
+
+func (self *Actor) SetColor(color *graphics.Color) {
+	self.color.SetColor(color)
+}
+
+func (self *Actor) SetColorRGBA(r, g, b, a float32) {
+	self.color.Set(r, g, b, a)
+}
+
+// Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color.
+func (self *Actor) GetColor() *graphics.Color {
+	return self.color
+}
+
+// Sets a name for easier identification of the actor in application code.
+// @see Group#findActor(String)
+func (self *Actor) SetName(name string) {
+	self.name = name
+}
+
+// Retrieve custom actor name set with {@link Actor#setName(String)}, used for easier identification
+func (self *Actor) GetName() string {
+	return self.name
 }
 
 // Returns the X position of the actor's left edge.
@@ -193,15 +220,16 @@ func (self *Actor) GetX() float32 {
 	return self.x
 }
 
-//   /** Returns the X position of the specified {@link Align alignment}. */
-//   public float getX (int alignment) {
-//     float x = self.x;
-//     if ((alignment & right) != 0)
-//       x += width;
-//     else if ((alignment & left) == 0) //
-//       x += width / 2;
-//     return x;
-//   }
+// Returns the X position of the specified {@link Align alignment}
+func (self *Actor) GetXAlign(alignment utils.Alignment) float32 {
+	x := self.x
+	if (alignment & utils.AlignmentRight) != 0 {
+		x += self.w
+	} else if (alignment & utils.AlignmentLeft) == 0 {
+		x += self.w / 2
+	}
+	return x
+}
 
 func (self *Actor) SetX(x float32) {
 	if self.x != x {
@@ -213,6 +241,17 @@ func (self *Actor) SetX(x float32) {
 // Returns the Y position of the actor's bottom edge.
 func (self *Actor) GetY() float32 {
 	return self.y
+}
+
+// Returns the Y position of the specified {@link Align alignment}
+func (self *Actor) GetYAlign(alignment utils.Alignment) float32 {
+	y := self.y
+	if (alignment & utils.AlignmentTop) != 0 {
+		y += self.h
+	} else if (alignment & utils.AlignmentBottom) == 0 {
+		y += self.h / 2
+	}
+	return y
 }
 
 func (self *Actor) SetY(y float32) {
@@ -231,6 +270,26 @@ func (self *Actor) SetPosition(x, y float32) {
 	}
 }
 
+// Sets the position using the specified {@link Align alignment}.
+// Note this may set the position to non-integer coordinates.
+func (self *Actor) SetPositionAlign(x, y float32, alignment utils.Alignment) {
+	if (alignment & utils.AlignmentRight) != 0 {
+		self.x -= self.w
+	} else if (alignment & utils.AlignmentLeft) == 0 {
+		self.x -= self.w / 2
+	}
+	if (alignment & utils.AlignmentTop) != 0 {
+		self.y -= self.h
+	} else if (alignment & utils.AlignmentBottom) == 0 {
+		self.y -= self.h / 2
+	}
+	if self.x != x || self.y != y {
+		self.x = x
+		self.y = y
+		self.positionChanged()
+	}
+}
+
 // Add x and y to current position.
 func (self *Actor) MoveBy(x, y float32) {
 	if x != 0 || y != 0 {
@@ -239,35 +298,6 @@ func (self *Actor) MoveBy(x, y float32) {
 		self.positionChanged()
 	}
 }
-
-//   /** Returns the Y position of the specified {@link Align alignment}. */
-//   public float getY (int alignment) {
-//     float y = self.y;
-//     if ((alignment & top) != 0)
-//       y += height;
-//     else if ((alignment & bottom) == 0) //
-//       y += height / 2;
-//     return y;
-//   }
-
-//   /** Sets the position using the specified {@link Align alignment}. Note self may set the position to non-integer coordinates. */
-//   public void setPosition (float x, float y, int alignment) {
-//     if ((alignment & right) != 0)
-//       x -= width;
-//     else if ((alignment & left) == 0) //
-//       x -= width / 2;
-
-//     if ((alignment & top) != 0)
-//       y -= height;
-//     else if ((alignment & bottom) == 0) //
-//       y -= height / 2;
-
-//     if (self.x != x || self.y != y) {
-//       self.x = x;
-//       self.y = y;
-//       positionChanged();
-//     }
-//   }
 
 func (self *Actor) GetWidth() float32 {
 	return self.w
@@ -423,72 +453,11 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 	self.rotation += amountInDegrees
 }
 
-//   func (self *Actor) setColor (Color color) {
-//     self.color.set(color);
-//   }
-
-//   func (self *Actor) setColor (float r, float g, float b, float a) {
-//     color.set(r, g, b, a);
-//   }
-
-// Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color.
-//   public Color getColor () {
-//     return color;
-//   }
-
-// Retrieve custom actor name set with {@link Actor#setName(String)}, used for easier identification
-//   public String getName () {
-//     return name;
-//   }
-
-// Sets a name for easier identification of the actor in application code.
-//    * @see Group#findActor(String) */
-//   func (self *Actor) setName (String name) {
-//     self.name = name;
-//   }
-
-// Changes the z-order for self actor so it is in front of all siblings.
-//   func (self *Actor) toFront () {
-//     setZIndex(Integer.MAX_VALUE);
-//   }
-
-// Changes the z-order for self actor so it is in back of all siblings.
-//   func (self *Actor) toBack () {
-//     setZIndex(0);
-//   }
-
-// Sets the z-index of self actor. The z-index is the index into the parent's {@link Group#getChildren() children}, where a
-//    * lower index is below a higher index. Setting a z-index higher than the number of children will move the child to the front.
-//    * Setting a z-index less than zero is invalid. */
-//   func (self *Actor) setZIndex (int index) {
-//     if (index < 0) throw new IllegalArgumentException("ZIndex cannot be < 0.");
-//     Group parent = self.parent;
-//     if (parent == null) return;
-//     Array<Actor> children = parent.children;
-//     if (children.size == 1) return;
-//     if (!children.removeValue(self, true)) return;
-//     if (index >= children.size)
-//       children.add(self);
-//     else
-//       children.insert(index, self);
-//   }
-
-//   /** Returns the z-index of self actor.
-//    * @see #setZIndex(int) */
-//   public int getZIndex () {
-//     Group parent = self.parent;
-//     if (parent == null) return -1;
-//     r
-
 // public class Actor {
 //   private Stage stage;
 //   Group parent;
 //   private final DelayedRemovalArray<EventListener> listeners = new DelayedRemovalArray(0);
 //   private final DelayedRemovalArray<EventListener> captureListeners = new DelayedRemovalArray(0);
-
-//   private Touchable touchable = Touchable.enabled;
-//   final Color color = new Color(1, 1, 1, 1);
-//   private Object userObject;
 
 //   /** Sets self actor as the event {@link Event#setTarget(Actor) target} and propagates the event to self actor and ancestor
 //    * actors as necessary. If self actor is not in the stage, the stage must be set before calling self method.
@@ -630,17 +599,6 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return captureListeners;
 //   }
 
-//   /** Returns the stage that self actor is currently in, or null if not in a stage. */
-//   public Stage getStage () {
-//     return stage;
-//   }
-
-//   /** Called by the framework when self actor or any parent is added to a group that is in the stage.
-//    * @param stage May be null if the actor or any parent is no longer in a stage. */
-//   protected void setStage (Stage stage) {
-//     self.stage = stage;
-//   }
-
 //   /** Returns true if self actor is the same as or is the descendant of the specified actor. */
 //   public boolean isDescendantOf (Actor actor) {
 //     if (actor == null) throw new IllegalArgumentException("actor cannot be null.");
@@ -660,70 +618,6 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //       if (actor == self) return true;
 //       actor = actor.parent;
 //     }
-//   }
-
-//   /** Returns true if the actor's parent is not null. */
-//   public boolean hasParent () {
-//     return parent != null;
-//   }
-
-//   /** Returns the parent actor, or null if not in a group. */
-//   public Group getParent () {
-//     return parent;
-//   }
-
-//   /** Called by the framework when an actor is added to or removed from a group.
-//    * @param parent May be null if the actor has been removed from the parent. */
-//   protected void setParent (Group parent) {
-//     self.parent = parent;
-//   }
-
-//   /** Returns true if input events are processed by self actor. */
-//   public boolean isTouchable () {
-//     return touchable == Touchable.enabled;
-//   }
-
-//   public Touchable getTouchable () {
-//     return touchable;
-//   }
-
-//   /** Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}. */
-//   public void setTouchable (Touchable touchable) {
-//     self.touchable = touchable;
-//   }
-
-//   /** Returns an application specific object for convenience, or null. */
-//   public Object getUserObject () {
-//     return userObject;
-//   }
-
-//   /** Sets an application specific object for convenience. */
-//   public void setUserObject (Object userObject) {
-//     self.userObject = userObject;
-//   }
-
-//   public void setColor (Color color) {
-//     self.color.set(color);
-//   }
-
-//   public void setColor (float r, float g, float b, float a) {
-//     color.set(r, g, b, a);
-//   }
-
-//   /** Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color. */
-//   public Color getColor () {
-//     return color;
-//   }
-
-//   /** Retrieve custom actor name set with {@link Actor#setName(String)}, used for easier identification */
-//   public String getName () {
-//     return name;
-//   }
-
-//   /** Sets a name for easier identification of the actor in application code.
-//    * @see Group#findActor(String) */
-//   public void setName (String name) {
-//     self.name = name;
 //   }
 
 //   /** Changes the z-order for self actor so it is in front of all siblings. */

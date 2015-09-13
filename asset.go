@@ -27,11 +27,11 @@ var (
 	animationsMap map[string]int
 )
 
-func Initialize(config *AssetConfig) {
+func InitAssets(config *AssetConfig) {
 }
 
 func SoundPlay(name string) {
-	log.Infof("Playing Sound: %s", name)
+	log.Info("Playing Sound: " + name)
 }
 
 func SoundPause() {
@@ -43,7 +43,7 @@ func SoundResume() {
 }
 
 func SoundStop(name string) {
-	log.Infof("Stopping Sound: %s", name)
+	log.Infof("Stopping Sound: " + name)
 }
 
 func SoundDispose() {
