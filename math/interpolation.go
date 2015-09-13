@@ -98,7 +98,7 @@ func SineOut() Interpolation {
 	}
 }
 
-func ICircle() Interpolation {
+func CircleInterp() Interpolation {
 	return func(a float32) float32 {
 		if a <= 0.5 {
 			a *= 2
