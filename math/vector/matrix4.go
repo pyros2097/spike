@@ -131,7 +131,10 @@ func (self *Matrix4) SetM4(matrix *Matrix4) *Matrix4 {
 // param values The matrix, in float form, that is to be copied. Remember that this matrix is in
 // http://en.wikipedia.org/wiki/Row-major_order column major order.
 func (self *Matrix4) SetValues(values [16]float32) *Matrix4 {
-	copy(values, 0, val, 0, val.length)
+	for i, v := range values {
+		self.val[i] = v
+	}
+	// copy(self.val, values)
 	return self
 }
 
@@ -820,7 +823,7 @@ func (self *Matrix4) SetToWorld(position, forward, up *Vector3) *Matrix4 {
 	right.SetV(tmpForward).CrsV(up).Nor()
 	tmpUp.SetV(right).CrsV(tmpForward).Nor()
 
-	self.SetVAxis(right, tmpUp, tmpForward.SclValue(-1), position)
+	self.SetVAxis(right, tmpUp, tmpForward.SclScalar(-1), position)
 	return self
 }
 
@@ -848,9 +851,9 @@ func (self *Matrix4) Avg(other *Matrix4, w float32) *Matrix4 {
 	self.GetTranslation(tmpUp)
 	other.GetTranslation(right)
 
-	self.SetToScalingV3(tmpVec.SclValue(w).AddV(tmpForward.SclValue(1 - w)))
+	self.SetToScalingV3(tmpVec.SclScalar(w).AddV(tmpForward.SclScalar(1 - w)))
 	self.RotateQ(quat.Slerp(quat2, 1-w))
-	self.SetTranslationV3(tmpUp.SclValue(w).AddV(right.SclValue(1 - w)))
+	self.SetTranslationV3(tmpUp.SclScalar(w).AddV(right.SclScalar(1 - w)))
 
 	return self
 }
@@ -861,14 +864,14 @@ func (self *Matrix4) Avg(other *Matrix4, w float32) *Matrix4 {
 func (self *Matrix4) AvgM4(t []*Matrix4) *Matrix4 {
 	w := float32(1 / len(t))
 
-	tmpVec.SetV(t[0].GetScale(tmpUp).SclValue(w))
+	tmpVec.SetV(t[0].GetScale(tmpUp).SclScalar(w))
 	quat.SetQ(t[0].GetRotationQ(quat2).Exp(w))
-	tmpForward.SetV(t[0].GetTranslation(tmpUp).SclValue(w))
+	tmpForward.SetV(t[0].GetTranslation(tmpUp).SclScalar(w))
 
 	for i := 1; i < len(t); i++ {
-		tmpVec.AddV(t[i].GetScale(tmpUp).SclValue(w))
+		tmpVec.AddV(t[i].GetScale(tmpUp).SclScalar(w))
 		quat.MulQ(t[i].GetRotationQ(quat2).Exp(w))
-		tmpForward.AddV(t[i].GetTranslation(tmpUp).SclValue(w))
+		tmpForward.AddV(t[i].GetTranslation(tmpUp).SclScalar(w))
 	}
 	quat.Nor()
 
@@ -885,14 +888,14 @@ func (self *Matrix4) AvgM4(t []*Matrix4) *Matrix4 {
 // param t List of transforms
 // param w List of weights
 func (self *Matrix4) AvgM4W(t []*Matrix4, w []float32) *Matrix4 {
-	tmpVec.SetV(t[0].GetScale(tmpUp).SclValue(w[0]))
+	tmpVec.SetV(t[0].GetScale(tmpUp).SclScalar(w[0]))
 	quat.SetQ(t[0].GetRotationQ(quat2).Exp(w[0]))
-	tmpForward.SetV(t[0].GetTranslation(tmpUp).SclValue(w[0]))
+	tmpForward.SetV(t[0].GetTranslation(tmpUp).SclScalar(w[0]))
 
 	for i := 1; i < len(t); i++ {
-		tmpVec.AddV(t[i].GetScale(tmpUp).SclValue(w[i]))
+		tmpVec.AddV(t[i].GetScale(tmpUp).SclScalar(w[i]))
 		quat.MulQ(t[i].GetRotationQ(quat2).Exp(w[i]))
-		tmpForward.AddV(t[i].GetTranslation(tmpUp).SclValue(w[i]))
+		tmpForward.AddV(t[i].GetTranslation(tmpUp).SclScalar(w[i]))
 	}
 	quat.Nor()
 
@@ -1106,7 +1109,10 @@ func MulM4(mata [16]float32, matb [16]float32) {
 	tmp[M4_31] = mata[M4_30]*matb[M4_01] + mata[M4_31]*matb[M4_11] + mata[M4_32]*matb[M4_21] + mata[M4_33]*matb[M4_31]
 	tmp[M4_32] = mata[M4_30]*matb[M4_02] + mata[M4_31]*matb[M4_12] + mata[M4_32]*matb[M4_22] + mata[M4_33]*matb[M4_32]
 	tmp[M4_33] = mata[M4_30]*matb[M4_03] + mata[M4_31]*matb[M4_13] + mata[M4_32]*matb[M4_23] + mata[M4_33]*matb[M4_33]
-	copy(mata, tmp)
+	for i, v := range tmp {
+		mata[i] = v
+	}
+	// copy(mata, tmp)
 }
 
 // @off

@@ -5,7 +5,10 @@
 package vector
 
 import (
+	"math"
+
 	. "github.com/pyros2097/gdx/math/interpolation"
+	"github.com/pyros2097/gdx/math/utils"
 )
 
 var (
@@ -34,7 +37,7 @@ func NewVector3(x, y, z float32) *Vector3 {
 
 // Creates a vector from the given vector
 // vector The vector
-func NewVector3V(v *Vector3) *Vector3 {
+func NewVector3Copy(v *Vector3) *Vector3 {
 	return &Vector3{v.x, v.y, v.z}
 }
 
@@ -48,7 +51,7 @@ func NewVector3Values(values []float32) *Vector3 {
 // vector The vector
 // z The z-component
 func NewVector3VZ(vector *Vector2, z float32) *Vector3 {
-	return &Vector3{vector.x, vector.y, v}
+	return &Vector3{vector.x, vector.y, z}
 }
 
 // Sets the vector to the given components
@@ -71,22 +74,22 @@ func (self *Vector3) SetV(vector *Vector3) *Vector3 {
 // values The array
 // return this vector for chaining
 func (self *Vector3) SetValues(values []float32) *Vector3 {
-	return self.SetValues(values[0], values[1], values[2])
+	return self.Set(values[0], values[1], values[2])
 }
 
 // Sets the components of the given vector and z-component
 // vector The vector
 // z The z-component
 func (self *Vector3) SetVZ(vector *Vector2, z float32) *Vector3 {
-	return self.SetC(vector.x, vector.y, z)
+	return self.Set(vector.x, vector.y, z)
 }
 
 func (self *Vector3) Copy() *Vector3 {
-	return NewVector3(self)
+	return NewVector3Copy(self)
 }
 
 func (self *Vector3) AddV(vector *Vector3) *Vector3 {
-	return self.add(vector.x, vector.y, vector.z)
+	return self.Add(vector.x, vector.y, vector.z)
 }
 
 // Adds the given vector to this component
@@ -94,7 +97,7 @@ func (self *Vector3) AddV(vector *Vector3) *Vector3 {
 // y The y-component of the other vector
 // z The z-component of the other vector.
 func (self *Vector3) Add(x, y, z float32) *Vector3 {
-	return self.set(self.x+x, self.y+y, self.z+z)
+	return self.Set(self.x+x, self.y+y, self.z+z)
 }
 
 // Adds the given value to all three components of the vector.
@@ -117,7 +120,7 @@ func (self *Vector3) SubValue(value float32) *Vector3 {
 	return self.Set(self.x-value, self.y-value, self.z-value)
 }
 
-func (self *Vector3) SclValue(scalar float32) *Vector3 {
+func (self *Vector3) SclScalar(scalar float32) *Vector3 {
 	return self.Set(self.x*scalar, self.y*scalar, self.z*scalar)
 }
 
@@ -146,11 +149,11 @@ func (self *Vector3) MulAddV(vec, mulVec *Vector3) *Vector3 {
 
 // return The euclidean length
 func LenV3(x, y, z float32) float32 {
-	return float32(Math.sqrt(float64(x*x + y*y + z*z)))
+	return float32(math.Sqrt(float64(x*x + y*y + z*z)))
 }
 
 func (self *Vector3) Len() float32 {
-	return float32(Math.sqrt(float64(self.x*self.x + self.y*self.y + self.z*self.z)))
+	return float32(math.Sqrt(float64(self.x*self.x + self.y*self.y + self.z*self.z)))
 }
 
 // return The squared euclidean length
@@ -173,14 +176,14 @@ func DstV3(x1, y1, z1, x2, y2, z2 float32) float32 {
 	a := x2 - x1
 	b := y2 - y1
 	c := z2 - z1
-	return float32(Math.sqrt(float64(a*a + b*b + c*c)))
+	return float32(math.Sqrt(float64(a*a + b*b + c*c)))
 }
 
 func (self *Vector3) DstV(vector *Vector3) float32 {
 	a := vector.x - self.x
 	b := vector.y - self.y
 	c := vector.z - self.z
-	return float32(Math.sqrt(float64(a*a + b*b + c*c)))
+	return float32(math.Sqrt(float64(a*a + b*b + c*c)))
 }
 
 // return the distance between this point and the given point
@@ -188,7 +191,7 @@ func (self *Vector3) Dst(x, y, z float32) float32 {
 	a := x - self.x
 	b := y - self.y
 	c := z - self.z
-	return float32(Math.sqrt(float64(a*a + b*b + c*c)))
+	return float32(math.Sqrt(float64(a*a + b*b + c*c)))
 }
 
 // return the squared distance between the given points
@@ -200,9 +203,9 @@ func Dst2V3(x1, y1, z1, x2, y2, z2 float32) float32 {
 }
 
 func (self *Vector3) Dst2V(point *Vector3) float32 {
-	a := point.x - x
-	b := point.y - y
-	c := point.z - z
+	a := point.x - self.x
+	b := point.y - self.y
+	c := point.z - self.z
 	return a*a + b*b + c*c
 }
 
@@ -211,7 +214,7 @@ func (self *Vector3) Dst2V(point *Vector3) float32 {
 // y The y-component of the other point
 // z The z-component of the other point
 // return The squared distance
-func (self *Vector3) Dst2(x, y, z float32) float32 {
+func (self *Vector3) Dst2V3(x, y, z float32) float32 {
 	a := x - self.x
 	b := y - self.y
 	c := z - self.z
@@ -223,11 +226,11 @@ func (self *Vector3) Nor() *Vector3 {
 	if len2 == 0 || len2 == 1 {
 		return self
 	}
-	return self.Scl(1 / float32(Math.sqrt(float64(len2))))
+	return self.SclScalar(1 / float32(math.Sqrt(float64(len2))))
 }
 
 // return The dot product between the two vectors
-func Dotv3(x1, y1, z1, x2, y2, z2 float32) float32 {
+func DotV3(x1, y1, z1, x2, y2, z2 float32) float32 {
 	return x1*x2 + y1*y2 + z1*z2
 }
 
@@ -247,7 +250,7 @@ func (self *Vector3) Dot(x, y, z float32) float32 {
 // Sets this vector to the cross product between it and the other vector.
 // vector The other vector
 func (self *Vector3) CrsV(vector *Vector3) *Vector3 {
-	return self.Set(self.y*vector.z-self.z*vector.y, sekf.z*vector.x-self.x*vector.z, self.x*vector.y-self.y*vector.x)
+	return self.Set(self.y*vector.z-self.z*vector.y, self.z*vector.x-self.x*vector.z, self.x*vector.y-self.y*vector.x)
 }
 
 // Sets this vector to the cross product between it and the other vector.
@@ -269,35 +272,35 @@ func (self *Vector3) Mul4x3(matrix []float32) *Vector3 {
 // Left-multiplies the vector by the given matrix, assuming the fourth (w) component of the vector is 1.
 func (self *Vector3) Mul(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M01]+self.z*l_mat[Matrix4.M02]+
-		l_mat[Matrix4.M03], self.x*l_mat[Matrix4.M10]+self.y*l_mat[Matrix4.M11]+z*l_mat[Matrix4.M12]+
-		l_mat[Matrix4.M13], self.x*l_mat[Matrix4.M20]+self.y*l_mat[Matrix4.M21]+self.z*l_mat[Matrix4.M22]+
-		l_mat[Matrix4.M23])
+	return self.Set(self.x*l_mat[M4_00]+self.y*l_mat[M4_01]+self.z*l_mat[M4_02]+
+		l_mat[M4_03], self.x*l_mat[M4_10]+self.y*l_mat[M4_11]+self.z*l_mat[M4_12]+
+		l_mat[M4_13], self.x*l_mat[M4_20]+self.y*l_mat[M4_21]+self.z*l_mat[M4_22]+
+		l_mat[M4_23])
 }
 
 // Multiplies the vector by the transpose of the given matrix, assuming the fourth (w) component of the vector is 1.
 func (self *Vector3) TraMul(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M10]+self.z*l_mat[Matrix4.M20]+
-		l_mat[Matrix4.M30], self.x*l_mat[Matrix4.M01]+self.y*l_mat[Matrix4.M11]+self.z*l_mat[Matrix4.M21]+
-		l_mat[Matrix4.M31], x*l_mat[Matrix4.M02]+self.y*l_mat[Matrix4.M12]+self.z*l_mat[Matrix4.M22]+
-		l_mat[Matrix4.M32])
+	return self.Set(self.x*l_mat[M4_00]+self.y*l_mat[M4_10]+self.z*l_mat[M4_20]+
+		l_mat[M4_30], self.x*l_mat[M4_01]+self.y*l_mat[M4_11]+self.z*l_mat[M4_21]+
+		l_mat[M4_31], self.x*l_mat[M4_02]+self.y*l_mat[M4_12]+self.z*l_mat[M4_22]+
+		l_mat[M4_32])
 }
 
 // Left-multiplies the vector by the given matrix.
 func (self *Vector3) MulM3(matrix *Matrix3) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix3.M00]+self.y*l_mat[Matrix3.M01]+self.z*l_mat[Matrix3.M02], self.x*
-		l_mat[Matrix3.M10]+self.y*l_mat[Matrix3.M11]+self.z*l_mat[Matrix3.M12], x*l_mat[Matrix3.M20]+
-		self.y*l_mat[Matrix3.M21]+self.z*l_mat[Matrix3.M22])
+	return self.Set(self.x*l_mat[M3_00]+self.y*l_mat[M3_01]+self.z*l_mat[M3_02], self.x*
+		l_mat[M3_10]+self.y*l_mat[M3_11]+self.z*l_mat[M3_12], self.x*l_mat[M3_20]+
+		self.y*l_mat[M3_21]+self.z*l_mat[M3_22])
 }
 
 // Multiplies the vector by the transpose of the given matrix.
 func (self *Vector3) TraMulM3(matrix *Matrix3) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix3.M00]+self.y*l_mat[Matrix3.M10]+self.z*l_mat[Matrix3.M20], self.x*
-		l_mat[Matrix3.M01]+self.y*l_mat[Matrix3.M11]+self.z*l_mat[Matrix3.M21], self.x*l_mat[Matrix3.M02]+
-		self.y*l_mat[Matrix3.M12]+self.z*l_mat[Matrix3.M22])
+	return self.Set(self.x*l_mat[M3_00]+self.y*l_mat[M3_10]+self.z*l_mat[M3_20], self.x*
+		l_mat[M3_01]+self.y*l_mat[M3_11]+self.z*l_mat[M3_21], self.x*l_mat[M3_02]+
+		self.y*l_mat[M3_12]+self.z*l_mat[M3_22])
 }
 
 // Multiplies the vector by the given {@link Quaternion}.
@@ -309,28 +312,28 @@ func (self *Vector3) MulQ(quat *Quaternion) *Vector3 {
 // mostly used to project/unproject vectors via a perspective projection matrix.
 func (self *Vector3) Prj(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	l_w := 1 / (self.x*l_mat[Matrix4.M30] + self.y*l_mat[Matrix4.M31] + self.z*l_mat[Matrix4.M32] + l_mat[Matrix4.M33])
-	return self.Set((self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M01]+self.z*l_mat[Matrix4.M02]+
-		l_mat[Matrix4.M03])*l_w, (self.x*l_mat[Matrix4.M10]+self.y*l_mat[Matrix4.M11]+self.z*l_mat[Matrix4.M12]+
-		l_mat[Matrix4.M13])*l_w, (self.x*l_mat[Matrix4.M20]+self.y*l_mat[Matrix4.M21]+self.z*l_mat[Matrix4.M22]+
-		l_mat[Matrix4.M23])*l_w)
+	l_w := 1 / (self.x*l_mat[M4_30] + self.y*l_mat[M4_31] + self.z*l_mat[M4_32] + l_mat[M4_33])
+	return self.Set((self.x*l_mat[M4_00]+self.y*l_mat[M4_01]+self.z*l_mat[M4_02]+
+		l_mat[M4_03])*l_w, (self.x*l_mat[M4_10]+self.y*l_mat[M4_11]+self.z*l_mat[M4_12]+
+		l_mat[M4_13])*l_w, (self.x*l_mat[M4_20]+self.y*l_mat[M4_21]+self.z*l_mat[M4_22]+
+		l_mat[M4_23])*l_w)
 }
 
 // Multiplies this vector by the first three columns of the matrix, essentially only applying rotation and scaling.
 func (self *Vector3) Rot(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M01]+self.z*l_mat[Matrix4.M02], self.x*
-		l_mat[Matrix4.M10]+self.y*l_mat[Matrix4.M11]+self.z*l_mat[Matrix4.M12], self.x*l_mat[Matrix4.M20]+
-		self.y*l_mat[Matrix4.M21]+self.z*l_mat[Matrix4.M22])
+	return self.Set(self.x*l_mat[M4_00]+self.y*l_mat[M4_01]+self.z*l_mat[M4_02], self.x*
+		l_mat[M4_10]+self.y*l_mat[M4_11]+self.z*l_mat[M4_12], self.x*l_mat[M4_20]+
+		self.y*l_mat[M4_21]+self.z*l_mat[M4_22])
 }
 
 // Multiplies this vector by the transpose of the first three columns of the matrix. Note: only works for translation and
 // rotation, does not work for scaling. For those, use {@link #rot(Matrix4)} with {@link Matrix4#inv()}.
 func (self *Vector3) Unrotate(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	return self.Set(self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M10]+self.z*l_mat[Matrix4.M20], self.x*
-		l_mat[Matrix4.M01]+self.y*l_mat[Matrix4.M11]+self.z*l_mat[Matrix4.M21], self.x*l_mat[Matrix4.M02]+
-		self.y*l_mat[Matrix4.M12]+self.z*l_mat[Matrix4.M22])
+	return self.Set(self.x*l_mat[M4_00]+self.y*l_mat[M4_10]+self.z*l_mat[M4_20], self.x*
+		l_mat[M4_01]+self.y*l_mat[M4_11]+self.z*l_mat[M4_21], self.x*l_mat[M4_02]+
+		self.y*l_mat[M4_12]+self.z*l_mat[M4_22])
 }
 
 // Translates this vector in the direction opposite to the translation of the matrix and the multiplies this vector by the
@@ -338,12 +341,12 @@ func (self *Vector3) Unrotate(matrix *Matrix4) *Vector3 {
 // scaling. For those, use {@link #mul(Matrix4)} with {@link Matrix4#inv()}.
 func (self *Vector3) Untransform(matrix *Matrix4) *Vector3 {
 	l_mat := matrix.val
-	x -= l_mat[Matrix4.M03]
-	y -= l_mat[Matrix4.M03]
-	z -= l_mat[Matrix4.M03]
-	return self.Set(self.x*l_mat[Matrix4.M00]+self.y*l_mat[Matrix4.M10]+self.z*l_mat[Matrix4.M20], self.x*
-		l_mat[Matrix4.M01]+self.y*l_mat[Matrix4.M11]+self.z*l_mat[Matrix4.M21], self.x*l_mat[Matrix4.M02]+
-		self.y*l_mat[Matrix4.M12]+self.z*l_mat[Matrix4.M22])
+	self.x -= l_mat[M4_03]
+	self.y -= l_mat[M4_03]
+	self.z -= l_mat[M4_03]
+	return self.Set(self.x*l_mat[M4_00]+self.y*l_mat[M4_10]+self.z*l_mat[M4_20], self.x*
+		l_mat[M4_01]+self.y*l_mat[M4_11]+self.z*l_mat[M4_21], self.x*l_mat[M4_02]+
+		self.y*l_mat[M4_12]+self.z*l_mat[M4_22])
 }
 
 // Rotates this vector by the given angle in degrees around the given axis.
@@ -352,7 +355,7 @@ func (self *Vector3) Untransform(matrix *Matrix4) *Vector3 {
 // axisY the y-component of the axis
 // axisZ the z-component of the axis
 func (self *Vector3) Rotate(degrees, axisX, axisY, axisZ float32) *Vector3 {
-	return self.Mul(tmpMatV3.SetToRotation(axisX, axisY, axisZ, degrees))
+	return self.Mul(tmpMatV3.SetToRotationAxis(axisX, axisY, axisZ, degrees))
 }
 
 // Rotates this vector by the given angle in radians around the given axis.
@@ -368,24 +371,24 @@ func (self *Vector3) RotateRad(radians, axisX, axisY, axisZ float32) *Vector3 {
 // axis the axis
 // degrees the angle in degrees
 func (self *Vector3) RotateV(axis *Vector3, degrees float32) *Vector3 {
-	tmpMatV3.setToRotation(axis, degrees)
-	return self.mul(tmpMatV3)
+	tmpMatV3.SetToRotationV3(axis, degrees)
+	return self.Mul(tmpMatV3)
 }
 
 // Rotates this vector by the given angle in radians around the given axis.
 // axis the axis
 // radians the angle in radians
 func (self *Vector3) RotateRadV(axis *Vector3, radians float32) *Vector3 {
-	tmpMatV3.SetToRotationRad(axis, radians)
+	tmpMatV3.SetToRotationRadV3(axis, radians)
 	return self.Mul(tmpMatV3)
 }
 
-func (self *Vector3) IsUnit() *Vector3 {
-	return isUnit(0.000000001)
+func (self *Vector3) IsUnit() bool {
+	return self.IsUnitMargin(0.000000001)
 }
 
 func (self *Vector3) IsUnitMargin(margin float32) bool {
-	return Math.abs(self.Len2()-1) < margin
+	return math.Abs(float64(self.Len2()-1)) < float64(margin)
 }
 
 func (self *Vector3) IsZero() bool {
@@ -397,35 +400,35 @@ func (self *Vector3) IsZeroMargin(margin float32) bool {
 }
 
 func (self *Vector3) IsOnLineEpsilon(other *Vector3, epsilon float32) bool {
-	return self.Len2(y*other.z-z*other.y, z*other.x-x*other.z, x*other.y-y*other.x) <= epsilon
+	return Len2V3(self.y*other.z-self.z*other.y, self.z*other.x-self.x*other.z, self.x*other.y-self.y*other.x) <= epsilon
 }
 
 func (self *Vector3) IsOnLine(other *Vector3) bool {
-	return self.Len2(self.y*other.z-z*other.y, self.z*other.x-self.x*other.z, self.x*other.y-self.y*other.x) <= FLOAT_ROUNDING_ERROR
+	return Len2V3(self.y*other.z-self.z*other.y, self.z*other.x-self.x*other.z, self.x*other.y-self.y*other.x) <= utils.FLOAT_ROUNDING_ERROR
 }
 
 func (self *Vector3) IsCollinearEpsilon(other *Vector3, epsilon float32) bool {
-	return self.isOnLine(other, epsilon) && self.hasSameDirection(other)
+	return self.IsOnLineEpsilon(other, epsilon) && self.HasSameDirection(other)
 }
 
 func (self *Vector3) IsCollinear(other *Vector3) bool {
-	return self.isOnLine(other) && self.hasSameDirection(other)
+	return self.IsOnLine(other) && self.HasSameDirection(other)
 }
 
 func (self *Vector3) IsCollinearOppositeEpsilon(other *Vector3, epsilon float32) bool {
-	return self.isOnLine(other, epsilon) && self.hasOppositeDirection(other)
+	return self.IsOnLineEpsilon(other, epsilon) && self.HasOppositeDirection(other)
 }
 
 func (self *Vector3) IsCollinearOpposite(other *Vector3) bool {
-	return self.isOnLine(other) && self.hasOppositeDirection(other)
+	return self.IsOnLine(other) && self.HasOppositeDirection(other)
 }
 
 func (self *Vector3) IsPerpendicular(vector *Vector3) bool {
-	return isZero(self.Dot(vector))
+	return utils.IsZero(self.DotV(vector))
 }
 
 func (self *Vector3) IsPerpendicularEpsilon(vector *Vector3, epsilon float32) bool {
-	return isZero(self.Dot(vector), epsilon)
+	return utils.IsZeroTolerance(self.DotV(vector), epsilon)
 }
 
 func (self *Vector3) HasSameDirection(vector *Vector3) bool {
@@ -444,7 +447,7 @@ func (self *Vector3) Lerp(target *Vector3, alpha float32) *Vector3 {
 }
 
 func (self *Vector3) Interpolate(target *Vector3, alpha float32, interpolator Interpolation) *Vector3 {
-	return self.Lerp(target, interpolator.apply(0, 1, alpha))
+	return self.Lerp(target, InterpolationStartEnd(0, 1, alpha, interpolator))
 }
 
 // Spherically interpolates between this vector and the target vector by alpha which is in the range [0,1]. The result is
@@ -459,35 +462,32 @@ func (self *Vector3) Slerp(target *Vector3, alpha float32) *Vector3 {
 	}
 
 	// theta0 = angle between input vectors
-	theta0 := float32(math.Acos(dot))
+	theta0 := float32(math.Acos(float64(dot)))
 	// theta = angle between this vector and result
 	theta := theta0 * alpha
 
-	st := float32(math.Sin(theta))
+	st := float32(math.Sin(float64(theta)))
 	tx := target.x - self.x*dot
 	ty := target.y - self.y*dot
 	tz := target.z - self.z*dot
 	l2 := tx*tx + ty*ty + tz*tz
+	var dl float32
 	if l2 < 0.0001 {
-		dl := st * 1
+		dl = st * 1
 	} else {
-		dl := st * 1 / float32(Math.sqrt(l2))
+		dl = st * 1 / float32(math.Sqrt(float64(l2)))
 	}
-	return self.Scl(float32(math.Cos(theta))).Add(tx*dl, ty*dl, tz*dl).Nor()
-}
-
-func (self *Vector3) String() string {
-	return "[" + self.x + ", " + self.y + ", " + self.z + "]"
+	return self.SclScalar(float32(math.Cos(float64(theta)))).Add(tx*dl, ty*dl, tz*dl).Nor()
 }
 
 func (self *Vector3) Limit(limit float32) *Vector3 {
 	return self.Limit2(limit * limit)
 }
 
-func (self *Vector3) limit2(limit2 float32) *Vector3 {
+func (self *Vector3) Limit2(limit2 float32) *Vector3 {
 	len2 := self.Len2()
 	if len2 > limit2 {
-		self.Scl(float32(Math.sqrt(float64(limit2 / len2))))
+		self.SclScalar(float32(math.Sqrt(float64(limit2 / len2))))
 	}
 	return self
 }
@@ -501,22 +501,22 @@ func (self *Vector3) SetLength2(len2 float32) *Vector3 {
 	if oldLen2 == 0 || oldLen2 == len2 {
 		return self
 	} else {
-		return self.Scl(float32(Math.sqrt(float64(len2 / oldLen2))))
+		return self.SclScalar(float32(math.Sqrt(float64(len2 / oldLen2))))
 	}
 }
 
 func (self *Vector3) Clamp(min, max float32) *Vector3 {
-	len2 := self.len2()
+	len2 := self.Len2()
 	if len2 == 0 {
 		return self
 	}
 	max2 := max * max
 	if len2 > max2 {
-		return self.Scl(float32(Math.sqrt(float64(max2 / len2))))
+		return self.SclScalar(float32(math.Sqrt(float64(max2 / len2))))
 	}
 	min2 := min * min
 	if len2 < min2 {
-		return self.Scl(float32(Math.sqrt(float64(min2 / len2))))
+		return self.SclScalar(float32(math.Sqrt(float64(min2 / len2))))
 	}
 	return self
 }
@@ -545,13 +545,13 @@ func (self *Vector3) EpsilonEqualsV(other *Vector3, epsilon float32) bool {
 	if other == nil {
 		return false
 	}
-	if Math.abs(other.x-x) > epsilon {
+	if math.Abs(float64(other.x-self.x)) > float64(epsilon) {
 		return false
 	}
-	if Math.abs(other.y-y) > epsilon {
+	if math.Abs(float64(other.y-self.y)) > float64(epsilon) {
 		return false
 	}
-	if Math.abs(other.z-z) > epsilon {
+	if math.Abs(float64(other.z-self.z)) > float64(epsilon) {
 		return false
 	}
 	return true
@@ -560,13 +560,13 @@ func (self *Vector3) EpsilonEqualsV(other *Vector3, epsilon float32) bool {
 // Compares this vector with the other vector, using the supplied epsilon for fuzzy equality testing.
 // return whether the vectors are the same.
 func (self *Vector3) EpsilonEquals(x, y, z, epsilon float32) bool {
-	if math.Abs(x-self.x) > epsilon {
+	if math.Abs(float64(x-self.x)) > float64(epsilon) {
 		return false
 	}
-	if math.Abs(y-self.y) > epsilon {
+	if math.Abs(float64(y-self.y)) > float64(epsilon) {
 		return false
 	}
-	if Math.Abs(z-self.z) > epsilon {
+	if math.Abs(float64(z-self.z)) > float64(epsilon) {
 		return false
 	}
 	return true
@@ -577,4 +577,9 @@ func (self *Vector3) SetZero() *Vector3 {
 	self.y = 0
 	self.z = 0
 	return self
+}
+
+func (self *Vector3) String() string {
+	return ""
+	// return "[" + self.x + ", " + self.y + ", " + self.z + "]"
 }

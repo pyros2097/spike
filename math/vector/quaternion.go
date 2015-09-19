@@ -76,13 +76,13 @@ func (self *Quaternion) Copy() *Quaternion {
 }
 
 // return the euclidean length of the specified quaternion
-func LenQ(x, y, z, w float32) {
-	return float32(math.Sqrt(x*x + y*y + z*z + w*w))
+func LenQ(x, y, z, w float32) float32 {
+	return float32(math.Sqrt(float64(x*x + y*y + z*z + w*w)))
 }
 
 // return the euclidean length of this quaternion
 func (self *Quaternion) Len() float32 {
-	return float32(math.Sqrt(self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w))
+	return float32(math.Sqrt(float64(self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w)))
 }
 
 // Sets the quaternion to the given euler angles in degrees.
@@ -155,7 +155,7 @@ func (self *Quaternion) GetRoll() float32 {
 func (self *Quaternion) GetPitchRad() float32 {
 	pole := self.GetGimbalPole()
 	if pole == 0 {
-		return float32(math.Asin(utils.ClampFloat32(2*(self.w*self.x-self.z*self.y), -1, 1)))
+		return float32(math.Asin(float64(utils.ClampFloat32(2*(self.w*self.x-self.z*self.y), -1, 1))))
 	}
 	return float32(pole) * utils.PI * 0.5
 }
@@ -181,7 +181,7 @@ func (self *Quaternion) GetYaw() float32 {
 	return self.GetYawRad() * utils.RadiansToDegrees
 }
 
-func Len2(x, y, z, w float32) float32 {
+func Len2Q(x, y, z, w float32) float32 {
 	return x*x + y*y + z*z + w*w
 }
 
@@ -310,7 +310,7 @@ func (self *Quaternion) Add(qx, qy, qz, qw float32) *Quaternion {
 // Fills a 4x4 matrix with the rotation matrix represented by this quaternion.
 //
 // param matrix Matrix to fill
-func (self *Quaternion) ToMatrix(matrix []float32) {
+func (self *Quaternion) ToMatrix(matrix [16]float32) {
 	xx := self.x * self.x
 	xy := self.x * self.y
 	xz := self.x * self.z
@@ -391,33 +391,34 @@ func (self *Quaternion) SetFromAxisRad(x, y, z, radians float32) *Quaternion {
 		return self.Idt()
 	}
 	d = 1 / d
+	var l_ang float32
 	if radians < 0 {
-		l_ang := utils.PI2 - (-radians % utils.PI2)
+		l_ang = utils.PI2 // - (-radians % utils.PI2) // TODO FIX THIS
 	} else {
-		l_ang := radians % utils.PI2
+		l_ang = radians // % utils.PI2 // TODO FIX THIS
 	}
-	l_sin := float32(math.Sin(l_ang / 2))
-	l_cos := float32(math.Cos(l_ang / 2))
+	l_sin := float32(math.Sin(float64(l_ang / 2)))
+	l_cos := float32(math.Cos(float64(l_ang / 2)))
 	return self.Set(d*x*l_sin, d*y*l_sin, d*z*l_sin, l_cos).Nor()
 }
 
 // Sets the Quaternion from the given matrix, optionally removing any scaling.
 func (self *Quaternion) SetFromMatrixM4Normalize(normalizeAxes bool, matrix *Matrix4) *Quaternion {
-	return self.SetFromAxes(normalizeAxes, matrix.val[M4_00], matrix.val[M4_01], matrix.val[M4_02],
+	return self.SetFromAxesNormalize(normalizeAxes, matrix.val[M4_00], matrix.val[M4_01], matrix.val[M4_02],
 		matrix.val[M4_10], matrix.val[M4_11], matrix.val[M4_12], matrix.val[M4_20],
 		matrix.val[M4_21], matrix.val[M4_22])
 }
 
 // Sets the Quaternion from the given rotation matrix, which must not contain scaling.
 func (self *Quaternion) SetFromMatrixM4(matrix *Matrix4) *Quaternion {
-	return self.SetFromMatrixNormalize(false, matrix)
+	return self.SetFromMatrixM4Normalize(false, matrix)
 }
 
 // Sets the Quaternion from the given matrix, optionally removing any scaling.
 func (self *Quaternion) SetFromMatrixM3Normalize(normalizeAxes bool, matrix *Matrix3) *Quaternion {
-	return self.SetFromAxes(normalizeAxes, matrix.val[Matrix3.M00], matrix.val[Matrix3.M01], matrix.val[Matrix3.M02],
-		matrix.val[Matrix3.M10], matrix.val[Matrix3.M11], matrix.val[Matrix3.M12], matrix.val[Matrix3.M20],
-		matrix.val[Matrix3.M21], matrix.val[Matrix3.M22])
+	return self.SetFromAxesNormalize(normalizeAxes, matrix.val[M3_00], matrix.val[M3_01], matrix.val[M3_02],
+		matrix.val[M3_10], matrix.val[M3_11], matrix.val[M3_12], matrix.val[M3_20],
+		matrix.val[M3_21], matrix.val[M3_22])
 }
 
 // Sets the Quaternion from the given rotation matrix, which must not contain scaling.
@@ -439,7 +440,7 @@ func (self *Quaternion) SetFromMatrixM3(matrix *Matrix3) *Quaternion {
 // param zy z-axis y-coordinate
 // param zz z-axis z-coordinate
 func (self *Quaternion) SetFromAxes(xx, xy, xz, yx, yy, yz, zx, zy, zz float32) *Quaternion {
-	return self.SetFromAxes(false, xx, xy, xz, yx, yy, yz, zx, zy, zz)
+	return self.SetFromAxesNormalize(false, xx, xy, xz, yx, yy, yz, zx, zy, zz)
 }
 
 // Sets the Quaternion from the given x-, y- and z-axis.
@@ -477,33 +478,33 @@ func (self *Quaternion) SetFromAxesNormalize(normalizeAxes bool, xx, xy, xz, yx,
 
 	// we protect the division by s by ensuring that s>=1
 	if t >= 0 { // |w| >= .5
-		s := float32(math.Sqrt(t + 1)) // |s|>=1 ...
-		w = 0.5 * s
+		s := float32(math.Sqrt(float64(t + 1))) // |s|>=1 ...
+		self.w = 0.5 * s
 		s = 0.5 / s // so this division isn't bad
-		x = (zy - yz) * s
-		y = (xz - zx) * s
-		z = (yx - xy) * s
+		self.x = (zy - yz) * s
+		self.y = (xz - zx) * s
+		self.z = (yx - xy) * s
 	} else if (xx > yy) && (xx > zz) {
-		s := float32(math.Sqrt(1.0 + xx - yy - zz)) // |s|>=1
-		x = s * 0.5                                 // |x| >= .5
+		s := float32(math.Sqrt(float64(1.0 + xx - yy - zz))) // |s|>=1
+		self.x = s * 0.5                                     // |x| >= .5
 		s = 0.5 / s
-		y = (yx + xy) * s
-		z = (xz + zx) * s
-		w = (zy - yz) * s
+		self.y = (yx + xy) * s
+		self.z = (xz + zx) * s
+		self.w = (zy - yz) * s
 	} else if yy > zz {
-		s := float32(math.Sqrt(1.0 + yy - xx - zz)) // |s|>=1
-		y = s * 0.5                                 // |y| >= .5
+		s := float32(math.Sqrt(float64(1.0 + yy - xx - zz))) // |s|>=1
+		self.y = s * 0.5                                     // |y| >= .5
 		s = 0.5 / s
-		x = (yx + xy) * s
-		z = (zy + yz) * s
-		w = (xz - zx) * s
+		self.x = (yx + xy) * s
+		self.z = (zy + yz) * s
+		self.w = (xz - zx) * s
 	} else {
-		s := float32(math.Sqrt(1.0 + zz - xx - yy)) // |s|>=1
-		z = s * 0.5                                 // |z| >= .5
+		s := float32(math.Sqrt(float64(1.0 + zz - xx - yy))) // |s|>=1
+		self.z = s * 0.5                                     // |z| >= .5
 		s = 0.5 / s
-		x = (xz + zx) * s
-		y = (zy + yz) * s
-		w = (yx - xy) * s
+		self.x = (xz + zx) * s
+		self.y = (zy + yz) * s
+		self.w = (yx - xy) * s
 	}
 
 	return self
@@ -513,9 +514,9 @@ func (self *Quaternion) SetFromAxesNormalize(normalizeAxes bool, xx, xy, xz, yx,
 // param v1 The base vector, which should be normalized.
 // param v2 The target vector, which should be normalized.
 func (self *Quaternion) SetFromCrossV3(v1, v2 *Vector3) *Quaternion {
-	dot := ClampFloat32(v1.DotV(v2), -1, 1)
+	dot := utils.ClampFloat32(v1.DotV(v2), -1, 1)
 	angle := float32(math.Acos(float64(dot)))
-	return setFromAxisRad(v1.y*v2.z-v1.z*v2.y, v1.z*v2.x-v1.x*v2.z, v1.x*v2.y-v1.y*v2.x, angle)
+	return self.SetFromAxisRad(v1.y*v2.z-v1.z*v2.y, v1.z*v2.x-v1.x*v2.z, v1.x*v2.y-v1.y*v2.x, angle)
 }
 
 // Set this quaternion to the rotation between two vectors.
@@ -526,9 +527,9 @@ func (self *Quaternion) SetFromCrossV3(v1, v2 *Vector3) *Quaternion {
 // param y2 The target vector y value, which should be normalized.
 // param z2 The target vector z value, which should be normalized.
 func (self *Quaternion) SetFromCross(x1, y1, z1, x2, y2, z2 float32) *Quaternion {
-	dot := ClampFloat32(DotV3(x1, y1, z1, x2, y2, z2), -1, 1)
+	dot := utils.ClampFloat32(DotV3(x1, y1, z1, x2, y2, z2), -1, 1)
 	angle := float32(math.Acos(float64(dot)))
-	return self.setFromAxisRad(y1*z2-z1*y2, z1*x2-x1*z2, x1*y2-y1*x2, angle)
+	return self.SetFromAxisRad(y1*z2-z1*y2, z1*x2-x1*z2, x1*y2-y1*x2, angle)
 }
 
 // Spherical linear interpolation between this quaternion and the other quaternion, based on the alpha value in the range
@@ -537,10 +538,11 @@ func (self *Quaternion) SetFromCross(x1, y1, z1, x2, y2, z2 float32) *Quaternion
 // param alpha alpha in the range [0,1
 func (self *Quaternion) Slerp(end *Quaternion, alpha float32) *Quaternion {
 	d := self.x*end.x + self.y*end.y + self.z*end.z + self.w*end.w
+	var absDot float32
 	if d < 0 {
-		absDot := -d
+		absDot = -d
 	} else {
-		absDot := d
+		absDot = d
 	}
 	// Set the first and second scale for the interpolation
 	scale0 := 1 - alpha
@@ -550,13 +552,13 @@ func (self *Quaternion) Slerp(end *Quaternion, alpha float32) *Quaternion {
 	// warrant such calculations
 	if (1 - absDot) > 0.1 { // Get the angle between the 2 quaternions,
 		// and then store the sin() of that angle
-		angle = float32(math.Acos(absDot))
-		invSinTheta = 1 / float32(math.Sin(angle))
+		angle := float32(math.Acos(float64(absDot)))
+		invSinTheta := 1 / float32(math.Sin(float64(angle)))
 
 		// Calculate the scale for q1 and q2, according to the angle and
 		// it's sine value
-		scale0 = float32(math.Sin((1-alpha)*angle) * invSinTheta)
-		scale1 = float32(math.Sin((alpha * angle)) * invSinTheta)
+		scale0 = float32(math.Sin(float64(((1 - alpha) * angle) * invSinTheta)))
+		scale1 = float32(math.Sin(float64((alpha * angle) * invSinTheta)))
 	}
 
 	if d < 0 {
@@ -581,12 +583,12 @@ func (self *Quaternion) Slerp(end *Quaternion, alpha float32) *Quaternion {
 func (self *Quaternion) SlerpQ(q []*Quaternion) *Quaternion {
 
 	//Calculate exponents and multiply everything from left to right
-	w := 1.0 / len(q)
+	w := float32(1.0 / len(q))
 	self.SetQ(q[0]).Exp(w)
 	for i := 1; i < len(q); i++ {
-		self.MulQ(tmp1.Set(q[i]).Exp(w))
+		self.MulQ(tmp1.SetQ(q[i]).Exp(w))
 	}
-	self.Nor
+	self.Nor()
 	return self
 }
 
@@ -601,7 +603,7 @@ func (self *Quaternion) SlerpW(q []*Quaternion, w []float32) *Quaternion {
 	//Calculate exponents and multiply everything from left to right
 	self.SetQ(q[0]).Exp(w[0])
 	for i := 1; i < len(q); i++ {
-		self.MulQ(tmp1.Set(q[i]).Exp(w[i]))
+		self.MulQ(tmp1.SetQ(q[i]).Exp(w[i]))
 	}
 	self.Nor()
 	return self
@@ -614,24 +616,25 @@ func (self *Quaternion) Exp(alpha float32) *Quaternion {
 
 	//Calculate |q|^alpha
 	norm := self.Len()
-	normExp := float32(math.Pow(norm, alpha))
+	normExp := float32(math.Pow(float64(norm), float64(alpha)))
 
 	//Calculate theta
-	theta := float32(math.Acos(w / norm))
+	theta := float32(math.Acos(float64(self.w / norm)))
 
 	//Calculate coefficient of basis elements
 	//If theta is small enough, use the limit of sin(alpha*theta) / sin(theta) instead of actual value
-	if math.Abs(theta) < 0.001 {
-		coeff := normExp * alpha / norm
+	var coeff float32
+	if math.Abs(float64(theta)) < 0.001 {
+		coeff = normExp * alpha / norm
 	} else {
-		coeff := float32(normExp * math.Sin(alpha*theta) / (norm * math.Sin(theta)))
+		coeff = float32(float64(normExp) * math.Sin(float64(alpha*theta)/(float64(norm)*math.Sin(float64(theta)))))
 	}
 
 	//Write results
-	w = float32((normExp * math.Cos(alpha*theta)))
-	x *= coeff
-	y *= coeff
-	z *= coeff
+	self.w = float32((float64(normExp) * math.Cos(float64(alpha*theta))))
+	self.x *= coeff
+	self.y *= coeff
+	self.z *= coeff
 
 	//Fix any possible discrepancies
 	self.Nor()
@@ -736,9 +739,9 @@ func (self *Quaternion) GetAxisAngleRad(axis *Vector3) float32 {
 	if self.w > 1 {
 		self.Nor()
 	}
-	angle := float32(2.0 * Math.acos(self.w))
-	s := math.Sqrt(float64(1 - self.w*self.w)) // assuming quaternion normalised then w is less than 1, so term always positive.
-	if s < FLOAT_ROUNDING_ERROR {              // test to avoid divide by zero, s is always positive due to sqrt
+	angle := float32(2.0 * math.Acos(float64(self.w)))
+	s := float32(math.Sqrt(float64(1 - self.w*self.w))) // assuming quaternion normalised then w is less than 1, so term always positive.
+	if s < utils.FLOAT_ROUNDING_ERROR {                 // test to avoid divide by zero, s is always positive due to sqrt
 		// if s close to zero then direction of axis not important
 		axis.x = self.x // if it is important that axis is normalised then replace with x=1; y=z=0;
 		axis.y = self.y
@@ -786,7 +789,7 @@ func (self *Quaternion) GetAngle() float32 {
 func (self *Quaternion) GetSwingTwist(axisX, axisY, axisZ float32, swing, twist *Quaternion) {
 	d := DotV3(self.x, self.y, self.z, axisX, axisY, axisZ)
 	twist.Set(axisX*d, axisY*d, axisZ*d, self.w).Nor()
-	swing.Set(twist).Conjugate().MulLeftQ(self)
+	swing.SetQ(twist).Conjugate().MulLeftQ(self)
 }
 
 // Get the swing rotation and twist rotation for the specified axis. The twist rotation represents the rotation around the
@@ -809,12 +812,12 @@ func (self *Quaternion) GetSwingTwistV(axis *Vector3, swing, twist *Quaternion) 
 // param axisZ the z component of the normalized axis for which to get the angle
 // return the angle in radians of the rotation around the specified axis
 func (self *Quaternion) GetAngleAroundRad(axisX, axisY, axisZ float32) float32 {
-	d = DotV3(self.x, self.y, self.z, axisX, axisY, axisZ)
-	l2 = Len2Q(axisX*d, axisY*d, axisZ*d, self.w)
-	if isZero(l2) {
+	d := DotV3(self.x, self.y, self.z, axisX, axisY, axisZ)
+	l2 := Len2Q(axisX*d, axisY*d, axisZ*d, self.w)
+	if utils.IsZero(l2) {
 		return 0
 	} else {
-		return float32((2.0 * math.Acos(ClampFloat32((self.w/math.Sqrt(l2)), -1, 1))))
+		return float32((2.0 * math.Acos(float64(utils.ClampFloat32((self.w/float32(math.Sqrt(float64(l2)))), -1, 1)))))
 	}
 }
 

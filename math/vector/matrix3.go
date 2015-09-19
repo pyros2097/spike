@@ -300,7 +300,10 @@ func (self *Matrix3) Inv() *Matrix3 {
 // mat The matrix to copy.
 // return This matrix for the purposes of chaining.
 func (self *Matrix3) SetM3(mat *Matrix3) *Matrix3 {
-	copy(mat.val, 0, self.val, 0, len(self.val))
+	for i, v := range mat.val {
+		self.val[i] = v
+	}
+	// copy(self.val, mat.val)
 	return self
 }
 
@@ -346,7 +349,10 @@ func (self *Matrix3) SetM4(mat *Matrix4) *Matrix3 {
 // http://en.wikipedia.org/wiki/Row-major_order#Column-major_order column major order.
 // return This matrix for the purpose of chaining methods together.
 func (self *Matrix3) Set(values [9]float32) *Matrix3 {
-	copy(values, 0, self.val, 0, len(self.val))
+	for i, v := range values {
+		self.val[i] = v
+	}
+	// copy(self.val, values)
 	return self
 }
 
@@ -384,7 +390,7 @@ func (self *Matrix3) TrnV3(vector *Vector3) *Matrix3 {
 // y The y-component of the translation vector.
 // return This matrix for the purpose of chaining.
 func (self *Matrix3) Translate(x, y float32) *Matrix3 {
-	val := self.val
+	// val := self.val
 	tmp[M3_00] = 1
 	tmp[M3_10] = 0
 	tmp[M3_20] = 0
@@ -405,7 +411,7 @@ func (self *Matrix3) Translate(x, y float32) *Matrix3 {
 // translation The translation vector.
 // return This matrix for the purpose of chaining.
 func (self *Matrix3) TranslateV(translation *Vector2) *Matrix3 {
-	val := self.val
+	// val := self.val
 	tmp[M3_00] = 1
 	tmp[M3_10] = 0
 	tmp[M3_20] = 0
