@@ -2,7 +2,12 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package shape
+package collision
+
+import (
+	"github.com/pyros2097/gdx/math/utils"
+	. "github.com/pyros2097/gdx/math/vector"
+)
 
 // Encapsulates a 3D sphere with a center and a radius
 type Sphere struct {
@@ -24,11 +29,11 @@ func (self *Sphere) Overlaps(sphere *Sphere) bool {
 }
 
 func (self *Sphere) Volume() float32 {
-	return PI_4_3 * self.radius * self.radius * self.radius
+	return utils.PI_4_3 * self.radius * self.radius * self.radius
 }
 
 func (self *Sphere) SurfaceArea() float32 {
-	return 4 * PI * self.radius * self.radius
+	return 4 * utils.PI * self.radius * self.radius
 }
 
 // public int hashCode () {

@@ -1,13 +1,4 @@
-package math
-
-// package com.badlogic.gdx.math;
-
-// import static com.badlogic.gdx.math.MathUtils.*;
-// import static org.junit.Assert.*;
-
-// import org.junit.Test;
-
-// import com.badlogic.gdx.math.MathUtils;
+package utils
 
 // public class MathUtilsTest {
 

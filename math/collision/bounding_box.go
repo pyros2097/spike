@@ -6,10 +6,12 @@ package collision
 
 import (
 	"math"
+
+	. "github.com/pyros2097/gdx/math/vector"
 )
 
 var (
-	tmpVector = NewVector3()
+	tmpVector = NewVector3Empty()
 )
 
 // Encapsulates an axis aligned bounding box represented by a minimum and a maximum Vector. Additionally you can query for the
@@ -20,20 +22,20 @@ type BoundingBox struct {
 
 // Constructs a new bounding box with the minimum and maximum vector set to zeros.
 func NewBoundingBox() *BoundingBox {
-	return &BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}.Clr()
+	return (&BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}).Clr()
 }
 
 // Constructs a new bounding box from the given bounding box.
 // param bounds The bounding box to copy
 func NewBoundingBoxCopy(bounds *BoundingBox) *BoundingBox {
-	return &BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}.SetB(bounds)
+	return (&BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}).SetB(bounds)
 }
 
 // Constructs the new bounding box using the given minimum and maximum vector.
 // param minimum The minimum vector
 // param maximum The maximum vector
 func NewBoundingBoxVector3(minimum, maximum *Vector3) *BoundingBox {
-	return &BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}.Set(minimum, maximum)
+	return (&BoundingBox{&Vector3{}, &Vector3{}, &Vector3{}, &Vector3{}}).Set(minimum, maximum)
 }
 
 // @param out The {@link Vector3} to receive the center of the bounding box.
@@ -185,14 +187,6 @@ func (self *BoundingBox) Inf() *BoundingBox {
 	return self
 }
 
-// Extends the bounding box to incorporate the given {@link Vector3}.
-// param point The vector
-// return This bounding box for chaining.
-func (self *BoundingBox) Ext(point *Vector) *BoundingBox {
-	return self.Set(min.Set(min(self.min.x, point.x), min(min.y, point.y), min(min.z, point.z)),
-		self.max.set(math.Max(self.max.x, point.x), math.Max(max.y, point.y), math.Max(max.z, point.z)))
-}
-
 // Sets the minimum and maximum vector to zeros.
 // return This bounding box for chaining.
 func (self *BoundingBox) Clr() *BoundingBox {
@@ -203,6 +197,14 @@ func (self *BoundingBox) Clr() *BoundingBox {
 // return True in case the bounding box is valid, false otherwise
 func (self *BoundingBox) IsValid() bool {
 	return self.min.x < self.max.x && self.min.y < self.max.y && self.min.z < self.max.z
+}
+
+// Extends the bounding box to incorporate the given {@link Vector3}.
+// param point The vector
+// return This bounding box for chaining.
+func (self *BoundingBox) ExtV3(point *Vector3) *BoundingBox {
+	return self.Set(min.Set(min(self.min.x, point.x), min(min.y, point.y), min(min.z, point.z)),
+		self.max.set(math.Max(self.max.x, point.x), math.Max(max.y, point.y), math.Max(max.z, point.z)))
 }
 
 // Extends the bounding box by the given vector.
@@ -296,8 +298,9 @@ func (self *BoundingBox) ContainsV3(v *Vector3) bool {
 	return self.min.x <= v.x && self.max.x >= v.x && self.min.y <= v.y && self.max.y >= v.y && self.min.z <= v.z && self.max.z >= v.z
 }
 
-func (self *BoundingBox) ToString() string {
-	return "[" + self.min + "|" + self.max + "]"
+func (self *BoundingBox) String() string {
+	return ""
+	// return "[" + self.min + "|" + self.max + "]"
 }
 
 func min(a, b float32) float32 {

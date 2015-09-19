@@ -6,6 +6,9 @@ package shape
 
 import (
 	"math"
+
+	"github.com/pyros2097/gdx/math/utils"
+	. "github.com/pyros2097/gdx/math/vector"
 )
 
 // A convenient 2D ellipse class, based on the circle class
@@ -22,10 +25,7 @@ func NewEllipseEmpty() *Ellipse {
 // Copy constructor
 // param ellipse Ellipse to construct a copy of.
 func NewEllipseCopy(ellipse *Ellipse) *Ellipse {
-	self.x = ellipse.x
-	self.y = ellipse.y
-	self.w = ellipse.w
-	self.h = ellipse.h
+	return &Ellipse{ellipse.x, ellipse.y, ellipse.w, ellipse.h}
 }
 
 // Constructs a new ellipse
@@ -34,10 +34,7 @@ func NewEllipseCopy(ellipse *Ellipse) *Ellipse {
 // param width Width in pixels
 // param height Height in pixels
 func NewEllipse(x, y, w, h float32) *Ellipse {
-	self.x = x
-	self.y = y
-	self.w = w
-	self.h = h
+	return &Ellipse{x, y, w, h}
 }
 
 // Costructs a new ellipse
@@ -45,27 +42,18 @@ func NewEllipse(x, y, w, h float32) *Ellipse {
 // param width Width in pixels
 // param height Height in pixels
 func NewEllipseV(position *Vector2, w, h float32) *Ellipse {
-	self.x = position.x
-	self.y = position.y
-	self.w = w
-	self.h = h
+	return &Ellipse{position.x, position.y, w, h}
 }
 
 func NewEllipseV2(position, size *Vector2) *Ellipse {
-	self.x = position.x
-	self.y = position.y
-	self.w = size.x
-	self.h = size.y
+	return &Ellipse{position.x, position.y, size.x, size.y}
 }
 
 // Constructs a new {@link Ellipse} from the position and radius of a {@link Circle} (since circles are special cases of
 // ellipses).
 // param circle The circle to take the values of
 func NewEllipseCircle(circle *Circle) *Ellipse {
-	self.x = circle.x
-	self.y = circle.y
-	self.w = circle.radius
-	self.h = circle.radius
+	return &Ellipse{circle.x, circle.y, circle.radius, circle.radius}
 }
 
 // Checks whether or not this ellipse contains the given point.
@@ -152,7 +140,7 @@ func (self *Ellipse) SetSize(w, h float32) *Ellipse {
 
 // return The area of this {@link Ellipse} as {@link MathUtils#PI} * {@link Ellipse#width} * {@link Ellipse#height}
 func (self *Ellipse) Area() float32 {
-	return PI * (self.w * self.h) / 4
+	return utils.PI * (self.w * self.h) / 4
 }
 
 // Approximates the circumference of this {@link Ellipse}. Oddly enough, the circumference of an ellipse is actually difficult
@@ -164,10 +152,10 @@ func (self *Ellipse) Circumference() float32 {
 	b := self.h / 2
 	if a*3 > b || b*3 > a {
 		// If one dimension is three times as long as the other...
-		return float32(PI * ((3 * (a + b)) - math.Sqrt(float64((3*a+b)*(a+3*b)))))
+		return float32(float64(utils.PI*(3*(a+b)) - math.Sqrt(float64((3*a+b)*(a+3*b)))))
 	} else {
 		// We can use the simpler approximation, then
-		return float32(PI2 * math.Sqrt(float64((a*a+b*b)/2)))
+		return float32(float64(utils.PI2) * math.Sqrt(float64((a*a+b*b)/2)))
 	}
 }
 

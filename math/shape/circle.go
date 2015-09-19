@@ -5,7 +5,8 @@
 package shape
 
 import (
-	"github.com/pyros2097/gdx/math/vector"
+	"github.com/pyros2097/gdx/math/utils"
+	. "github.com/pyros2097/gdx/math/vector"
 )
 
 // A convenient 2D circle class.
@@ -92,13 +93,13 @@ func (self *Circle) setPosition(x, y float32) {
 
 // Sets the x-coordinate of circle center
 // x The x-coordinate
-func (self *Circle) setX(float x) {
+func (self *Circle) setX(x float32) {
 	self.x = x
 }
 
 // Sets the y-coordinate of circle center
 // y The y-coordinate
-func (self *Circle) setY(float y) {
+func (self *Circle) setY(y float32) {
 	self.y = y
 }
 
@@ -115,55 +116,50 @@ func (self *Circle) SetRadius(radius float32) {
 func (self *Circle) Contains(x, y float32) bool {
 	x = self.x - x
 	y = self.y - y
-	return x*x+y*y <= radius*radius
+	return x*x+y*y <= self.radius*self.radius
 }
 
 // Checks whether or not this circle contains a given point.
 // point The {@link Vector2} that contains the point coordinates.
 // true if this circle contains this point; false otherwise.
-func (self *Circle) ContainsV(point *Vector2) {
-	dx := x - point.x
-	dy := y - point.y
-	return dx*dx+dy*dy <= radius*radius
+func (self *Circle) ContainsV(point *Vector2) bool {
+	dx := self.x - point.x
+	dy := self.y - point.y
+	return dx*dx+dy*dy <= self.radius*self.radius
 }
 
 // c the other {@link Circle}
 // whether this circle contains the other circle.
 func (self *Circle) ContainsC(c *Circle) bool {
-	radiusDiff := radius - c.radius
+	radiusDiff := self.radius - c.radius
 	if radiusDiff < 0 {
 		return false // Can't contain bigger circle
 	}
-	dx := x - c.x
-	dy := y - c.y
+	dx := self.x - c.x
+	dy := self.y - c.y
 	dst := dx*dx + dy*dy
-	radiusSum := radius + c.radius
+	radiusSum := self.radius + c.radius
 	return (!(radiusDiff*radiusDiff < dst) && (dst < radiusSum*radiusSum))
 }
 
 // // c the other {@link Circle}
 // // whether this circle overlaps the other circle.
 func (self *Circle) Overlaps(c *Circle) bool {
-	dx := x - c.x
-	dy := y - c.y
+	dx := self.x - c.x
+	dy := self.y - c.y
 	distance := dx*dx + dy*dy
-	radiusSum := radius + c.radius
+	radiusSum := self.radius + c.radius
 	return distance < radiusSum*radiusSum
-}
-
-// Returns a {@link String} representation of this {@link Circle} of the form {@code x,y,radius}.
-func (self *Circle) String() {
-	return x + "," + y + "," + radius
 }
 
 // The circumference of this circle (as 2 * {@link MathUtils#PI2}) * {@code radius}
 func (self *Circle) Circumference() float32 {
-	return self.radius * PI2
+	return self.radius * utils.PI2
 }
 
 // The area of this circle (as {@link MathUtils#PI} * radius * radius).
 func (self *Circle) Area() float32 {
-	return self.radius * self.radius * PI
+	return self.radius * self.radius * utils.PI
 }
 
 // @Override
@@ -183,3 +179,9 @@ func (self *Circle) Area() float32 {
 // 	result = prime * result + NumberUtils.floatToRawIntBits(y);
 // 	return result;
 // }
+
+// Returns a {@link String} representation of this {@link Circle} of the form {@code x,y,radius}.
+func (self *Circle) String() string {
+	return ""
+	// return x + "," + y + "," + radius
+}

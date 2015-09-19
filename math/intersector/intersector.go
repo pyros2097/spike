@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Package offering various methods for intersection testing between different geometric objects.
-package main
+package intersector
 
 var (
 	v0 = NewVector3Empty()
@@ -58,13 +58,14 @@ func IsPointInTriangle(px, py, ax, ay, bx, by, cx, cy) float32 {
   return true;
 }
 
-func IntersectSegmentPlane(start, end, Plane plane, intersection *Vector3) {
+func IntersectSegmentPlane(start, end, plane *Plane, intersection *Vector3) {
   dir := v0.set(end).sub(start);
   denom := dir.dot(plane.getNormal());
   t := -(start.dot(plane.getNormal()) + plane.getD()) / denom;
-  if (t < 0 || t > 1) return false;
-
-  intersection.set(start).add(dir.scl(t));
+  if t < 0 || t > 1 {
+    return false;
+  }
+  intersection.Set(start).Add(dir.scl(t));
   return true;
 }
 

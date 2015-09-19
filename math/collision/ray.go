@@ -4,6 +4,10 @@
 
 package collision
 
+import (
+	. "github.com/pyros2097/gdx/math/vector"
+)
+
 var (
 	tmp = NewVector3Empty()
 )
@@ -37,7 +41,7 @@ func (self *Ray) Copy() *Ray {
 // param out The vector to set to the result
 // param distance The distance from the end point to the start point.
 func (self *Ray) GetEndPoint(out *Vector3, distance float32) *Vector3 {
-	return out.SetV(direction).SclV(distance).Add(self.origin)
+	return out.SetV(self.direction).SclV(distance).Add(self.origin)
 }
 
 // Multiplies the ray by the given matrix. Use this to transform a ray into another coordinate system.
@@ -45,19 +49,15 @@ func (self *Ray) GetEndPoint(out *Vector3, distance float32) *Vector3 {
 func (self *Ray) Mul(matrix *Matrix4) *Ray {
 	tmp.SetV(self.origin).AddV(self.direction)
 	tmp.MulV(matrix)
-	origin.MulV(matrix)
-	direction.SetV(tmp.SubV(self.origin))
+	self.origin.MulV(matrix)
+	self.direction.SetV(tmp.SubV(self.origin))
 	return self
-}
-
-func (self *Ray) String() string {
-	return "ray [" + self.origin + ":" + self.direction + "]"
 }
 
 // Sets the starting position and the direction of this ray.
 // param origin The starting position
 // param direction The direction
-func (self *Ray) SetV(origin, direction *Vector3) *Ray {
+func (self *Ray) SetV3(origin, direction *Vector3) *Ray {
 	self.origin.SetV(origin)
 	self.direction.SetV(direction)
 	return self
@@ -70,7 +70,7 @@ func (self *Ray) SetV(origin, direction *Vector3) *Ray {
 // param dx The x-component of the direction
 // param dy The y-component of the direction
 // param dz The z-component of the direction
-func (self *Ray) SetV(x, y, z, dx, dy, dz float32) {
+func (self *Ray) Set(x, y, z, dx, dy, dz float32) *Ray {
 	self.origin.Set(x, y, z)
 	self.direction.Set(dx, dy, dz)
 	return self
@@ -78,9 +78,9 @@ func (self *Ray) SetV(x, y, z, dx, dy, dz float32) {
 
 // Sets the starting position and direction from the given ray
 // param ray The ray
-func (self *Ray) SetR(Ray ray) {
-	self.origin.set(ray.origin)
-	self.direction.set(ray.direction)
+func (self *Ray) SetRay(ray *Ray) *Ray {
+	self.origin.Set(ray.origin)
+	self.direction.Set(ray.direction)
 	return self
 }
 
@@ -98,3 +98,8 @@ func (self *Ray) SetR(Ray ray) {
 // 	result = prime * result + self.origin.hashCode();
 // 	return result;
 // }
+
+func (self *Ray) String() string {
+	return ""
+	// return "ray [" + self.origin + ":" + self.direction + "]"
+}

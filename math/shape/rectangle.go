@@ -6,6 +6,8 @@ package shape
 
 import (
 	"math"
+
+	. "github.com/pyros2097/gdx/math/vector"
 )
 
 var (
@@ -104,7 +106,7 @@ func (self *Rectangle) SetH(h float32) *Rectangle {
 
 // return the Vector2 with coordinates of this rectangle
 func (self *Rectangle) GetPosition(position *Vector2) *Vector2 {
-	return position.Set(x, y)
+	return position.Set(self.x, self.y)
 }
 
 // Sets the x and y-coordinates of the bottom left corner from vector
@@ -137,7 +139,7 @@ func (self *Rectangle) SetSizeXY(sizeXY float32) *Rectangle {
 
 // returns the Vector2 with size of this rectangle
 func (self *Rectangle) GetSize(size *Vector2) *Vector2 {
-	return size.Set(width, height)
+	return size.Set(self.w, self.h)
 }
 
 // returns whether the point is contained in the rectangle
@@ -158,23 +160,24 @@ func (self *Rectangle) ContainsRect(rectangle *Rectangle) bool {
 	ymin := rectangle.y
 	ymax := ymin + rectangle.height
 
-	return ((xmin > x && xmin < x+width) && (xmax > x && xmax < x+width)) && ((ymin > y && ymin < y+height) && (ymax > y && ymax < y+height))
+	return ((xmin > self.x && xmin < self.x+self.w) && (xmax > self.x && xmax < self.x+w)) &&
+		((ymin > self.y && ymin < self.y+h) && (ymax > self.y && ymax < self.y+h))
 }
 
 // returns whether this rectangle overlaps the other rectangle.
 func (self *Rectangle) Overlaps(r *Rectangle) bool {
-	return x < r.x+r.width && x+width > r.x && y < r.y+r.height && y+height > r.y
+	return self.x < r.x+r.width && self.x+self.w > r.x && self.y < r.y+r.height && self.y+self.h > r.y
 }
 
 // Merges this rectangle with the other rectangle. The rectangle should not have negative width or negative height.
 func (self *Rectangle) MergeRect(rect *Rectangle) *Rectangle {
-	minX := float32(math.Min(x, rect.x))
-	maxX := float32(math.Max(x+width, rect.x+rect.width))
+	minX := float32(math.Min(self.x, rect.x))
+	maxX := float32(math.Max(self.x+self.w, rect.x+rect.width))
 	self.x = minX
 	self.w = maxX - minX
 
-	minY := float32(math.Min(y, rect.y))
-	maxY := float32(math.Max(y+height, rect.y+rect.height))
+	minY := float32(math.Min(self.y, rect.y))
+	maxY := float32(math.Max(self.y+self.h, rect.y+rect.height))
 	self.y = minY
 	self.h = maxY - minY
 
@@ -290,10 +293,6 @@ func (self *Rectangle) FitInside(rect *Rectangle) *Rectangle {
 	return self
 }
 
-func (self *Rectangle) String() string {
-	return x + "," + y + "," + width + "," + height
-}
-
 func (self *Rectangle) Area() float32 {
 	return self.width * self.height
 }
@@ -325,4 +324,9 @@ func (self *Rectangle) Equals(rect *Rectangle) bool {
 	// if (NumberUtils.floatToRawIntBits(x) != NumberUtils.floatToRawIntBits(other.x)) return false;
 	// if (NumberUtils.floatToRawIntBits(y) != NumberUtils.floatToRawIntBits(other.y)) return false;
 	return true
+}
+
+func (self *Rectangle) String() string {
+	return ""
+	// return x + "," + y + "," + width + "," + height
 }

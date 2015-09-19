@@ -2,7 +2,11 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package math
+package collision
+
+import (
+	. "github.com/pyros2097/gdx/math/vector"
+)
 
 // A Segment is a line in 3-space having a staring and an ending position.
 type Segment struct {
@@ -17,8 +21,8 @@ type Segment struct {
 // param b the second point
 func NewSegmentV(a, b *Vector3) *Segment {
 	segment := &Segment{}
-	segment.a.set(a)
-	segment.b.set(b)
+	segment.a.Set(a)
+	segment.b.Set(b)
 	return segment
 }
 
@@ -31,17 +35,17 @@ func NewSegmentV(a, b *Vector3) *Segment {
 // param bZ the z-coordinate of the second point
 func NewSegment(aX, aY, aZ, bX, bY, bZ float32) *Segment {
 	segment := &Segment{}
-	segment.a.set(aX, aY, aZ)
-	segment.b.set(bX, bY, bZ)
+	segment.a.Set(aX, aY, aZ)
+	segment.b.Set(bX, bY, bZ)
 	return segment
 }
 
 func (self *Segment) Len() float32 {
-	return a.Dst(b)
+	return self.a.Dst(self.b)
 }
 
 func (self *Segment) Len2() float32 {
-	return a.Dst2(b)
+	return self.a.Dst2(self.b)
 }
 
 // public boolean equals (Object o) {
