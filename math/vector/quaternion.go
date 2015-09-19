@@ -2,7 +2,13 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package math
+package vector
+
+import (
+	"math"
+
+	"github.com/pyros2097/gdx/math/utils"
+)
 
 var (
 	tmp1 = NewQuaternion(0, 0, 0, 0)
@@ -19,20 +25,23 @@ func NewQuaternion(x, y, z, w float32) *Quaternion {
 }
 
 func NewQuaternionEmpty() *Quaternion {
-	return &Quaternion{}.Idt()
+	q := &Quaternion{}
+	return q.Idt()
 }
 
 // Constructor, sets the quaternion components from the given quaternion.
 // param quaternion The quaternion to copy.
-func NewQuaternionCopy() *Quaternion {
-	return &Quaternion{}.SetQ(quaternion)
+func NewQuaternionCopy(quaternion *Quaternion) *Quaternion {
+	q := &Quaternion{}
+	return q.SetQ(quaternion)
 }
 
 // Constructor, sets the quaternion from the given axis vector and the angle around that axis in degrees.
 // param axis The axis
 // param angle The angle in degrees.
 func NewQuaternionAxis(axis *Vector3, angle float32) *Quaternion {
-	return &Quaternion{}.SetV(axis, angle)
+	q := &Quaternion{}
+	return q.SetV3(axis, angle)
 }
 
 // Sets the components of the quaternion
@@ -50,20 +59,20 @@ func (self *Quaternion) Set(x, y, z, w float32) *Quaternion {
 
 // Sets the quaternion components from the given quaternion.
 // param quaternion The quaternion.
-func (self *Quaternion) SetQ(quaternion *Quaternion) {
+func (self *Quaternion) SetQ(quaternion *Quaternion) *Quaternion {
 	return self.Set(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
 }
 
 // Sets the quaternion components from the given axis and angle around that axis.
 // param axis The axis
 // param angle The angle in degrees
-func (self *Quaternion) Set(axis *Vector3, angle float32) *Quaternion {
+func (self *Quaternion) SetV3(axis *Vector3, angle float32) *Quaternion {
 	return self.SetFromAxis(axis.x, axis.y, axis.z, angle)
 }
 
 // return a copy of this quaternion
 func (self *Quaternion) Copy() *Quaternion {
-	return NewQuaternion(self)
+	return NewQuaternionCopy(self)
 }
 
 // return the euclidean length of the specified quaternion
@@ -73,11 +82,7 @@ func LenQ(x, y, z, w float32) {
 
 // return the euclidean length of this quaternion
 func (self *Quaternion) Len() float32 {
-	return float32(math.Sqrt(x*x + y*y + z*z + w*w))
-}
-
-func (self *Quaternion) String() string {
-	return "[" + self.x + "|" + self.y + "|" + self.z + "|" + self.w + "]"
+	return float32(math.Sqrt(self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w))
 }
 
 // Sets the quaternion to the given euler angles in degrees.
@@ -86,7 +91,7 @@ func (self *Quaternion) String() string {
 // param roll the rotation around the z axis degrees
 // return this quaternion
 func (self *Quaternion) SetEulerAngles(yaw, pitch, roll float32) *Quaternion {
-	return self.SetEulerAnglesRad(yaw*DegreesToRadians, pitch*DegreesToRadians, roll*DegreesToRadians)
+	return self.SetEulerAnglesRad(yaw*utils.DegreesToRadians, pitch*utils.DegreesToRadians, roll*utils.DegreesToRadians)
 }
 
 // Sets the quaternion to the given euler angles in radians.
@@ -96,30 +101,30 @@ func (self *Quaternion) SetEulerAngles(yaw, pitch, roll float32) *Quaternion {
 // return this quaternion
 func (self *Quaternion) SetEulerAnglesRad(yaw, pitch, roll float32) *Quaternion {
 	hr := roll * 0.5
-	shr := float32(math.Sin(hr))
-	chr := float32(math.Cos(hr))
+	shr := float32(math.Sin(float64(hr)))
+	chr := float32(math.Cos(float64(hr)))
 	hp := pitch * 0.5
-	shp := float32(math.Sin(hp))
-	chp := float32(math.Cos(hp))
+	shp := float32(math.Sin(float64(hp)))
+	chp := float32(math.Cos(float64(hp)))
 	hy := yaw * 0.5
-	shy := float32(math.Sin(hy))
-	chy := float32(math.Cos(hy))
+	shy := float32(math.Sin(float64(hy)))
+	chy := float32(math.Cos(float64(hy)))
 	chy_shp := chy * shp
 	shy_chp := shy * chp
 	chy_chp := chy * chp
 	shy_shp := shy * shp
 
-	x = (chy_shp * chr) + (shy_chp * shr) // cos(yaw/2) * sin(pitch/2) * cos(roll/2) + sin(yaw/2) * cos(pitch/2) * sin(roll/2)
-	y = (shy_chp * chr) - (chy_shp * shr) // sin(yaw/2) * cos(pitch/2) * cos(roll/2) - cos(yaw/2) * sin(pitch/2) * sin(roll/2)
-	z = (chy_chp * shr) - (shy_shp * chr) // cos(yaw/2) * cos(pitch/2) * sin(roll/2) - sin(yaw/2) * sin(pitch/2) * cos(roll/2)
-	w = (chy_chp * chr) + (shy_shp * shr) // cos(yaw/2) * cos(pitch/2) * cos(roll/2) + sin(yaw/2) * sin(pitch/2) * sin(roll/2)
+	self.x = (chy_shp * chr) + (shy_chp * shr) // cos(yaw/2) * sin(pitch/2) * cos(roll/2) + sin(yaw/2) * cos(pitch/2) * sin(roll/2)
+	self.y = (shy_chp * chr) - (chy_shp * shr) // sin(yaw/2) * cos(pitch/2) * cos(roll/2) - cos(yaw/2) * sin(pitch/2) * sin(roll/2)
+	self.z = (chy_chp * shr) - (shy_shp * chr) // cos(yaw/2) * cos(pitch/2) * sin(roll/2) - sin(yaw/2) * sin(pitch/2) * cos(roll/2)
+	self.w = (chy_chp * chr) + (shy_shp * shr) // cos(yaw/2) * cos(pitch/2) * cos(roll/2) + sin(yaw/2) * sin(pitch/2) * sin(roll/2)
 	return self
 }
 
 // Get the pole of the gimbal lock, if any.
 // return positive (+1) for north pole, negative (-1) for south pole, zero (0) when no gimbal lock
 func (self *Quaternion) GetGimbalPole() int {
-	t := y*x + z*w
+	t := self.y*self.x + self.z*self.w
 	if t > 0.499 {
 		return 1
 	} else if t < -0.499 {
@@ -131,52 +136,52 @@ func (self *Quaternion) GetGimbalPole() int {
 
 // Get the roll euler angle in radians, which is the rotation around the z axis. Requires that this quaternion is normalized.
 // return the rotation around the z axis in radians (between -PI and +PI)
-func (self *Quaternion) getRollRad() float32 {
+func (self *Quaternion) GetRollRad() float32 {
 	pole := self.GetGimbalPole()
 	if pole == 0 {
-		return Atan2(2*(w*z+y*x), 1-2*(x*x+z*z))
+		return utils.Atan2(2*(self.w*self.z+self.y*self.x), 1-2*(self.x*self.x+self.z*self.z))
 	}
-	return pole * 2 * Atan2(y, w)
+	return float32(pole) * 2 * utils.Atan2(self.y, self.w)
 }
 
 // Get the roll euler angle in degrees, which is the rotation around the z axis. Requires that this quaternion is normalized.
 // return the rotation around the z axis in degrees (between -180 and +180)
-func (self *Quaternion) getRoll() float32 {
-	return self.GetRollRad() * MathUtils.radiansToDegrees
+func (self *Quaternion) GetRoll() float32 {
+	return self.GetRollRad() * utils.RadiansToDegrees
 }
 
 // Get the pitch euler angle in radians, which is the rotation around the x axis. Requires that this quaternion is normalized.
 // return the rotation around the x axis in radians (between -(PI/2) and +(PI/2))
 func (self *Quaternion) GetPitchRad() float32 {
-	pole = sellf.GetGimbalPole()
+	pole := self.GetGimbalPole()
 	if pole == 0 {
-		return float32(math.Asin(ClampFloat32(2*(w*x-z*y), -1, 1)))
+		return float32(math.Asin(utils.ClampFloat32(2*(self.w*self.x-self.z*self.y), -1, 1)))
 	}
-	return pole * PI * 0.5
+	return float32(pole) * utils.PI * 0.5
 }
 
 // Get the pitch euler angle in degrees, which is the rotation around the x axis. Requires that this quaternion is normalized.
 // return the rotation around the x axis in degrees (between -90 and +90)
 func (self *Quaternion) GetPitch() float32 {
-	return self.GetPitchRad() * RadiansToDegrees
+	return self.GetPitchRad() * utils.RadiansToDegrees
 }
 
 // Get the yaw euler angle in radians, which is the rotation around the y axis. Requires that this quaternion is normalized.
 // return the rotation around the y axis in radians (between -PI and +PI)
-func (self *Quaternion) getYawRad() float32 {
+func (self *Quaternion) GetYawRad() float32 {
 	if self.GetGimbalPole() == 0 {
-		return Atan2(2*(y*w+x*z), 1-2*(y*y+x*x))
+		return utils.Atan2(2*(self.y*self.w+self.x*self.z), 1-2*(self.y*self.y+self.x*self.x))
 	}
 	return 0
 }
 
 // Get the yaw euler angle in degrees, which is the rotation around the y axis. Requires that this quaternion is normalized.
 // return the rotation around the y axis in degrees (between -180 and +180)
-func (self *Quaternion) getYaw() float32 {
-	return getYawRad() * MathUtils.radiansToDegrees
+func (self *Quaternion) GetYaw() float32 {
+	return self.GetYawRad() * utils.RadiansToDegrees
 }
 
-func Len2(x, y, z, w float32) {
+func Len2(x, y, z, w float32) float32 {
 	return x*x + y*y + z*z + w*w
 }
 
@@ -188,12 +193,12 @@ func (self *Quaternion) Len2() float32 {
 // Normalizes this quaternion to unit length
 func (self *Quaternion) Nor() *Quaternion {
 	length := self.Len2()
-	if length != 0 && isEqual(length, 1) {
-		length = float32(math.Sqrt(length))
-		w /= length
-		x /= length
-		y /= length
-		z /= length
+	if length != 0 && utils.IsEqual(length, 1) {
+		length = float32(math.Sqrt(float64(length)))
+		self.w /= length
+		self.x /= length
+		self.y /= length
+		self.z /= length
 	}
 	return self
 }
@@ -212,7 +217,7 @@ func (self *Quaternion) Conjugate() *Quaternion {
 func (self *Quaternion) Transform(v *Vector3) *Vector3 {
 	tmp2.SetQ(self)
 	tmp2.Conjugate()
-	tmp2.MulLeft(tmp1.Set(v.x, v.y, v.z, 0)).MulLeft(self)
+	tmp2.MulLeftQ(tmp1.Set(v.x, v.y, v.z, 0)).MulLeftQ(self)
 
 	v.x = tmp2.x
 	v.y = tmp2.y
@@ -240,10 +245,10 @@ func (self *Quaternion) MulQ(other *Quaternion) *Quaternion {
 // param z the z component of the other quaternion to multiply with
 // param w the w component of the other quaternion to multiply with
 func (self *Quaternion) Mul(x, y, z, w float32) *Quaternion {
-	newX = self.w*x + self.x*w + self.y*z - self.z*y
-	newY = self.w*y + self.y*w + self.z*x - self.x*z
-	newZ = self.w*z + self.z*w + self.x*y - self.y*x
-	newW = self.w*w - self.x*x - self.y*y - self.z*z
+	newX := self.w*x + self.x*w + self.y*z - self.z*y
+	newY := self.w*y + self.y*w + self.z*x - self.x*z
+	newZ := self.w*z + self.z*w + self.x*y - self.y*x
+	newW := self.w*w - self.x*x - self.y*y - self.z*z
 	self.x = newX
 	self.y = newY
 	self.z = newZ
@@ -254,10 +259,10 @@ func (self *Quaternion) Mul(x, y, z, w float32) *Quaternion {
 // Multiplies this quaternion with another one in the form of this = other * this
 // param other Quaternion to multiply with
 func (self *Quaternion) MulLeftQ(other *Quaternion) *Quaternion {
-	newX = other.w*self.x + other.x*self.w + other.y*self.z - other.z*y
-	newY = other.w*self.y + other.y*self.w + other.z*self.x - other.x*z
-	newZ = other.w*self.z + other.z*self.w + other.x*self.y - other.y*x
-	newW = other.w*self.w - other.x*self.x - other.y*self.y - other.z*z
+	newX := other.w*self.x + other.x*self.w + other.y*self.z - other.z*self.y
+	newY := other.w*self.y + other.y*self.w + other.z*self.x - other.x*self.z
+	newZ := other.w*self.z + other.z*self.w + other.x*self.y - other.y*self.x
+	newW := other.w*self.w - other.x*self.x - other.y*self.y - other.z*self.z
 	self.x = newX
 	self.y = newY
 	self.z = newZ
@@ -271,10 +276,10 @@ func (self *Quaternion) MulLeftQ(other *Quaternion) *Quaternion {
 // param z the z component of the other quaternion to multiply with
 // param w the w component of the other quaternion to multiply with
 func (self *Quaternion) MulLeft(x, y, z, w float32) *Quaternion {
-	newX = w*self.x + x*self.w + y*self.z - z*y
-	newY = w*self.y + y*self.w + z*self.x - x*z
-	newZ = w*self.z + z*self.w + x*self.y - y*x
-	newW = w*self.w - x*self.x - y*self.y - z*z
+	newX := w*self.x + x*self.w + y*self.z - z*y
+	newY := w*self.y + y*self.w + z*self.x - x*z
+	newZ := w*self.z + z*self.w + x*self.y - y*x
+	newW := w*self.w - x*self.x - y*self.y - z*z
 	self.x = newX
 	self.y = newY
 	self.z = newZ
@@ -316,22 +321,22 @@ func (self *Quaternion) ToMatrix(matrix []float32) {
 	zz := self.z * self.z
 	zw := self.z * self.w
 	// Set matrix from quaternion
-	matrix[Matrix4.M00] = 1 - 2*(yy+zz)
-	matrix[Matrix4.M01] = 2 * (xy - zw)
-	matrix[Matrix4.M02] = 2 * (xz + yw)
-	matrix[Matrix4.M03] = 0
-	matrix[Matrix4.M10] = 2 * (xy + zw)
-	matrix[Matrix4.M11] = 1 - 2*(xx+zz)
-	matrix[Matrix4.M12] = 2 * (yz - xw)
-	matrix[Matrix4.M13] = 0
-	matrix[Matrix4.M20] = 2 * (xz - yw)
-	matrix[Matrix4.M21] = 2 * (yz + xw)
-	matrix[Matrix4.M22] = 1 - 2*(xx+yy)
-	matrix[Matrix4.M23] = 0
-	matrix[Matrix4.M30] = 0
-	matrix[Matrix4.M31] = 0
-	matrix[Matrix4.M32] = 0
-	matrix[Matrix4.M33] = 1
+	matrix[M4_00] = 1 - 2*(yy+zz)
+	matrix[M4_01] = 2 * (xy - zw)
+	matrix[M4_02] = 2 * (xz + yw)
+	matrix[M4_03] = 0
+	matrix[M4_10] = 2 * (xy + zw)
+	matrix[M4_11] = 1 - 2*(xx+zz)
+	matrix[M4_12] = 2 * (yz - xw)
+	matrix[M4_13] = 0
+	matrix[M4_20] = 2 * (xz - yw)
+	matrix[M4_21] = 2 * (yz + xw)
+	matrix[M4_22] = 1 - 2*(xx+yy)
+	matrix[M4_23] = 0
+	matrix[M4_30] = 0
+	matrix[M4_31] = 0
+	matrix[M4_32] = 0
+	matrix[M4_33] = 1
 }
 
 // Sets the quaternion to an identity Quaternio
@@ -341,12 +346,13 @@ func (self *Quaternion) Idt() *Quaternion {
 
 // return If this quaternion is an identity Quaternion
 func (self *Quaternion) IsIdentity() bool {
-	return IsZero(x) && IsZero(y) && IsZero(z) && IsEqual(w, 1)
+	return utils.IsZero(self.x) && utils.IsZero(self.y) && utils.IsZero(self.z) && utils.IsEqual(self.w, 1)
 }
 
 // return If this quaternion is an identity Quaternion
-func (self *Quaternion) IsIdentity(tolerance float32) bool {
-	return IsZero(x, tolerance) && IsZero(y, tolerance) && IsZero(z, tolerance) && IsEqual(w, 1, tolerance)
+func (self *Quaternion) IsIdentityTolerance(tolerance float32) bool {
+	return utils.IsZeroTolerance(self.x, tolerance) && utils.IsZeroTolerance(self.y, tolerance) &&
+		utils.IsZeroTolerance(self.z, tolerance) && utils.IsEqualTolerance(self.w, 1, tolerance)
 }
 
 // todo : the setFromAxis(v3,float) method should replace the set(v3,float) method
@@ -354,14 +360,14 @@ func (self *Quaternion) IsIdentity(tolerance float32) bool {
 //
 // param axis The axis
 // param degrees The angle in degrees
-func (self *Quaternion) SetFromAxis(axis *Vector3, degrees float32) *Quaternion {
+func (self *Quaternion) SetFromAxisV3(axis *Vector3, degrees float32) *Quaternion {
 	return self.SetFromAxis(axis.x, axis.y, axis.z, degrees)
 }
 
 // Sets the quaternion components from the given axis and angle around that axis.
 // param axis The axis
 // param radians The angle in radians
-func (self *Quaternion) SetFromAxisRad(axis *Vector3, radians float32) *Quaternion {
+func (self *Quaternion) SetFromAxisRadV3(axis *Vector3, radians float32) *Quaternion {
 	return self.SetFromAxisRad(axis.x, axis.y, axis.z, radians)
 }
 
@@ -371,7 +377,7 @@ func (self *Quaternion) SetFromAxisRad(axis *Vector3, radians float32) *Quaterni
 // param z Z direction of the axis
 // param degrees The angle in degrees
 func (self *Quaternion) SetFromAxis(x, y, z, degrees float32) *Quaternion {
-	return self.SetFromAxisRad(x, y, z, degrees*MathUtils.degreesToRadians)
+	return self.SetFromAxisRad(x, y, z, degrees*utils.DegreesToRadians)
 }
 
 // Sets the quaternion components from the given axis and angle around that axis.
@@ -386,9 +392,9 @@ func (self *Quaternion) SetFromAxisRad(x, y, z, radians float32) *Quaternion {
 	}
 	d = 1 / d
 	if radians < 0 {
-		l_ang := PI2 - (-radians % PI2)
+		l_ang := utils.PI2 - (-radians % utils.PI2)
 	} else {
-		l_ang := radians % PI2
+		l_ang := radians % utils.PI2
 	}
 	l_sin := float32(math.Sin(l_ang / 2))
 	l_cos := float32(math.Cos(l_ang / 2))
@@ -396,27 +402,27 @@ func (self *Quaternion) SetFromAxisRad(x, y, z, radians float32) *Quaternion {
 }
 
 // Sets the Quaternion from the given matrix, optionally removing any scaling.
-func (self *Quaternion) SetFromMatrix(normalizeAxes bool, matrix *Matrix4) {
-	return self.SetFromAxes(normalizeAxes, matrix.val[Matrix4.M00], matrix.val[Matrix4.M01], matrix.val[Matrix4.M02],
-		matrix.val[Matrix4.M10], matrix.val[Matrix4.M11], matrix.val[Matrix4.M12], matrix.val[Matrix4.M20],
-		matrix.val[Matrix4.M21], matrix.val[Matrix4.M22])
+func (self *Quaternion) SetFromMatrixM4Normalize(normalizeAxes bool, matrix *Matrix4) *Quaternion {
+	return self.SetFromAxes(normalizeAxes, matrix.val[M4_00], matrix.val[M4_01], matrix.val[M4_02],
+		matrix.val[M4_10], matrix.val[M4_11], matrix.val[M4_12], matrix.val[M4_20],
+		matrix.val[M4_21], matrix.val[M4_22])
 }
 
 // Sets the Quaternion from the given rotation matrix, which must not contain scaling.
-func (self *Quaternion) SetFromMatrix(matrix *Matrix4) {
-	return self.SetFromMatrix(false, matrix)
+func (self *Quaternion) SetFromMatrixM4(matrix *Matrix4) *Quaternion {
+	return self.SetFromMatrixNormalize(false, matrix)
 }
 
 // Sets the Quaternion from the given matrix, optionally removing any scaling.
-func (self *Quaternion) SetFromMatrix(normalizeAxes bool, matrix *Matrix3) *Quaternion {
+func (self *Quaternion) SetFromMatrixM3Normalize(normalizeAxes bool, matrix *Matrix3) *Quaternion {
 	return self.SetFromAxes(normalizeAxes, matrix.val[Matrix3.M00], matrix.val[Matrix3.M01], matrix.val[Matrix3.M02],
 		matrix.val[Matrix3.M10], matrix.val[Matrix3.M11], matrix.val[Matrix3.M12], matrix.val[Matrix3.M20],
 		matrix.val[Matrix3.M21], matrix.val[Matrix3.M22])
 }
 
 // Sets the Quaternion from the given rotation matrix, which must not contain scaling.
-func (self *Quaternion) SetFromMatrix(matrix *Matrix3) {
-	return self.SetFromMatrix(false, matrix)
+func (self *Quaternion) SetFromMatrixM3(matrix *Matrix3) *Quaternion {
+	return self.SetFromMatrixM3Normalize(false, matrix)
 }
 
 // Sets the Quaternion from the given x-, y- and z-axis which have to be orthonormal.
@@ -450,7 +456,7 @@ func (self *Quaternion) SetFromAxes(xx, xy, xz, yx, yy, yz, zx, zy, zz float32) 
 // param zx z-axis x-coordinate
 // param zy z-axis y-coordinate
 // param zz z-axis z-coordinate
-func (self *Quaternion) SetFromAxes(normalizeAxes bool, xx, xy, xz, yx, yy, yz, zx, zy, zz float32) *Quaternion {
+func (self *Quaternion) SetFromAxesNormalize(normalizeAxes bool, xx, xy, xz, yx, yy, yz, zx, zy, zz float32) *Quaternion {
 	if normalizeAxes {
 		lx := 1 / LenV3(xx, xy, xz)
 		ly := 1 / LenV3(yx, yy, yz)
@@ -506,7 +512,7 @@ func (self *Quaternion) SetFromAxes(normalizeAxes bool, xx, xy, xz, yx, yy, yz, 
 // Set this quaternion to the rotation between two vectors.
 // param v1 The base vector, which should be normalized.
 // param v2 The target vector, which should be normalized.
-func (self *Quaternion) SetFromCrossV(v1, v2 *Vector3) *Quaternion {
+func (self *Quaternion) SetFromCrossV3(v1, v2 *Vector3) *Quaternion {
 	dot := ClampFloat32(v1.DotV(v2), -1, 1)
 	angle := float32(math.Acos(float64(dot)))
 	return setFromAxisRad(v1.y*v2.z-v1.z*v2.y, v1.z*v2.x-v1.x*v2.z, v1.x*v2.y-v1.y*v2.x, angle)
@@ -712,7 +718,7 @@ func (self *Quaternion) MulScalar(scalar float32) *Quaternion {
 // @see <a href="http://en.wikipedia.org/wiki/Axis%E2%80%93angle_representation">wikipedia</a>
 // @see <a href="http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle">calculation</a>
 func (self *Quaternion) GetAxisAngle(axis *Vector3) float32 {
-	return self.GetAxisAngleRad(axis) * RadiansToDegrees
+	return self.GetAxisAngleRad(axis) * utils.RadiansToDegrees
 }
 
 // Get the axis-angle representation of the rotation in radians. The supplied vector will receive the axis (x, y and z values)
@@ -762,7 +768,7 @@ func (self *Quaternion) GetAngleRad() float32 {
 // and the angle of this rotation. Use {@link #getAngleAround(Vector3)} to get the angle around a specific axis.
 // return the angle in degrees of the rotation
 func (self *Quaternion) GetAngle() float32 {
-	return self.GetAngleRad() * RadiansToDegrees
+	return self.GetAngleRad() * utils.RadiansToDegrees
 }
 
 // Get the swing rotation and twist rotation for the specified axis. The twist rotation represents the rotation around the
@@ -825,7 +831,7 @@ func (self *Quaternion) GetAngleAroundRadV(axis *Vector3) float32 {
 // param axisZ the z component of the normalized axis for which to get the angle
 // return the angle in degrees of the rotation around the specified axis
 func (self *Quaternion) GetAngleAround(axisX, axisY, axisZ float32) float32 {
-	return self.GetAngleAroundRad(axisX, axisY, axisZ) * RadiansToDegrees
+	return self.GetAngleAroundRad(axisX, axisY, axisZ) * utils.RadiansToDegrees
 }
 
 // Get the angle in degrees of the rotation around the specified axis. The axis must be normalized.
@@ -833,4 +839,9 @@ func (self *Quaternion) GetAngleAround(axisX, axisY, axisZ float32) float32 {
 // return the angle in degrees of the rotation around the specified axis
 func (self *Quaternion) GetAngleAroundV(axis *Vector3) float32 {
 	return self.GetAngleAround(axis.x, axis.y, axis.z)
+}
+
+func (self *Quaternion) String() string {
+	return ""
+	// return "[" + self.x + "|" + self.y + "|" + self.z + "|" + self.w + "]"
 }

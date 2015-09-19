@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // Utility and fast math functions.
-package math
+package utils
 
 import (
 	"math"
@@ -54,25 +54,29 @@ var (
 // 	}
 // }
 
-// // Returns the sine in radians from a lookup table.
-// func Sin(radians float32) float32 {
-// 	return SinTable[int((radians*RadToIndex)&SIN_MASK)]
-// }
+// Returns the sine in radians from a lookup table.
+func Sin(radians float32) float32 {
+	return 0
+	// return SinTable[int((radians*RadToIndex)&SIN_MASK)]
+}
 
-// // Returns the cosine in radians from a lookup table.
-// func Cos(radians float32) float32 {
-// 	return SinTable[int(((radians+PI/2)*RadToIndex)&SIN_MASK)]
-// }
+// Returns the cosine in radians from a lookup table.
+func Cos(radians float32) float32 {
+	return 0
+	// return SinTable[int(((radians+PI/2)*RadToIndex)&SIN_MASK)]
+}
 
-// // Returns the sine in radians from a lookup table.
-// func SinDeg(degrees float32) float32 {
-// 	return SinTable[int((degrees*DegToIndex)&SIN_MASK)]
-// }
+// Returns the sine in radians from a lookup table.
+func SinDeg(degrees float32) float32 {
+	return 0
+	// return SinTable[int((degrees*DegToIndex)&SIN_MASK)]
+}
 
-// // Returns the cosine in radians from a lookup table.
-// func CosDeg(degrees float32) float32 {
-// 	return SinTable[int(((degrees+90)*DegToIndex)&SIN_MASK)]
-// }
+// Returns the cosine in radians from a lookup table.
+func CosDeg(degrees float32) float32 {
+	return 0
+	// return SinTable[int(((degrees+90)*DegToIndex)&SIN_MASK)]
+}
 
 /** Returns atan2 in radians, faster but less accurate than math.atan2. Average error of 0.00231 radians (0.1323 degrees),
  * largest error of 0.00488 radians (0.2796 degrees). */
@@ -178,6 +182,30 @@ func Lerp(fromValue, toValue, progress float32) float32 {
 	return fromValue + (toValue-fromValue)*progress
 }
 
+// Linearly interpolates between two angles in radians. Takes into account that angles wrap at two pi and always takes the
+// direction with the smallest delta angle.
+//
+// param fromRadians start angle in radians
+// param toRadians target angle in radians
+// param progress interpolation value in the range [0, 1]
+// return the interpolated angle in the range [0, PI2]
+// func LerpAngle(fromRadians, toRadians, progress float32) {
+// 	delta := ((toRadians - fromRadians + PI2 + PI) % PI2) - PI
+// 	return (fromRadians + delta*progress + PI2) % PI2
+// }
+
+// Linearly interpolates between two angles in degrees. Takes into account that angles wrap at 360 degrees and always takes
+// the direction with the smallest delta angle.
+//
+// param fromDegrees start angle in degrees
+// param toDegrees target angle in degrees
+// param progress interpolation value in the range [0, 1]
+// return the interpolated angle in the range [0, 360]
+// func LerpAngleDeg(fromDegrees, toDegrees, progress float32) {
+// 	delta := ((toDegrees - fromDegrees + 360 + 180) % 360) - 180
+// 	return (fromDegrees + delta*progress + 360) % 360
+// }
+
 /** Returns the largest integer less than or equal to the specified float. This method will only properly floor floats from
  * -(2^14) to (Float.MAX_VALUE - 2^14). */
 func Floor(value float32) int {
@@ -220,7 +248,7 @@ func IsZero(value float32) bool {
 
 /** Returns true if the value is zero.
  * @param tolerance represent an upper bound below which the value is considered zero. */
-func isZeroTolerance(value, tolerance float32) bool {
+func IsZeroTolerance(value, tolerance float32) bool {
 	return math.Abs(float64(value)) <= float64(tolerance)
 }
 
