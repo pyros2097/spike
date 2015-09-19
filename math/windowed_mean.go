@@ -1,108 +1,108 @@
-/*******************************************************************************
- * Copyright 2011 See AUTHORS file.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
+// Copyright 2015 pyros2097. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
 
-package com.badlogic.gdx.math;
+package math
 
-/** A simple class keeping track of the mean of a stream of values within a certain window. the WindowedMean will only return a
- * value in case enough data has been sampled. After enough data has been sampled the oldest sample will be replaced by the newest
- * in case a new sample is added.
- * 
- * @author badlogicgames@gmail.com */
-public final class WindowedMean {
-	float values[];
-	int added_values = 0;
-	int last_value;
-	float mean = 0;
-	boolean dirty = true;
+import (
+	"math"
+)
 
-	/** constructor, window_size specifies the number of samples we will continuously get the mean and variance from. the class will
-	 * only return meaning full values if at least window_size values have been added.
-	 * 
-	 * @param window_size size of the sample window */
-	public WindowedMean (int window_size) {
-		values = new float[window_size];
+// A simple class keeping track of the mean of a stream of values within a certain window. the WindowedMean will only return a
+// value in case enough data has been sampled. After enough data has been sampled the oldest sample will be replaced by the newest
+// in case a new sample is added.
+type WindowedMean struct {
+	values       []float32
+	added_values int
+	last_value   int
+	mean         float32
+	dirty        bool
+}
+
+// constructor, window_size specifies the number of samples we will continuously get the mean and variance from. the class will
+// only return meaning full values if at least window_size values have been added.
+// window_size size of the sample window
+func NewWindowedMean(window_size int) *WindowedMean {
+	return &WindowedMean{dirty: true, values: make([]float32, window_size)}
+}
+
+// return whether the value returned will be meaningful
+func (self *WindowedMean) HasEnoughData() bool {
+	return self.added_values >= len(self.values)
+}
+
+// clears this WindowedMean. The class will only return meaningful values after enough data has been added again.
+func (self *WindowedMean) Clear() {
+	self.added_values = 0
+	self.last_value = 0
+	for i := 0; i < len(self.values); i++ {
+		self.values[i] = 0
 	}
+	self.dirty = true
+}
 
-	/** @return whether the value returned will be meaningful */
-	public boolean hasEnoughData () {
-		return added_values >= values.length;
+// adds a new sample to this mean. In case the window is full the oldest value will be replaced by this new value.
+func (self *WindowedMean) AddValue(value float32) {
+	if self.added_values < len(self.values) {
+		self.added_values++
 	}
-
-	/** clears this WindowedMean. The class will only return meaningful values after enough data has been added again. */
-	public void clear () {
-		added_values = 0;
-		last_value = 0;
-		for (int i = 0; i < values.length; i++)
-			values[i] = 0;
-		dirty = true;
+	self.last_value++
+	self.values[self.last_value] = value
+	if self.last_value > len(self.values)-1 {
+		self.last_value = 0
 	}
+	self.dirty = true
+}
 
-	/** adds a new sample to this mean. In case the window is full the oldest value will be replaced by this new value.
-	 * 
-	 * @param value The value to add */
-	public void addValue (float value) {
-		if (added_values < values.length)
-			added_values++;
-		values[last_value++] = value;
-		if (last_value > values.length - 1) last_value = 0;
-		dirty = true;
-	}
-
-	/** returns the mean of the samples added to this instance. Only returns meaningful results when at least window_size samples
-	 * as specified in the constructor have been added.
-	 * @return the mean */
-	public float getMean () {
-		if (hasEnoughData()) {
-			if (dirty == true) {
-				float mean = 0;
-				for (int i = 0; i < values.length; i++)
-					mean += values[i];
-
-				this.mean = mean / values.length;
-				dirty = false;
+// returns the mean of the samples added to this instance. Only returns meaningful results when at least window_size samples
+// as specified in the constructor have been added.
+func (self *WindowedMean) GetMean() float32 {
+	if self.HasEnoughData() {
+		if self.dirty == true {
+			mean := 0
+			for i := 0; i < len(self.values); i++ {
+				mean += values[i]
 			}
-			return this.mean;
-		} else
-			return 0;
-	}
-
-	/** @return the oldest value in the window */
-	public float getOldest () {
-		return last_value == values.length - 1 ? values[0] : values[last_value + 1];
-	}
-
-	/** @return the value last added */
-	public float getLatest () {
-		return values[last_value - 1 == -1 ? values.length - 1 : last_value - 1];
-	}
-
-	/** @return The standard deviation */
-	public float standardDeviation () {
-		if (!hasEnoughData()) return 0;
-
-		float mean = getMean();
-		float sum = 0;
-		for (int i = 0; i < values.length; i++) {
-			sum += (values[i] - mean) * (values[i] - mean);
+			self.mean = mean / len(self.values)
+			self.dirty = false
 		}
+		return self.mean
+	} else {
+		return 0
+	}
+}
 
-		return (float)Math.sqrt(sum / values.length);
+// return the oldest value in the window
+func (self *WindowedMean) GetOldest() float32 {
+	if self.last_value == len(self.values)-1 {
+		return self.values[0]
 	}
-	
-	public int getWindowSize () {
-		return values.length;
+	return self.values[self.last_value+1]
+}
+
+// return the value last added
+func (self *WindowedMean) GetLatest() float32 {
+	if self.last_value-1 == -1 {
+		self.values[len(self.values)-1]
 	}
+	return self.values[self.last_value-1]
+}
+
+// return The standard deviation
+func (self *WindowedMean) StandardDeviation() float32 {
+	if !self.HasEnoughData() {
+		return 0
+	}
+
+	mean := self.GetMean()
+	var sum float32 = 0
+	for i := 0; i < len(self.values); i++ {
+		sum += (self.values[i] - mean) * (self.values[i] - mean)
+	}
+
+	return float32(math.Sqrt(float64(sum / len(values))))
+}
+
+func (self *WindowedMean) GetWindowSize() int {
+	return len(self.values)
 }

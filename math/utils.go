@@ -16,6 +16,7 @@ var (
 	FLOAT_ROUNDING_ERROR float32 = 0.000001 // 32 bits
 	PI                   float32 = 3.1415927
 	PI2                  float32 = PI * 2
+	PI_4_3               float32 = PI * 4 / 3
 	E                    float32 = 2.7182818
 
 	SIN_BITS  uint = 14 // 16KB. Adjust for accuracy.

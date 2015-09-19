@@ -59,7 +59,8 @@ func mathSqrt32(a float32) float32 {
 // Takes a linear value in the range of 0-1 and outputs a (usually) non-linear, interpolated value.
 type Interpolation func(a float32) float32
 
-// @param a Alpha value between 0 and 1.
+// type InterpolationStartEnd func(start, end, a float32, interp Interpolation)
+// An Interpolation func which has a start and end limit
 func InterpolationStartEnd(start, end, a float32, interp Interpolation) float32 {
 	return start + (end-start)*interp(a)
 }
@@ -119,23 +120,21 @@ func CircleIn() Interpolation {
 
 func CircleOut() Interpolation {
 	return func(a float32) float32 {
-		// a--
-		//       return (float)math.Sqrt(1 - a * a)
-		return a
+		a--
+		return float32(math.Sqrt(float64(1 - a*a)))
 	}
 }
 
 func Pow(power int) Interpolation {
 	return func(a float32) float32 {
-		// if a <= 0.5 {
-		// 	return math.Pow(a*2, power) / 2
-		// }
-		// div := 2
-		// if power%2 == 0 {
-		// 	div = -2
-		// }
-		// return math.Pow((a-1)*2, power)/div + 1
-		return a
+		if a <= 0.5 {
+			return float32(math.Pow(float64(a*2), float64(power)) / 2)
+		}
+		div := 2
+		if power%2 == 0 {
+			div = -2
+		}
+		return float32(math.Pow(float64((a-1)*2), float64(power))/div + 1)
 	}
 }
 

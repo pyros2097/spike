@@ -1,192 +1,170 @@
-package math
+// Copyright 2015 pyros2097. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
 
-// /*******************************************************************************
-//  * Copyright 2011 See AUTHORS file.
-//  *
-//  * Licensed under the Apache License, Version 2.0 (the "License");
-//  * you may not use this file except in compliance with the License.
-//  * You may obtain a copy of the License at
-//  *
-//  *   http://www.apache.org/licenses/LICENSE-2.0
-//  *
-//  * Unless required by applicable law or agreed to in writing, software
-//  * distributed under the License is distributed on an "AS IS" BASIS,
-//  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  * See the License for the specific language governing permissions and
-//  * limitations under the License.
-//  ******************************************************************************/
+// Package offering various methods for intersection testing between different geometric objects.
+package main
 
-// package com.badlogic.gdx.math;
+var (
+	v0 = NewVector3Empty()
+	v1 = NewVector3Empty()
+	v2 = NewVector3Empty()
+)
 
-// import java.util.Arrays;
-// import java.util.List;
+// Returns whether the given point is inside the triangle. This assumes that the point is on the plane of the triangle. No
+// check is performed that this is the case.
+//
+// param point the point
+// param t1 the first vertex of the triangle
+// param t2 the second vertex of the triangle
+// param t3 the third vertex of the triangle
+// return whether the point is in the triangle
+func IsPointInTriangleV3(point, t1, t2, t3 *Vector3) bool {
+  v0.SetV(t1).SubV(point);
+  v1.SetV(t2).SubV(point);
+  v2.SetV(t3).SubV(point);
 
-// import com.badlogic.gdx.math.Plane.PlaneSide;
-// import com.badlogic.gdx.math.collision.BoundingBox;
-// import com.badlogic.gdx.math.collision.Ray;
-// import com.badlogic.gdx.utils.Array;
+  ab := v0.DotV(v1);
+  ac := v0.DotV(v2);
+  bc := v1.DotV(v2);
+  cc := v2.DotV(v2);
 
-// /** Class offering various static methods for intersection testing between different geometric objects.
-//  *
-//  * @author badlogicgames@gmail.com
-//  * @author jan.stria
-//  * @author Nathan Sweet */
-// public final class Intersector {
-//   private final static Vector3 v0 = new Vector3();
-//   private final static Vector3 v1 = new Vector3();
-//   private final static Vector3 v2 = new Vector3();
+  if bc * ac - cc * ab < 0 {
+   return false;
+  }
+  bb := v1.DotV(v1)
+  if ab * bc - ac * bb < 0 {
+   return false;
+  }
+  return true;
+}
 
-//   /** Returns whether the given point is inside the triangle. This assumes that the point is on the plane of the triangle. No
-//    * check is performed that this is the case.
-//    *
-//    * @param point the point
-//    * @param t1 the first vertex of the triangle
-//    * @param t2 the second vertex of the triangle
-//    * @param t3 the third vertex of the triangle
-//    * @return whether the point is in the triangle */
-//   public static boolean isPointInTriangle (Vector3 point, Vector3 t1, Vector3 t2, Vector3 t3) {
-//     v0.set(t1).sub(point);
-//     v1.set(t2).sub(point);
-//     v2.set(t3).sub(point);
+// Returns true if the given point is inside the triangle.
+func IsPointInTriangleV2(p, a, b, c *Vector2) {
+  return IsPointInTriangle(p.x, p.y, a.x, a.y, b.x, b.y, c.x, c.y)
+}
 
-//     float ab = v0.dot(v1);
-//     float ac = v0.dot(v2);
-//     float bc = v1.dot(v2);
-//     float cc = v2.dot(v2);
+// Returns true if the given point is inside the triangle.
+func IsPointInTriangle(px, py, ax, ay, bx, by, cx, cy) float32 {
+  px1 := px - ax;
+  py1 := py - ay;
+  side12 := (bx - ax) * py1 - (by - ay) * px1 > 0;
+  if (cx - ax) * py1 - (cy - ay) * px1 > 0 == side12 {
+   return false;
+  }
+  if (cx - bx) * (py - by) - (cy - by) * (px - bx) > 0 != side12 {
+   return false;
+  }
+  return true;
+}
 
-//     if (bc * ac - cc * ab < 0) return false;
-//     float bb = v1.dot(v1);
-//     if (ab * bc - ac * bb < 0) return false;
-//     return true;
-//   }
+func IntersectSegmentPlane(start, end, Plane plane, intersection *Vector3) {
+  dir := v0.set(end).sub(start);
+  denom := dir.dot(plane.getNormal());
+  t := -(start.dot(plane.getNormal()) + plane.getD()) / denom;
+  if (t < 0 || t > 1) return false;
 
-//   /** Returns true if the given point is inside the triangle. */
-//   public static boolean isPointInTriangle (Vector2 p, Vector2 a, Vector2 b, Vector2 c) {
-//     float px1 = p.x - a.x;
-//     float py1 = p.y - a.y;
-//     boolean side12 = (b.x - a.x) * py1 - (b.y - a.y) * px1 > 0;
-//     if ((c.x - a.x) * py1 - (c.y - a.y) * px1 > 0 == side12) return false;
-//     if ((c.x - b.x) * (p.y - b.y) - (c.y - b.y) * (p.x - b.x) > 0 != side12) return false;
-//     return true;
-//   }
+  intersection.set(start).add(dir.scl(t));
+  return true;
+}
 
-//   /** Returns true if the given point is inside the triangle. */
-//   public static boolean isPointInTriangle (float px, float py, float ax, float ay, float bx, float by, float cx, float cy) {
-//     float px1 = px - ax;
-//     float py1 = py - ay;
-//     boolean side12 = (bx - ax) * py1 - (by - ay) * px1 > 0;
-//     if ((cx - ax) * py1 - (cy - ay) * px1 > 0 == side12) return false;
-//     if ((cx - bx) * (py - by) - (cy - by) * (px - bx) > 0 != side12) return false;
-//     return true;
-//   }
+// Determines on which side of the given line the point is. Returns -1 if the point is on the left side of the line, 0 if the
+// point is on the line and 1 if the point is on the right side of the line. Left and right are relative to the lines direction
+// which is linePoint1 to linePoint2.
+func int pointLineSide (Vector2 linePoint1, Vector2 linePoint2, Vector2 point) {
+  return (int)Math.signum((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y) - (linePoint2.y - linePoint1.y)
+    * (point.x - linePoint1.x));
+}
 
-//   public static boolean intersectSegmentPlane (Vector3 start, Vector3 end, Plane plane, Vector3 intersection) {
-//     Vector3 dir = v0.set(end).sub(start);
-//     float denom = dir.dot(plane.getNormal());
-//     float t = -(start.dot(plane.getNormal()) + plane.getD()) / denom;
-//     if (t < 0 || t > 1) return false;
+func int pointLineSide (float linePoint1X, float linePoint1Y, float linePoint2X, float linePoint2Y, float pointX,
+  float pointY) {
+  return (int)Math.signum((linePoint2X - linePoint1X) * (pointY - linePoint1Y) - (linePoint2Y - linePoint1Y)
+    * (pointX - linePoint1X));
+}
 
-//     intersection.set(start).add(dir.scl(t));
-//     return true;
-//   }
+// Checks whether the given point is in the polygon.
+// param polygon The polygon vertices passed as an array
+// param point The point
+// return true if the point is in the polygon
+func boolean isPointInPolygon (Array<Vector2> polygon, Vector2 point) {
+  Vector2 lastVertice = polygon.peek();
+  boolean oddNodes = false;
+  for (int i = 0; i < polygon.size; i++) {
+    Vector2 vertice = polygon.get(i);
+    if ((vertice.y < point.y && lastVertice.y >= point.y) || (lastVertice.y < point.y && vertice.y >= point.y)) {
+      if (vertice.x + (point.y - vertice.y) / (lastVertice.y - vertice.y) * (lastVertice.x - vertice.x) < point.x) {
+        oddNodes = !oddNodes;
+      }
+    }
+    lastVertice = vertice;
+  }
+  return oddNodes;
+}
 
-//   /** Determines on which side of the given line the point is. Returns -1 if the point is on the left side of the line, 0 if the
-//    * point is on the line and 1 if the point is on the right side of the line. Left and right are relative to the lines direction
-//    * which is linePoint1 to linePoint2. */
-//   public static int pointLineSide (Vector2 linePoint1, Vector2 linePoint2, Vector2 point) {
-//     return (int)Math.signum((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y) - (linePoint2.y - linePoint1.y)
-//       * (point.x - linePoint1.x));
-//   }
+// Returns true if the specified point is in the polygon.
+// param offset Starting polygon index.
+// param count Number of array indices to use after offset.
+func boolean isPointInPolygon (float[] polygon, int offset, int count, float x, float y) {
+  boolean oddNodes = false;
+  int j = offset + count - 2;
+  for (int i = offset, n = j; i <= n; i += 2) {
+    float yi = polygon[i + 1];
+    float yj = polygon[j + 1];
+    if ((yi < y && yj >= y) || (yj < y && yi >= y)) {
+      float xi = polygon[i];
+      if (xi + (y - yi) / (yj - yi) * (polygon[j] - xi) < x) oddNodes = !oddNodes;
+    }
+    j = i;
+  }
+  return oddNodes;
+}
 
-//   public static int pointLineSide (float linePoint1X, float linePoint1Y, float linePoint2X, float linePoint2Y, float pointX,
-//     float pointY) {
-//     return (int)Math.signum((linePoint2X - linePoint1X) * (pointY - linePoint1Y) - (linePoint2Y - linePoint1Y)
-//       * (pointX - linePoint1X));
-//   }
+// Returns the distance between the given line and point. Note the specified line is not a line segment.
+func float distanceLinePoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
+  float normalLength = (float)Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
+  return Math.abs((pointX - startX) * (endY - startY) - (pointY - startY) * (endX - startX)) / normalLength;
+}
 
-//   /** Checks whether the given point is in the polygon.
-//    * @param polygon The polygon vertices passed as an array
-//    * @param point The point
-//    * @return true if the point is in the polygon */
-//   public static boolean isPointInPolygon (Array<Vector2> polygon, Vector2 point) {
-//     Vector2 lastVertice = polygon.peek();
-//     boolean oddNodes = false;
-//     for (int i = 0; i < polygon.size; i++) {
-//       Vector2 vertice = polygon.get(i);
-//       if ((vertice.y < point.y && lastVertice.y >= point.y) || (lastVertice.y < point.y && vertice.y >= point.y)) {
-//         if (vertice.x + (point.y - vertice.y) / (lastVertice.y - vertice.y) * (lastVertice.x - vertice.x) < point.x) {
-//           oddNodes = !oddNodes;
-//         }
-//       }
-//       lastVertice = vertice;
-//     }
-//     return oddNodes;
-//   }
+// Returns the distance between the given segment and point.
+func float distanceSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
+  return nearestSegmentPoint(startX, startY, endX, endY, pointX, pointY, v2tmp).dst(pointX, pointY);
+}
 
-//   /** Returns true if the specified point is in the polygon.
-//    * @param offset Starting polygon index.
-//    * @param count Number of array indices to use after offset. */
-//   public static boolean isPointInPolygon (float[] polygon, int offset, int count, float x, float y) {
-//     boolean oddNodes = false;
-//     int j = offset + count - 2;
-//     for (int i = offset, n = j; i <= n; i += 2) {
-//       float yi = polygon[i + 1];
-//       float yj = polygon[j + 1];
-//       if ((yi < y && yj >= y) || (yj < y && yi >= y)) {
-//         float xi = polygon[i];
-//         if (xi + (y - yi) / (yj - yi) * (polygon[j] - xi) < x) oddNodes = !oddNodes;
-//       }
-//       j = i;
-//     }
-//     return oddNodes;
-//   }
+// Returns the distance between the given segment and point.
+func float distanceSegmentPoint (Vector2 start, Vector2 end, Vector2 point) {
+  return nearestSegmentPoint(start, end, point, v2tmp).dst(point);
+}
 
-//   /** Returns the distance between the given line and point. Note the specified line is not a line segment. */
-//   public static float distanceLinePoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
-//     float normalLength = (float)Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
-//     return Math.abs((pointX - startX) * (endY - startY) - (pointY - startY) * (endX - startX)) / normalLength;
-//   }
+// Returns a point on the segment nearest to the specified point.
+func Vector2 nearestSegmentPoint (Vector2 start, Vector2 end, Vector2 point, Vector2 nearest) {
+  float length2 = start.dst2(end);
+  if (length2 == 0) return nearest.set(start);
+  float t = ((point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y)) / length2;
+  if (t < 0) return nearest.set(start);
+  if (t > 1) return nearest.set(end);
+  return nearest.set(start.x + t * (end.x - start.x), start.y + t * (end.y - start.y));
+}
 
-//   /** Returns the distance between the given segment and point. */
-//   public static float distanceSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
-//     return nearestSegmentPoint(startX, startY, endX, endY, pointX, pointY, v2tmp).dst(pointX, pointY);
-//   }
+// Returns a point on the segment nearest to the specified point.
+func Vector2 nearestSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY,
+  Vector2 nearest) {
+  final float xDiff = endX - startX;
+  final float yDiff = endY - startY;
+  float length2 = xDiff * xDiff + yDiff * yDiff;
+  if (length2 == 0) return nearest.set(startX, startY);
+  float t = ((pointX - startX) * (endX - startX) + (pointY - startY) * (endY - startY)) / length2;
+  if (t < 0) return nearest.set(startX, startY);
+  if (t > 1) return nearest.set(endX, endY);
+  return nearest.set(startX + t * (endX - startX), startY + t * (endY - startY));
+}
 
-//   /** Returns the distance between the given segment and point. */
-//   public static float distanceSegmentPoint (Vector2 start, Vector2 end, Vector2 point) {
-//     return nearestSegmentPoint(start, end, point, v2tmp).dst(point);
-//   }
-
-//   /** Returns a point on the segment nearest to the specified point. */
-//   public static Vector2 nearestSegmentPoint (Vector2 start, Vector2 end, Vector2 point, Vector2 nearest) {
-//     float length2 = start.dst2(end);
-//     if (length2 == 0) return nearest.set(start);
-//     float t = ((point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y)) / length2;
-//     if (t < 0) return nearest.set(start);
-//     if (t > 1) return nearest.set(end);
-//     return nearest.set(start.x + t * (end.x - start.x), start.y + t * (end.y - start.y));
-//   }
-
-//   /** Returns a point on the segment nearest to the specified point. */
-//   public static Vector2 nearestSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY,
-//     Vector2 nearest) {
-//     final float xDiff = endX - startX;
-//     final float yDiff = endY - startY;
-//     float length2 = xDiff * xDiff + yDiff * yDiff;
-//     if (length2 == 0) return nearest.set(startX, startY);
-//     float t = ((pointX - startX) * (endX - startX) + (pointY - startY) * (endY - startY)) / length2;
-//     if (t < 0) return nearest.set(startX, startY);
-//     if (t > 1) return nearest.set(endX, endY);
-//     return nearest.set(startX + t * (endX - startX), startY + t * (endY - startY));
-//   }
-
-//   /** Returns whether the given line segment intersects the given circle.
-//    * @param start The start point of the line segment
-//    * @param end The end point of the line segment
-//    * @param center The center of the circle
-//    * @param squareRadius The squared radius of the circle
-//    * @return Whether the line segment and the circle intersect */
-//   public static boolean intersectSegmentCircle (Vector2 start, Vector2 end, Vector2 center, float squareRadius) {
+//   // Returns whether the given line segment intersects the given circle.
+//   // param start The start point of the line segment
+//   // param end The end point of the line segment
+//   // param center The center of the circle
+//   // param squareRadius The squared radius of the circle
+//   // return Whether the line segment and the circle intersect
+//   func boolean intersectSegmentCircle (Vector2 start, Vector2 end, Vector2 center, float squareRadius) {
 //     tmp.set(end.x - start.x, end.y - start.y, 0);
 //     tmp1.set(center.x - start.x, center.y - start.y, 0);
 //     float l = tmp.len();
@@ -206,16 +184,16 @@ package math
 //     return x * x + y * y <= squareRadius;
 //   }
 
-//   /** Checks whether the line segment and the circle intersect and returns by how much and in what direction the line has to move
+//   // Checks whether the line segment and the circle intersect and returns by how much and in what direction the line has to move
 //    * away from the circle to not intersect.
 //    *
-//    * @param start The line segment starting point
-//    * @param end The line segment end point
-//    * @param point The center of the circle
-//    * @param radius The radius of the circle
-//    * @param displacement The displacement vector set by the method having unit length
-//    * @return The displacement or Float.POSITIVE_INFINITY if no intersection is present */
-//   public static float intersectSegmentCircleDisplace (Vector2 start, Vector2 end, Vector2 point, float radius,
+//   // param start The line segment starting point
+//   // param end The line segment end point
+//   // param point The center of the circle
+//   // param radius The radius of the circle
+//   // param displacement The displacement vector set by the method having unit length
+//   // return The displacement or Float.POSITIVE_INFINITY if no intersection is present
+//   func float intersectSegmentCircleDisplace (Vector2 start, Vector2 end, Vector2 point, float radius,
 //     Vector2 displacement) {
 //     float u = (point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y);
 //     float d = start.dst(end);
@@ -231,17 +209,17 @@ package math
 //       return Float.POSITIVE_INFINITY;
 //   }
 
-//   /** Intersect two 2D Rays and return the scalar parameter of the first ray at the intersection point.
+//   // Intersect two 2D Rays and return the scalar parameter of the first ray at the intersection point.
 //    * You can get the intersection point by: Vector2 point(direction1).scl(scalar).add(start1);
 //    * For more information, check: http://stackoverflow.com/a/565282/1091440
-//    * @param start1 Where the first ray start
-//    * @param direction1 The direction the first ray is pointing
-//    * @param start2 Where the second ray start
-//    * @param direction2 The direction the second ray is pointing
-//    * @return scalar parameter on the first ray describing the point where the intersection happens. May be negative.
+//   // param start1 Where the first ray start
+//   // param direction1 The direction the first ray is pointing
+//   // param start2 Where the second ray start
+//   // param direction2 The direction the second ray is pointing
+//   // return scalar parameter on the first ray describing the point where the intersection happens. May be negative.
 //    * In case the rays are collinear, Float.POSITIVE_INFINITY will be returned.
-//    */
-//   public static float intersectRayRay(Vector2 start1, Vector2 direction1, Vector2 start2, Vector2 direction2) {
+//
+//   func float intersectRayRay(Vector2 start1, Vector2 direction1, Vector2 start2, Vector2 direction2) {
 //     float difx = start2.x - start1.x;
 //     float dify = start2.y - start1.y;
 //     float d1xd2 = direction1.x * direction2.y - direction1.y * direction2.x;
@@ -253,14 +231,14 @@ package math
 //     return difx * d2sy - dify * d2sx;
 //   }
 
-//   /** Intersects a {@link Ray} and a {@link Plane}. The intersection point is stored in intersection in case an intersection is
+//   // Intersects a {@link Ray} and a {@link Plane}. The intersection point is stored in intersection in case an intersection is
 //    * present.
 //    *
-//    * @param ray The ray
-//    * @param plane The plane
-//    * @param intersection The vector the intersection point is written to (optional)
-//    * @return Whether an intersection is present. */
-//   public static boolean intersectRayPlane (Ray ray, Plane plane, Vector3 intersection) {
+//   // param ray The ray
+//   // param plane The plane
+//   // param intersection The vector the intersection point is written to (optional)
+//   // return Whether an intersection is present.
+//   func boolean intersectRayPlane (Ray ray, Plane plane, Vector3 intersection) {
 //     float denom = ray.direction.dot(plane.getNormal());
 //     if (denom != 0) {
 //       float t = -(ray.origin.dot(plane.getNormal()) + plane.getD()) / denom;
@@ -275,17 +253,17 @@ package math
 //       return false;
 //   }
 
-//   /** Intersects a line and a plane. The intersection is returned as the distance from the first point to the plane. In case an
+//   // Intersects a line and a plane. The intersection is returned as the distance from the first point to the plane. In case an
 //    * intersection happened, the return value is in the range [0,1]. The intersection point can be recovered by point1 + t *
 //    * (point2 - point1) where t is the return value of this method.
-//    * @param x
-//    * @param y
-//    * @param z
-//    * @param x2
-//    * @param y2
-//    * @param z2
-//    * @param plane */
-//   public static float intersectLinePlane (float x, float y, float z, float x2, float y2, float z2, Plane plane,
+//   // param x
+//   // param y
+//   // param z
+//   // param x2
+//   // param y2
+//   // param z2
+//   // param plane
+//   func float intersectLinePlane (float x, float y, float z, float x2, float y2, float z2, Plane plane,
 //     Vector3 intersection) {
 //     Vector3 direction = tmp.set(x2, y2, z2).sub(x, y, z);
 //     Vector3 origin = tmp2.set(x, y, z);
@@ -305,15 +283,15 @@ package math
 //   private static final Plane p = new Plane(new Vector3(), 0);
 //   private static final Vector3 i = new Vector3();
 
-//   /** Intersect a {@link Ray} and a triangle, returning the intersection point in intersection.
+//   // Intersect a {@link Ray} and a triangle, returning the intersection point in intersection.
 //    *
-//    * @param ray The ray
-//    * @param t1 The first vertex of the triangle
-//    * @param t2 The second vertex of the triangle
-//    * @param t3 The third vertex of the triangle
-//    * @param intersection The intersection point (optional)
-//    * @return True in case an intersection is present. */
-//   public static boolean intersectRayTriangle (Ray ray, Vector3 t1, Vector3 t2, Vector3 t3, Vector3 intersection) {
+//   // param ray The ray
+//   // param t1 The first vertex of the triangle
+//   // param t2 The second vertex of the triangle
+//   // param t3 The third vertex of the triangle
+//   // param intersection The intersection point (optional)
+//   // return True in case an intersection is present.
+//   func boolean intersectRayTriangle (Ray ray, Vector3 t1, Vector3 t2, Vector3 t3, Vector3 intersection) {
 //     Vector3 edge1 = v0.set(t2).sub(t1);
 //     Vector3 edge2 = v1.set(t3).sub(t1);
 
@@ -355,14 +333,14 @@ package math
 //   private static final Vector3 dir = new Vector3();
 //   private static final Vector3 start = new Vector3();
 
-//   /** Intersects a {@link Ray} and a sphere, returning the intersection point in intersection.
+//   // Intersects a {@link Ray} and a sphere, returning the intersection point in intersection.
 //    *
-//    * @param ray The ray, the direction component must be normalized before calling this method
-//    * @param center The center of the sphere
-//    * @param radius The radius of the sphere
-//    * @param intersection The intersection point (optional, can be null)
-//    * @return Whether an intersection is present. */
-//   public static boolean intersectRaySphere (Ray ray, Vector3 center, float radius, Vector3 intersection) {
+//   // param ray The ray, the direction component must be normalized before calling this method
+//   // param center The center of the sphere
+//   // param radius The radius of the sphere
+//   // param intersection The intersection point (optional, can be null)
+//   // return Whether an intersection is present.
+//   func boolean intersectRaySphere (Ray ray, Vector3 center, float radius, Vector3 intersection) {
 //     final float len = ray.direction.dot(center.x - ray.origin.x, center.y - ray.origin.y, center.z - ray.origin.z);
 //     if (len < 0.f) // behind the ray
 //       return false;
@@ -374,7 +352,7 @@ package math
 //     return true;
 //   }
 
-//   /** Intersects a {@link Ray} and a {@link BoundingBox}, returning the intersection point in intersection.
+//   // Intersects a {@link Ray} and a {@link BoundingBox}, returning the intersection point in intersection.
 //    * This intersection is defined as the point on the ray closest to the origin which is within the specified
 //    * bounds.
 //    *
@@ -384,11 +362,11 @@ package math
 //    * <p>If the origin of the ray is inside the box, this method returns true and the intersection point is
 //    * set to the origin of the ray, accordingly to the definition above.</p>
 //    *
-//    * @param ray The ray
-//    * @param box The box
-//    * @param intersection The intersection point (optional)
-//    * @return Whether an intersection is present. */
-//   public static boolean intersectRayBounds (Ray ray, BoundingBox box, Vector3 intersection) {
+//   // param ray The ray
+//   // param box The box
+//   // param intersection The intersection point (optional)
+//   // return Whether an intersection is present.
+//   func boolean intersectRayBounds (Ray ray, BoundingBox box, Vector3 intersection) {
 //     if (box.contains(ray.origin)) {
 //       if (intersection != null) intersection.set(ray.origin);
 //       return true;
@@ -483,21 +461,21 @@ package math
 //     return hit;
 //   }
 
-//   /** Quick check whether the given {@link Ray} and {@link BoundingBox} intersect.
+//   // Quick check whether the given {@link Ray} and {@link BoundingBox} intersect.
 //    *
-//    * @param ray The ray
-//    * @param box The bounding box
-//    * @return Whether the ray and the bounding box intersect. */
+//   // param ray The ray
+//   // param box The bounding box
+//   // return Whether the ray and the bounding box intersect.
 //   static public boolean intersectRayBoundsFast (Ray ray, BoundingBox box) {
 //     return intersectRayBoundsFast(ray, box.getCenter(tmp1), box.getDimensions(tmp2));
 //   }
 
-//   /** Quick check whether the given {@link Ray} and {@link BoundingBox} intersect.
+//   // Quick check whether the given {@link Ray} and {@link BoundingBox} intersect.
 //    *
-//    * @param ray The ray
-//    * @param center The center of the bounding box
-//    * @param dimensions The dimensions (width, height and depth) of the bounding box
-//    * @return Whether the ray and the bounding box intersect. */
+//   // param ray The ray
+//   // param center The center of the bounding box
+//   // param dimensions The dimensions (width, height and depth) of the bounding box
+//   // return Whether the ray and the bounding box intersect.
 //   static public boolean intersectRayBoundsFast (Ray ray, Vector3 center, Vector3 dimensions) {
 //     final float divX = 1f / ray.direction.x;
 //     final float divY = 1f / ray.direction.y;
@@ -540,13 +518,13 @@ package math
 //   static Vector3 tmp3 = new Vector3();
 //   static Vector2 v2tmp = new Vector2();
 
-//   /** Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
+//   // Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
 //    *
-//    * @param ray The ray
-//    * @param triangles The triangles, each successive 3 elements from a vertex
-//    * @param intersection The nearest intersection point (optional)
-//    * @return Whether the ray and the triangles intersect. */
-//   public static boolean intersectRayTriangles (Ray ray, float[] triangles, Vector3 intersection) {
+//   // param ray The ray
+//   // param triangles The triangles, each successive 3 elements from a vertex
+//   // param intersection The nearest intersection point (optional)
+//   // return Whether the ray and the triangles intersect.
+//   func boolean intersectRayTriangles (Ray ray, float[] triangles, Vector3 intersection) {
 //     float min_dist = Float.MAX_VALUE;
 //     boolean hit = false;
 
@@ -575,15 +553,15 @@ package math
 //     }
 //   }
 
-//   /** Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
+//   // Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
 //    *
-//    * @param ray The ray
-//    * @param vertices the vertices
-//    * @param indices the indices, each successive 3 shorts index the 3 vertices of a triangle
-//    * @param vertexSize the size of a vertex in floats
-//    * @param intersection The nearest intersection point (optional)
-//    * @return Whether the ray and the triangles intersect. */
-//   public static boolean intersectRayTriangles (Ray ray, float[] vertices, short[] indices, int vertexSize, Vector3 intersection) {
+//   // param ray The ray
+//   // param vertices the vertices
+//   // param indices the indices, each successive 3 shorts index the 3 vertices of a triangle
+//   // param vertexSize the size of a vertex in floats
+//   // param intersection The nearest intersection point (optional)
+//   // return Whether the ray and the triangles intersect.
+//   func boolean intersectRayTriangles (Ray ray, float[] vertices, short[] indices, int vertexSize, Vector3 intersection) {
 //     float min_dist = Float.MAX_VALUE;
 //     boolean hit = false;
 
@@ -616,13 +594,13 @@ package math
 //     }
 //   }
 
-//   /** Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
+//   // Intersects the given ray with list of triangles. Returns the nearest intersection point in intersection
 //    *
-//    * @param ray The ray
-//    * @param triangles The triangles
-//    * @param intersection The nearest intersection point (optional)
-//    * @return Whether the ray and the triangles intersect. */
-//   public static boolean intersectRayTriangles (Ray ray, List<Vector3> triangles, Vector3 intersection) {
+//   // param ray The ray
+//   // param triangles The triangles
+//   // param intersection The nearest intersection point (optional)
+//   // return Whether the ray and the triangles intersect.
+//   func boolean intersectRayTriangles (Ray ray, List<Vector3> triangles, Vector3 intersection) {
 //     float min_dist = Float.MAX_VALUE;
 //     boolean hit = false;
 
@@ -649,15 +627,15 @@ package math
 //     }
 //   }
 
-//   /** Intersects the two lines and returns the intersection point in intersection.
+//   // Intersects the two lines and returns the intersection point in intersection.
 //    *
-//    * @param p1 The first point of the first line
-//    * @param p2 The second point of the first line
-//    * @param p3 The first point of the second line
-//    * @param p4 The second point of the second line
-//    * @param intersection The intersection point
-//    * @return Whether the two lines intersect */
-//   public static boolean intersectLines (Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2 intersection) {
+//   // param p1 The first point of the first line
+//   // param p2 The second point of the first line
+//   // param p3 The first point of the second line
+//   // param p4 The second point of the second line
+//   // param intersection The intersection point
+//   // return Whether the two lines intersect
+//   func boolean intersectLines (Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2 intersection) {
 //     float x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y, x4 = p4.x, y4 = p4.y;
 
 //     float d = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
@@ -670,10 +648,10 @@ package math
 //     return true;
 //   }
 
-//   /** Intersects the two lines and returns the intersection point in intersection.
-//    * @param intersection The intersection point, or null.
-//    * @return Whether the two lines intersect */
-//   public static boolean intersectLines (float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4,
+//   // Intersects the two lines and returns the intersection point in intersection.
+//   // param intersection The intersection point, or null.
+//   // return Whether the two lines intersect
+//   func boolean intersectLines (float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4,
 //     Vector2 intersection) {
 //     float d = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
 //     if (d == 0) return false;
@@ -685,12 +663,12 @@ package math
 //     return true;
 //   }
 
-//   /** Check whether the given line and {@link Polygon} intersect.
-//    * @param p1 The first point of the line
-//    * @param p2 The second point of the line
-//    * @param polygon The polygon
-//    * @return Whether polygon and line intersects */
-//   public static boolean intersectLinePolygon (Vector2 p1, Vector2 p2, Polygon polygon) {
+//   // Check whether the given line and {@link Polygon} intersect.
+//   // param p1 The first point of the line
+//   // param p2 The second point of the line
+//   // param polygon The polygon
+//   // return Whether polygon and line intersects
+//   func boolean intersectLinePolygon (Vector2 p1, Vector2 p2, Polygon polygon) {
 //      float[] vertices = polygon.getTransformedVertices();
 //      float x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
 //      int n = vertices.length;
@@ -712,10 +690,10 @@ package math
 //      return false;
 //   }
 
-//   /** Determines whether the given rectangles intersect and, if they do, sets the supplied {@code intersection} rectangle to the
+//   // Determines whether the given rectangles intersect and, if they do, sets the supplied {@code intersection} rectangle to the
 //    * area of overlap.
 //    *
-//    * @return Whether the rectangles intersect */
+//   // return Whether the rectangles intersect
 //   static public boolean intersectRectangles (Rectangle rectangle1, Rectangle rectangle2, Rectangle intersection) {
 //     if (rectangle1.overlaps(rectangle2)) {
 //       intersection.x = Math.max(rectangle1.x, rectangle2.x);
@@ -727,11 +705,11 @@ package math
 //     return false;
 //   }
 
-//    /** Check whether the given line segment and {@link Polygon} intersect.
-//     * @param p1 The first point of the segment
-//     * @param p2 The second point of the segment
-//     * @return Whether polygon and segment intersect */
-//    public static boolean intersectSegmentPolygon (Vector2 p1, Vector2 p2, Polygon polygon) {
+//    // Check whether the given line segment and {@link Polygon} intersect.
+//    // param p1 The first point of the segment
+//    // param p2 The second point of the segment
+//    // return Whether polygon and segment intersect
+//    func boolean intersectSegmentPolygon (Vector2 p1, Vector2 p2, Polygon polygon) {
 //       float[] vertices = polygon.getTransformedVertices();
 //       float x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
 //       int n = vertices.length;
@@ -756,15 +734,15 @@ package math
 //       return false;
 //    }
 
-//   /** Intersects the two line segments and returns the intersection point in intersection.
+//   // Intersects the two line segments and returns the intersection point in intersection.
 //    *
-//    * @param p1 The first point of the first line segment
-//    * @param p2 The second point of the first line segment
-//    * @param p3 The first point of the second line segment
-//    * @param p4 The second point of the second line segment
-//    * @param intersection The intersection point (optional)
-//    * @return Whether the two line segments intersect */
-//   public static boolean intersectSegments (Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2 intersection) {
+//   // param p1 The first point of the first line segment
+//   // param p2 The second point of the first line segment
+//   // param p3 The first point of the second line segment
+//   // param p4 The second point of the second line segment
+//   // param intersection The intersection point (optional)
+//   // return Whether the two line segments intersect
+//   func boolean intersectSegments (Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector2 intersection) {
 //     float x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y, x3 = p3.x, y3 = p3.y, x4 = p4.x, y4 = p4.y;
 
 //     float d = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
@@ -782,7 +760,7 @@ package math
 //     return true;
 //   }
 
-//   public static boolean intersectSegments (float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4,
+//   func boolean intersectSegments (float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4,
 //     Vector2 intersection) {
 //     float d = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
 //     if (d == 0) return false;
@@ -807,15 +785,15 @@ package math
 //     return a * d - b * c;
 //   }
 
-//   public static boolean overlaps (Circle c1, Circle c2) {
+//   func boolean overlaps (Circle c1, Circle c2) {
 //     return c1.overlaps(c2);
 //   }
 
-//   public static boolean overlaps (Rectangle r1, Rectangle r2) {
+//   func boolean overlaps (Rectangle r1, Rectangle r2) {
 //     return r1.overlaps(r2);
 //   }
 
-//   public static boolean overlaps (Circle c, Rectangle r) {
+//   func boolean overlaps (Circle c, Rectangle r) {
 //     float closestX = c.x;
 //     float closestY = c.y;
 
@@ -839,39 +817,39 @@ package math
 //     return closestX + closestY < c.radius * c.radius;
 //   }
 
-//   /** Check whether specified counter-clockwise wound convex polygons overlap.
+//   // Check whether specified counter-clockwise wound convex polygons overlap.
 //    *
-//    * @param p1 The first polygon.
-//    * @param p2 The second polygon.
-//    * @return Whether polygons overlap. */
-//   public static boolean overlapConvexPolygons (Polygon p1, Polygon p2) {
+//   // param p1 The first polygon.
+//   // param p2 The second polygon.
+//   // return Whether polygons overlap.
+//   func boolean overlapConvexPolygons (Polygon p1, Polygon p2) {
 //     return overlapConvexPolygons(p1, p2, null);
 //   }
 
-//   /** Check whether specified counter-clockwise wound convex polygons overlap. If they do, optionally obtain a Minimum Translation Vector indicating the
+//   // Check whether specified counter-clockwise wound convex polygons overlap. If they do, optionally obtain a Minimum Translation Vector indicating the
 //    * minimum magnitude vector required to push the polygon p1 out of collision with polygon p2.
 //    *
-//    * @param p1 The first polygon.
-//    * @param p2 The second polygon.
-//    * @param mtv A Minimum Translation Vector to fill in the case of a collision, or null (optional).
-//    * @return Whether polygons overlap. */
-//   public static boolean overlapConvexPolygons (Polygon p1, Polygon p2, MinimumTranslationVector mtv) {
+//   // param p1 The first polygon.
+//   // param p2 The second polygon.
+//   // param mtv A Minimum Translation Vector to fill in the case of a collision, or null (optional).
+//   // return Whether polygons overlap.
+//   func boolean overlapConvexPolygons (Polygon p1, Polygon p2, MinimumTranslationVector mtv) {
 //     return overlapConvexPolygons(p1.getTransformedVertices(), p2.getTransformedVertices(), mtv);
 //   }
 
-//   /** @see #overlapConvexPolygons(float[], int, int, float[], int, int, MinimumTranslationVector) */
-//   public static boolean overlapConvexPolygons (float[] verts1, float[] verts2, MinimumTranslationVector mtv) {
+//   // @see #overlapConvexPolygons(float[], int, int, float[], int, int, MinimumTranslationVector)
+//   func boolean overlapConvexPolygons (float[] verts1, float[] verts2, MinimumTranslationVector mtv) {
 //     return overlapConvexPolygons(verts1, 0, verts1.length, verts2, 0, verts2.length, mtv);
 //   }
 
-//   /** Check whether polygons defined by the given counter-clockwise wound vertex arrays overlap. If they do, optionally obtain a Minimum Translation
+//   // Check whether polygons defined by the given counter-clockwise wound vertex arrays overlap. If they do, optionally obtain a Minimum Translation
 //    * Vector indicating the minimum magnitude vector required to push the polygon defined by verts1 out of the collision with the polygon defined by verts2.
 //    *
-//    * @param verts1 Vertices of the first polygon.
-//    * @param verts2 Vertices of the second polygon.
-//    * @param mtv A Minimum Translation Vector to fill in the case of a collision, or null (optional).
-//    * @return Whether polygons overlap. */
-//   public static boolean overlapConvexPolygons (float[] verts1, int offset1, int count1, float[] verts2, int offset2, int count2,
+//   // param verts1 Vertices of the first polygon.
+//   // param verts2 Vertices of the second polygon.
+//   // param mtv A Minimum Translation Vector to fill in the case of a collision, or null (optional).
+//   // return Whether polygons overlap.
+//   func boolean overlapConvexPolygons (float[] verts1, int offset1, int count1, float[] verts2, int offset2, int count2,
 //     MinimumTranslationVector mtv) {
 //     float overlap = Float.MAX_VALUE;
 //     float smallestAxisX = 0;
@@ -1021,7 +999,7 @@ package math
 //     return true;
 //   }
 
-//   /** Splits the triangle by the plane. The result is stored in the SplitTriangle instance. Depending on where the triangle is
+//   // Splits the triangle by the plane. The result is stored in the SplitTriangle instance. Depending on where the triangle is
 //    * relative to the plane, the result can be:
 //    *
 //    * <ul>
@@ -1037,10 +1015,10 @@ package math
 //    * will be interpolated if split, such as texture coordinates or normals. Note that these additional attributes won't be
 //    * normalized, as might be necessary in case of normals.
 //    *
-//    * @param triangle
-//    * @param plane
-//    * @param split output SplitTriangle */
-//   public static void splitTriangle (float[] triangle, Plane plane, SplitTriangle split) {
+//   // param triangle
+//   // param plane
+//   // param split output SplitTriangle
+//   func void splitTriangle (float[] triangle, Plane plane, SplitTriangle split) {
 //     int stride = triangle.length / 3;
 //     boolean r1 = plane.testPoint(triangle[0], triangle[1], triangle[2]) == PlaneSide.Back;
 //     boolean r2 = plane.testPoint(triangle[0 + stride], triangle[1 + stride], triangle[2 + stride]) == PlaneSide.Back;
@@ -1153,7 +1131,7 @@ package math
 //     }
 //   }
 
-//   public static class SplitTriangle {
+//   func class SplitTriangle {
 //     public float[] front;
 //     public float[] back;
 //     float[] edgeSplit;
@@ -1164,8 +1142,8 @@ package math
 //     int frontOffset = 0;
 //     int backOffset = 0;
 
-//     /** Creates a new instance, assuming numAttributes attributes per triangle vertex.
-//      * @param numAttributes must be >= 3 */
+//     // Creates a new instance, assuming numAttributes attributes per triangle vertex.
+//     // param numAttributes must be >= 3
 //     public SplitTriangle (int numAttributes) {
 //       front = new float[numAttributes * 3 * 2];
 //       back = new float[numAttributes * 3 * 2];
@@ -1206,7 +1184,7 @@ package math
 //     }
 //   }
 
-//   public static class MinimumTranslationVector {
+//   func class MinimumTranslationVector {
 //     public Vector2 normal = new Vector2();
 //     public float depth = 0;
 //   }

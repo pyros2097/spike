@@ -1,7 +1,40 @@
+// Copyright 2015 pyros2097. All rights reserved.
+// Use of this source code is governed by the MIT
+// license that can be found in the LICENSE file.
+
 package math
 
+import (
+	"math"
+)
+
+var (
+	// Static temporary rectangle. Use with care! Use only when sure other code will not also use self.
+	Tmp = NewRectangleEmpty()
+
+	// Static temporary rectangle. Use with care! Use only when sure other code will not also use self.
+	Tmp2 = NewRectangleEmpty()
+)
+
+// Encapsulates a 2D rectangle defined by its corner point in the bottom left and its extents in x (width) and y (height).
+// Implements Shape2D
 type Rectangle struct {
 	x, y, w, h float32
+}
+
+// Constructs a new rectangle with all values set to zero
+func NewRectangleEmpty() *Rectangle {
+	return &Rectangle{}
+}
+
+// Constructs a new rectangle with the given corner point in the bottom left and dimensions.
+func NewRectangle(x, y, w, h float32) {
+	return &Rectangle{x, y, w, h}
+}
+
+// Constructs a rectangle based on the given rectangle
+func NewRectangleCopy(rect *Rectangle) {
+	return &Rectangle{rect.x, rect.y, rect.w, rect.h}
 }
 
 func (self *Rectangle) Set(x, y, w, h float32) *Rectangle {
@@ -12,449 +45,284 @@ func (self *Rectangle) Set(x, y, w, h float32) *Rectangle {
 	return self
 }
 
-/** @return the x-coordinate of the bottom left corner */
+// Sets the values of the given rectangle to this rectangle.
+func (self *Rectangle) SetR(rect *Rectangle) *Rectangle {
+	self.x = rect.x
+	self.y = rect.y
+	self.w = rect.w
+	self.h = rect.h
+	return self
+}
+
+// returns the x-coordinate of the bottom left corner
 func (self *Rectangle) GetX() float32 {
 	return self.x
 }
 
-/** Sets the x-coordinate of the bottom left corner
- * @param x The x-coordinate
- * @return this rectangle for chaining */
+// Sets the x-coordinate of the bottom left corner
+// param x The x-coordinate
+// returns this rectangle for chaining
 func (self *Rectangle) SetX(x float32) *Rectangle {
 	self.x = x
 	return self
 }
 
-/** @return the y-coordinate of the bottom left corner */
+// returns the y-coordinate of the bottom left corner
 func (self *Rectangle) GetY() float32 {
 	return self.y
 }
 
-/** Sets the y-coordinate of the bottom left corner
- * @param y The y-coordinate
- * @return this rectangle for chaining */
+// Sets the y-coordinate of the bottom left corner
+// param y The y-coordinate
+// returns this rectangle for chaining
 func (self *Rectangle) SetY(y float32) *Rectangle {
 	self.y = y
 	return self
 }
 
-/** @return the width */
+// returns the width
 func (self *Rectangle) GetW() float32 {
 	return self.w
 }
 
-/** Sets the width of this rectangle
- * @param w The width
- * @return this rectangle for chaining */
+// Sets the width of this rectangle
 func (self *Rectangle) SetW(w float32) *Rectangle {
 	self.w = w
 	return self
 }
 
-/** @return the height */
+// returns the height
 func (self *Rectangle) GetH() float32 {
 	return self.w
 }
 
-/** Sets the height of this rectangle
- * @param h The height
- * @return this rectangle for chaining */
+// Sets the height of this rectangle
 func (self *Rectangle) SetH(h float32) *Rectangle {
 	self.h = h
 	return self
 }
 
-/*******************************************************************************
- * Copyright 2011 See AUTHORS file.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS"
- * BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language
- * governing permissions and limitations under the License.
- ******************************************************************************/
-
-// package com.badlogic.gdx.math;
-
-// import java.io.Serializable;
-// import com.badlogic.gdx.utils.NumberUtils;
-
-// /** Encapsulates a 2D rectangle defined by its corner point in the bottom left and its extents in x (width) and y (height).
-//  * @author badlogicgames@gmail.com */
-// public class Rectangle implements Serializable, Shape2D {
-//   /** Static temporary rectangle. Use with care! Use only when sure other code will not also use this. */
-//   static public final Rectangle tmp = new Rectangle();
-
-//   /** Static temporary rectangle. Use with care! Use only when sure other code will not also use this. */
-//   static public final Rectangle tmp2 = new Rectangle();
-
-//   private static final long serialVersionUID = 5733252015138115702L;
-//   public float x, y;
-//   public float width, height;
-
-//   /** Constructs a new rectangle with all values set to zero */
-//   public Rectangle () {
-
-//   }
-
-//   /** Constructs a new rectangle with the given corner point in the bottom left and dimensions.
-//    * @param x The corner point x-coordinate
-//    * @param y The corner point y-coordinate
-//    * @param width The width
-//    * @param height The height */
-//   public Rectangle (float x, float y, float width, float height) {
-//     this.x = x;
-//     this.y = y;
-//     this.width = width;
-//     this.height = height;
-//   }
-
-//   /** Constructs a rectangle based on the given rectangle
-//    * @param rect The rectangle */
-//   public Rectangle (Rectangle rect) {
-//     x = rect.x;
-//     y = rect.y;
-//     width = rect.width;
-//     height = rect.height;
-//   }
-
-//   /** @param x bottom-left x coordinate
-//    * @param y bottom-left y coordinate
-//    * @param width width
-//    * @param height height
-//    * @return this rectangle for chaining */
-//   public Rectangle set (float x, float y, float width, float height) {
-//     this.x = x;
-//     this.y = y;
-//     this.width = width;
-//     this.height = height;
-
-//     return this;
-//   }
-
-//   /** @return the x-coordinate of the bottom left corner */
-//   public float getX () {
-//     return x;
-//   }
-
-//   /** Sets the x-coordinate of the bottom left corner
-//    * @param x The x-coordinate
-//    * @return this rectangle for chaining */
-//   public Rectangle setX (float x) {
-//     this.x = x;
-
-//     return this;
-//   }
-
-//   /** @return the y-coordinate of the bottom left corner */
-//   public float getY () {
-//     return y;
-//   }
-
-//   /** Sets the y-coordinate of the bottom left corner
-//    * @param y The y-coordinate
-//    * @return this rectangle for chaining */
-//   public Rectangle setY (float y) {
-//     this.y = y;
-
-//     return this;
-//   }
-
-//   /** @return the width */
-//   public float getWidth () {
-//     return width;
-//   }
-
-//   /** Sets the width of this rectangle
-//    * @param width The width
-//    * @return this rectangle for chaining */
-//   public Rectangle setWidth (float width) {
-//     this.width = width;
-
-//     return this;
-//   }
-
-//   /** @return the height */
-//   public float getHeight () {
-//     return height;
-//   }
-
-//   /** Sets the height of this rectangle
-//    * @param height The height
-//    * @return this rectangle for chaining */
-//   public Rectangle setHeight (float height) {
-//     this.height = height;
-
-//     return this;
-//   }
-
-//   /** return the Vector2 with coordinates of this rectangle
-//    * @param position The Vector2 */
-//   public Vector2 getPosition (Vector2 position) {
-//     return position.set(x, y);
-//   }
-
-//   /** Sets the x and y-coordinates of the bottom left corner from vector
-//    * @param position The position vector
-//    * @return this rectangle for chaining */
-//   public Rectangle setPosition (Vector2 position) {
-//     this.x = position.x;
-//     this.y = position.y;
-
-//     return this;
-//   }
-
-//   /** Sets the x and y-coordinates of the bottom left corner
-//    * @param x The x-coordinate
-//    * @param y The y-coordinate
-//    * @return this rectangle for chaining */
-//   public Rectangle setPosition (float x, float y) {
-//     this.x = x;
-//     this.y = y;
-
-//     return this;
-//   }
-
-//   /** Sets the width and height of this rectangle
-//    * @param width The width
-//    * @param height The height
-//    * @return this rectangle for chaining */
-//   public Rectangle setSize (float width, float height) {
-//     this.width = width;
-//     this.height = height;
-
-//     return this;
-//   }
-
-//   /** Sets the squared size of this rectangle
-//    * @param sizeXY The size
-//    * @return this rectangle for chaining */
-//   public Rectangle setSize (float sizeXY) {
-//     this.width = sizeXY;
-//     this.height = sizeXY;
-
-//     return this;
-//   }
-
-//   /** @return the Vector2 with size of this rectangle
-//    * @param size The Vector2 */
-//   public Vector2 getSize (Vector2 size) {
-//     return size.set(width, height);
-//   }
-
-//   /** @param x point x coordinate
-//    * @param y point y coordinate
-//    * @return whether the point is contained in the rectangle */
-//   public boolean contains (float x, float y) {
-//     return this.x <= x && this.x + this.width >= x && this.y <= y && this.y + this.height >= y;
-//   }
-
-//   /** @param point The coordinates vector
-//    * @return whether the point is contained in the rectangle */
-//   public boolean contains (Vector2 point) {
-//     return contains(point.x, point.y);
-//   }
-
-//   /** @param rectangle the other {@link Rectangle}.
-//    * @return whether the other rectangle is contained in this rectangle. */
-//   public boolean contains (Rectangle rectangle) {
-//     float xmin = rectangle.x;
-//     float xmax = xmin + rectangle.width;
-
-//     float ymin = rectangle.y;
-//     float ymax = ymin + rectangle.height;
-
-//     return ((xmin > x && xmin < x + width) && (xmax > x && xmax < x + width))
-//       && ((ymin > y && ymin < y + height) && (ymax > y && ymax < y + height));
-//   }
-
-//   /** @param r the other {@link Rectangle}
-//    * @return whether this rectangle overlaps the other rectangle. */
-//   public boolean overlaps (Rectangle r) {
-//     return x < r.x + r.width && x + width > r.x && y < r.y + r.height && y + height > r.y;
-//   }
-
-//   /** Sets the values of the given rectangle to this rectangle.
-//    * @param rect the other rectangle
-//    * @return this rectangle for chaining */
-//   public Rectangle set (Rectangle rect) {
-//     this.x = rect.x;
-//     this.y = rect.y;
-//     this.width = rect.width;
-//     this.height = rect.height;
-
-//     return this;
-//   }
-
-//   /** Merges this rectangle with the other rectangle. The rectangle should not have negative width or negative height.
-//    * @param rect the other rectangle
-//    * @return this rectangle for chaining */
-//   public Rectangle merge (Rectangle rect) {
-//     float minX = Math.min(x, rect.x);
-//     float maxX = Math.max(x + width, rect.x + rect.width);
-//     x = minX;
-//     width = maxX - minX;
-
-//     float minY = Math.min(y, rect.y);
-//     float maxY = Math.max(y + height, rect.y + rect.height);
-//     y = minY;
-//     height = maxY - minY;
-
-//     return this;
-//   }
-
-//   /** Merges this rectangle with a point. The rectangle should not have negative width or negative height.
-//    * @param x the x coordinate of the point
-//    * @param y the y coordinate of the point
-//    * @return this rectangle for chaining */
-//   public Rectangle merge (float x, float y) {
-//     float minX = Math.min(this.x, x);
-//     float maxX = Math.max(this.x + width, x);
-//     this.x = minX;
-//     this.width = maxX - minX;
-
-//     float minY = Math.min(this.y, y);
-//     float maxY = Math.max(this.y + height, y);
-//     this.y = minY;
-//     this.height = maxY - minY;
-
-//     return this;
-//   }
-
-//   /** Merges this rectangle with a point. The rectangle should not have negative width or negative height.
-//    * @param vec the vector describing the point
-//    * @return this rectangle for chaining */
-//   public Rectangle merge (Vector2 vec) {
-//     return merge(vec.x, vec.y);
-//   }
-
-//   /** Merges this rectangle with a list of points. The rectangle should not have negative width or negative height.
-//    * @param vecs the vectors describing the points
-//    * @return this rectangle for chaining */
-//   public Rectangle merge (Vector2[] vecs) {
-//     float minX = x;
-//     float maxX = x + width;
-//     float minY = y;
-//     float maxY = y + height;
-//     for (int i = 0; i < vecs.length; ++i) {
-//       Vector2 v = vecs[i];
-//       minX = Math.min(minX, v.x);
-//       maxX = Math.max(maxX, v.x);
-//       minY = Math.min(minY, v.y);
-//       maxY = Math.max(maxY, v.y);
-//     }
-//     x = minX;
-//     width = maxX - minX;
-//     y = minY;
-//     height = maxY - minY;
-//     return this;
-//   }
-
-//   /** Calculates the aspect ratio ( width / height ) of this rectangle
-//    * @return the aspect ratio of this rectangle. Returns Float.NaN if height is 0 to avoid ArithmeticException */
-//   public float getAspectRatio () {
-//     return (height == 0) ? Float.NaN : width / height;
-//   }
-
-//   /** Calculates the center of the rectangle. Results are located in the given Vector2
-//    * @param vector the Vector2 to use
-//    * @return the given vector with results stored inside */
-//   public Vector2 getCenter (Vector2 vector) {
-//     vector.x = x + width / 2;
-//     vector.y = y + height / 2;
-//     return vector;
-//   }
-
-//   /** Moves this rectangle so that its center point is located at a given position
-//    * @param x the position's x
-//    * @param y the position's y
-//    * @return this for chaining */
-//   public Rectangle setCenter (float x, float y) {
-//     setPosition(x - width / 2, y - height / 2);
-//     return this;
-//   }
-
-//   /** Moves this rectangle so that its center point is located at a given position
-//    * @param position the position
-//    * @return this for chaining */
-//   public Rectangle setCenter (Vector2 position) {
-//     setPosition(position.x - width / 2, position.y - height / 2);
-//     return this;
-//   }
-
-//   /** Fits this rectangle around another rectangle while maintaining aspect ratio. This scales and centers the rectangle to the
-//    * other rectangle (e.g. Having a camera translate and scale to show a given area)
-//    * @param rect the other rectangle to fit this rectangle around
-//    * @return this rectangle for chaining */
-//   public Rectangle fitOutside (Rectangle rect) {
-//     float ratio = getAspectRatio();
-
-//     if (ratio > rect.getAspectRatio()) {
-//       // Wider than tall
-//       setSize(rect.height * ratio, rect.height);
-//     } else {
-//       // Taller than wide
-//       setSize(rect.width, rect.width / ratio);
-//     }
-
-//     setPosition((rect.x + rect.width / 2) - width / 2, (rect.y + rect.height / 2) - height / 2);
-//     return this;
-//   }
-
-//   /** Fits this rectangle into another rectangle while maintaining aspect ratio. This scales and centers the rectangle to the
-//    * other rectangle (e.g. Scaling a texture within a arbitrary cell without squeezing)
-//    * @param rect the other rectangle to fit this rectangle inside
-//    * @return this rectangle for chaining */
-//   public Rectangle fitInside (Rectangle rect) {
-//     float ratio = getAspectRatio();
-
-//     if (ratio < rect.getAspectRatio()) {
-//       // Taller than wide
-//       setSize(rect.height * ratio, rect.height);
-//     } else {
-//       // Wider than tall
-//       setSize(rect.width, rect.width / ratio);
-//     }
-
-//     setPosition((rect.x + rect.width / 2) - width / 2, (rect.y + rect.height / 2) - height / 2);
-//     return this;
-//   }
-
-//   public String toString () {
-//     return x + "," + y + "," + width + "," + height;
-//   }
-
-//   public float area () {
-//     return this.width * this.height;
-//   }
-
-//   public float perimeter () {
-//     return 2 * (this.width + this.height);
-//   }
-
-//   public int hashCode () {
-//     final int prime = 31;
-//     int result = 1;
-//     result = prime * result + NumberUtils.floatToRawIntBits(height);
-//     result = prime * result + NumberUtils.floatToRawIntBits(width);
-//     result = prime * result + NumberUtils.floatToRawIntBits(x);
-//     result = prime * result + NumberUtils.floatToRawIntBits(y);
-//     return result;
-//   }
-
-//   public boolean equals (Object obj) {
-//     if (this == obj) return true;
-//     if (obj == null) return false;
-//     if (getClass() != obj.getClass()) return false;
-//     Rectangle other = (Rectangle)obj;
-//     if (NumberUtils.floatToRawIntBits(height) != NumberUtils.floatToRawIntBits(other.height)) return false;
-//     if (NumberUtils.floatToRawIntBits(width) != NumberUtils.floatToRawIntBits(other.width)) return false;
-//     if (NumberUtils.floatToRawIntBits(x) != NumberUtils.floatToRawIntBits(other.x)) return false;
-//     if (NumberUtils.floatToRawIntBits(y) != NumberUtils.floatToRawIntBits(other.y)) return false;
-//     return true;
-//   }
-
-// }
+// return the Vector2 with coordinates of this rectangle
+func (self *Rectangle) GetPosition(position *Vector2) *Vector2 {
+	return position.Set(x, y)
+}
+
+// Sets the x and y-coordinates of the bottom left corner from vector
+func (self *Rectangle) SetPositionV(position *Vector2) *Rectangle {
+	self.x = position.x
+	self.y = position.y
+	return self
+}
+
+// Sets the x and y-coordinates of the bottom left corner
+func (self *Rectangle) SetPosition(x, y float32) *Rectangle {
+	self.x = x
+	self.y = y
+	return self
+}
+
+// Sets the width and height of this rectangle
+func (self *Rectangle) SetSize(width, height float32) *Rectangle {
+	self.width = width
+	self.height = height
+	return self
+}
+
+// Sets the squared size of this rectangle
+func (self *Rectangle) SetSizeXY(sizeXY float32) *Rectangle {
+	self.width = sizeXY
+	self.height = sizeXY
+	return self
+}
+
+// returns the Vector2 with size of this rectangle
+func (self *Rectangle) GetSize(size *Vector2) *Vector2 {
+	return size.Set(width, height)
+}
+
+// returns whether the point is contained in the rectangle
+func (self *Rectangle) Contains(x, y float32) bool {
+	return self.x <= x && self.x+self.width >= x && self.y <= y && self.y+self.height >= y
+}
+
+// returns whether the point is contained in the rectangle
+func (self *Rectangle) ContainsV(point *Vector2) bool {
+	return self.Contains(point.x, point.y)
+}
+
+// returns whether the other rectangle is contained in this rectangle.
+func (self *Rectangle) ContainsRect(rectangle *Rectangle) bool {
+	xmin := rectangle.x
+	xmax := xmin + rectangle.width
+
+	ymin := rectangle.y
+	ymax := ymin + rectangle.height
+
+	return ((xmin > x && xmin < x+width) && (xmax > x && xmax < x+width)) && ((ymin > y && ymin < y+height) && (ymax > y && ymax < y+height))
+}
+
+// returns whether this rectangle overlaps the other rectangle.
+func (self *Rectangle) Overlaps(r *Rectangle) bool {
+	return x < r.x+r.width && x+width > r.x && y < r.y+r.height && y+height > r.y
+}
+
+// Merges this rectangle with the other rectangle. The rectangle should not have negative width or negative height.
+func (self *Rectangle) MergeRect(rect *Rectangle) *Rectangle {
+	minX := float32(math.Min(x, rect.x))
+	maxX := float32(math.Max(x+width, rect.x+rect.width))
+	self.x = minX
+	self.w = maxX - minX
+
+	minY := float32(math.Min(y, rect.y))
+	maxY := float32(math.Max(y+height, rect.y+rect.height))
+	self.y = minY
+	self.h = maxY - minY
+
+	return self
+}
+
+// Merges this rectangle with a point. The rectangle should not have negative width or negative height.
+func (self *Rectangle) Merge(x, y float32) *Rectangle {
+	minX := float32(math.Min(self.x, x))
+	maxX := float32(math.Max(self.x+self.w, x))
+	self.x = minX
+	self.w = maxX - minX
+
+	minY := float32(math.Min(self.y, y))
+	maxY := float32(math.Max(self.y+self.h, y))
+	self.y = minY
+	self.h = maxY - minY
+
+	return self
+}
+
+// Merges this rectangle with a point. The rectangle should not have negative width or negative height.
+func (self *Rectangle) MergeVec(vec *Vector2) *Rectangle {
+	return self.Merge(vec.x, vec.y)
+}
+
+// Merges this rectangle with a list of points. The rectangle should not have negative width or negative height.
+func (self *Rectangle) MergeVecs(vecs []*Vector2) *Rectangle {
+	minX := x
+	maxX := x + width
+	minY := y
+	maxY := y + height // TODO check ++i
+	for i := 0; i < len(vecs); i++ {
+		v := vecs[i]
+		minX = float32(math.Min(minX, v.x))
+		maxX = float32(math.Max(maxX, v.x))
+		minY = float32(math.Min(minY, v.y))
+		maxY = float32(math.Max(maxY, v.y))
+	}
+	self.x = minX
+	self.w = maxX - minX
+	self.y = minY
+	self.h = maxY - minY
+	return self
+}
+
+// Calculates the aspect ratio ( width / height ) of this rectangle
+// returns the aspect ratio of this rectangle. Returns Float.NaN if height is 0 to avoid ArithmeticException
+func (self *Rectangle) GetAspectRatio() float32 {
+	if height == 0 {
+		return float32(math.NaN)
+	}
+	return self.w / self.h
+}
+
+// Calculates the center of the rectangle. Results are located in the given Vector2
+// returns the given vector with results stored inside
+func (self *Rectangle) GetCenter(vector *Vector2) *Vector2 {
+	vector.x = self.x + self.w/2
+	vector.y = self.y + self.h/2
+	return vector
+}
+
+// Moves this rectangle so that its center point is located at a given position
+// returns this for chaining
+func (self *Rectangle) SetCenter(x, y float32) *Rectangle {
+	self.SetPosition(self.x-self.w/2, self.y-self.h/2)
+	return self
+}
+
+// Moves this rectangle so that its center point is located at a given position
+// returns this for chaining
+func (self *Rectangle) SetCenterV(position *Vector2) *Rectangle {
+	self.SetPosition(position.x-self.w/2, position.y-self.h/2)
+	return self
+}
+
+// Fits this rectangle around another rectangle while maintaining aspect ratio. This scales and centers the rectangle to the
+// other rectangle (e.g. Having a camera translate and scale to show a given area)
+// param rect the other rectangle to fit this rectangle around
+// returns this rectangle for chaining
+func (self *Rectangle) FitOutside(rect *Rectangle) *Rectangle {
+	ratio := self.GetAspectRatio()
+
+	if ratio > rect.getAspectRatio() {
+		// Wider than tall
+		self.SetSize(rect.height*ratio, rect.height)
+	} else {
+		// Taller than wide
+		self.SetSize(rect.width, rect.width/ratio)
+	}
+
+	self.SetPosition((rect.x+rect.width/2)-self.w/2, (rect.y+rect.height/2)-self.h/2)
+	return self
+}
+
+// Fits this rectangle into another rectangle while maintaining aspect ratio. This scales and centers the rectangle to the
+// other rectangle (e.g. Scaling a texture within a arbitrary cell without squeezing)
+// param rect the other rectangle to fit this rectangle inside
+// returns this rectangle for chaining
+func (self *Rectangle) FitInside(rect *Rectangle) *Rectangle {
+	ratio := self.GetAspectRatio()
+
+	if ratio < rect.GetAspectRatio() {
+		// Taller than wide
+		self.SetSize(rect.height*ratio, rect.height)
+	} else {
+		// Wider than tall
+		self.SetSize(rect.width, rect.width/ratio)
+	}
+
+	self.SetPosition((rect.x+rect.width/2)-self.w/2, (rect.y+rect.height/2)-self.h/2)
+	return self
+}
+
+func (self *Rectangle) String() string {
+	return x + "," + y + "," + width + "," + height
+}
+
+func (self *Rectangle) Area() float32 {
+	return self.width * self.height
+}
+
+func (self *Rectangle) Perimeter() float32 {
+	return 2 * (self.width + self.height)
+}
+
+func (self *Rectangle) HashCode() int {
+	//     final int prime = 31;
+	//     int result = 1;
+	//     result = prime * result + NumberUtils.floatToRawIntBits(height);
+	//     result = prime * result + NumberUtils.floatToRawIntBits(width);
+	//     result = prime * result + NumberUtils.floatToRawIntBits(x);
+	//     result = prime * result + NumberUtils.floatToRawIntBits(y);
+	//     return result;
+	return 0
+}
+
+func (self *Rectangle) Equals(rect *Rectangle) bool {
+	if self == rect {
+		return true
+	}
+	if rect == nil {
+		return false
+	}
+	// if (NumberUtils.floatToRawIntBits(height) != NumberUtils.floatToRawIntBits(other.height)) return false;
+	// if (NumberUtils.floatToRawIntBits(width) != NumberUtils.floatToRawIntBits(other.width)) return false;
+	// if (NumberUtils.floatToRawIntBits(x) != NumberUtils.floatToRawIntBits(other.x)) return false;
+	// if (NumberUtils.floatToRawIntBits(y) != NumberUtils.floatToRawIntBits(other.y)) return false;
+	return true
+}

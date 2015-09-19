@@ -98,7 +98,6 @@ func Run() {
 	lastTime := time.Now()
 	app.Main(func(a app.App) {
 		for now := range fpsTicker.C {
-			print("timing")
 			if !running {
 				break
 			}
