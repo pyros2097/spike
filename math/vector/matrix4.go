@@ -157,7 +157,7 @@ func (self *Matrix4) SetQR(qX, qY, qZ, qW float32) *Matrix4 {
 // param position The translation
 // param orientation The rotation, must be normalized
 func (self *Matrix4) SetV(position *Vector3, orientation *Quaternion) *Matrix4 {
-	return self.SetTQ(position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w)
+	return self.SetTQ(position.X, position.Y, position.Z, orientation.x, orientation.y, orientation.z, orientation.w)
 }
 
 // Sets the matrix to a rotation matrix representing the translation and quaternion.
@@ -209,7 +209,7 @@ func (self *Matrix4) SetTQ(tX, tY, tZ, qX, qY, qZ, qW float32) *Matrix4 {
 // param orient The rotation, must be normalized
 // param scale The scale
 func (self *Matrix4) SetVRS(p *Vector3, orient *Quaternion, scale *Vector3) *Matrix4 {
-	return self.Set(p.x, p.y, p.z, orient.x, orient.y, orient.z, orient.w, scale.x, scale.y, scale.z)
+	return self.Set(p.X, p.Y, p.Z, orient.x, orient.y, orient.z, orient.w, scale.X, scale.Y, scale.Z)
 }
 
 // Sets the matrix to a rotation matrix representing the translation and quaternion.
@@ -266,18 +266,18 @@ func (self *Matrix4) Set(tX, tY, tZ, qX, qY, qZ, qW, scaleX, scaleY, scaleZ floa
 // param zAxis The z-axis.
 // param pos The translation vector.
 func (self *Matrix4) SetVAxis(xAxis, yAxis, zAxis, pos *Vector3) *Matrix4 {
-	self.val[M4_00] = xAxis.x
-	self.val[M4_01] = xAxis.y
-	self.val[M4_02] = xAxis.z
-	self.val[M4_10] = yAxis.x
-	self.val[M4_11] = yAxis.y
-	self.val[M4_12] = yAxis.z
-	self.val[M4_20] = zAxis.x
-	self.val[M4_21] = zAxis.y
-	self.val[M4_22] = zAxis.z
-	self.val[M4_03] = pos.x
-	self.val[M4_13] = pos.y
-	self.val[M4_23] = pos.z
+	self.val[M4_00] = xAxis.X
+	self.val[M4_01] = xAxis.Y
+	self.val[M4_02] = xAxis.Z
+	self.val[M4_10] = yAxis.X
+	self.val[M4_11] = yAxis.Y
+	self.val[M4_12] = yAxis.Z
+	self.val[M4_20] = zAxis.X
+	self.val[M4_21] = zAxis.Y
+	self.val[M4_22] = zAxis.Z
+	self.val[M4_03] = pos.X
+	self.val[M4_13] = pos.Y
+	self.val[M4_23] = pos.Z
 	self.val[M4_30] = 0
 	self.val[M4_31] = 0
 	self.val[M4_32] = 0
@@ -293,9 +293,9 @@ func (self *Matrix4) Copy() *Matrix4 {
 // Adds a translational component to the matrix in the 4th column. The other columns are untouched.
 // param vector The translation vector to add to the current matrix. (This vector is not modified)
 func (self *Matrix4) TrnV(vector *Vector3) *Matrix4 {
-	self.val[M4_03] += vector.x
-	self.val[M4_13] += vector.y
-	self.val[M4_23] += vector.z
+	self.val[M4_03] += vector.X
+	self.val[M4_13] += vector.Y
+	self.val[M4_23] += vector.Z
 	return self
 }
 
@@ -590,9 +590,9 @@ func (self *Matrix4) SetToOrtho(left, right, bottom, top, near, far float32) *Ma
 //
 // param vector The translation vector
 func (self *Matrix4) SetTranslationV3(vector *Vector3) *Matrix4 {
-	self.val[M4_03] = vector.x
-	self.val[M4_13] = vector.y
-	self.val[M4_23] = vector.z
+	self.val[M4_03] = vector.X
+	self.val[M4_13] = vector.Y
+	self.val[M4_23] = vector.Z
 	return self
 }
 
@@ -614,9 +614,9 @@ func (self *Matrix4) SetTranslation(x, y, z float32) *Matrix4 {
 // param vector The translation vector
 func (self *Matrix4) SetToTranslationV3(vector *Vector3) *Matrix4 {
 	self.Idt()
-	self.val[M4_03] = vector.x
-	self.val[M4_13] = vector.y
-	self.val[M4_23] = vector.z
+	self.val[M4_03] = vector.X
+	self.val[M4_13] = vector.Y
+	self.val[M4_23] = vector.Z
 	return self
 }
 
@@ -641,12 +641,12 @@ func (self *Matrix4) SetToTranslation(x, y, z float32) *Matrix4 {
 // param scaling The scaling vector
 func (self *Matrix4) SetToTranslationAndScalingV3(translation, scaling *Vector3) *Matrix4 {
 	self.Idt()
-	self.val[M4_03] = translation.x
-	self.val[M4_13] = translation.y
-	self.val[M4_23] = translation.z
-	self.val[M4_00] = scaling.x
-	self.val[M4_11] = scaling.y
-	self.val[M4_22] = scaling.z
+	self.val[M4_03] = translation.X
+	self.val[M4_13] = translation.Y
+	self.val[M4_23] = translation.Z
+	self.val[M4_00] = scaling.X
+	self.val[M4_11] = scaling.Y
+	self.val[M4_22] = scaling.Z
 	return self
 }
 
@@ -762,9 +762,9 @@ func (self *Matrix4) SetFromEulerAnglesRad(yaw, pitch, roll float32) *Matrix4 {
 // param vector The scaling vector.
 func (self *Matrix4) SetToScalingV3(vector *Vector3) *Matrix4 {
 	self.Idt()
-	self.val[M4_00] = vector.x
-	self.val[M4_11] = vector.y
-	self.val[M4_22] = vector.z
+	self.val[M4_00] = vector.X
+	self.val[M4_11] = vector.Y
+	self.val[M4_22] = vector.Z
 	return self
 }
 
@@ -792,15 +792,15 @@ func (self *Matrix4) SetToLookAt(direction, up *Vector3) *Matrix4 {
 	l_vex.CrsV(up).Nor()
 	l_vey.SetV(l_vex).CrsV(l_vez).Nor()
 	self.Idt()
-	self.val[M4_00] = l_vex.x
-	self.val[M4_01] = l_vex.y
-	self.val[M4_02] = l_vex.z
-	self.val[M4_10] = l_vey.x
-	self.val[M4_11] = l_vey.y
-	self.val[M4_12] = l_vey.z
-	self.val[M4_20] = -l_vez.x
-	self.val[M4_21] = -l_vez.y
-	self.val[M4_22] = -l_vez.z
+	self.val[M4_00] = l_vex.X
+	self.val[M4_01] = l_vex.Y
+	self.val[M4_02] = l_vex.Z
+	self.val[M4_10] = l_vey.X
+	self.val[M4_11] = l_vey.Y
+	self.val[M4_12] = l_vey.Z
+	self.val[M4_20] = -l_vez.X
+	self.val[M4_21] = -l_vez.Y
+	self.val[M4_22] = -l_vez.Z
 
 	return self
 }
@@ -813,7 +813,7 @@ func (self *Matrix4) SetToLookAt(direction, up *Vector3) *Matrix4 {
 func (self *Matrix4) SetToLookAtPos(position, target, up *Vector3) *Matrix4 {
 	tmpVec.SetV(target).SubV(position)
 	self.SetToLookAt(tmpVec, up)
-	self.MulM4(tmpMat.SetToTranslation(-position.x, -position.y, -position.z))
+	self.MulM4(tmpMat.SetToTranslation(-position.X, -position.Y, -position.Z))
 
 	return self
 }
@@ -988,9 +988,9 @@ func (self *Matrix4) SetAsAffineM4(mat *Matrix4) *Matrix4 {
 }
 
 func (self *Matrix4) SclV(scale *Vector3) *Matrix4 {
-	self.val[M4_00] *= scale.x
-	self.val[M4_11] *= scale.y
-	self.val[M4_22] *= scale.z
+	self.val[M4_00] *= scale.X
+	self.val[M4_11] *= scale.Y
+	self.val[M4_22] *= scale.Z
 	return self
 }
 
@@ -1009,9 +1009,9 @@ func (self *Matrix4) SclValue(scale float32) *Matrix4 {
 }
 
 func (self *Matrix4) GetTranslation(position *Vector3) *Vector3 {
-	position.x = self.val[M4_03]
-	position.y = self.val[M4_13]
-	position.z = self.val[M4_23]
+	position.X = self.val[M4_03]
+	position.Y = self.val[M4_13]
+	position.Z = self.val[M4_23]
 	return position
 }
 
@@ -1364,7 +1364,7 @@ public static native float det (float[] values) /*-{ }; /*
 // glTranslate/glRotate/glScale
 // param translation
 func (self *Matrix4) TranslateV(translation *Vector3) *Matrix4 {
-	return self.Translate(translation.x, translation.y, translation.z)
+	return self.Translate(translation.X, translation.Y, translation.Z)
 }
 
 // Postmultiplies this matrix by a translation matrix. Postmultiplication is also used by OpenGL ES' 1.x

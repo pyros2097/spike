@@ -67,7 +67,7 @@ func (self *Quaternion) SetQ(quaternion *Quaternion) *Quaternion {
 // param axis The axis
 // param angle The angle in degrees
 func (self *Quaternion) SetV3(axis *Vector3, angle float32) *Quaternion {
-	return self.SetFromAxis(axis.x, axis.y, axis.z, angle)
+	return self.SetFromAxis(axis.X, axis.Y, axis.Z, angle)
 }
 
 // return a copy of this quaternion
@@ -217,11 +217,11 @@ func (self *Quaternion) Conjugate() *Quaternion {
 func (self *Quaternion) Transform(v *Vector3) *Vector3 {
 	tmp2.SetQ(self)
 	tmp2.Conjugate()
-	tmp2.MulLeftQ(tmp1.Set(v.x, v.y, v.z, 0)).MulLeftQ(self)
+	tmp2.MulLeftQ(tmp1.Set(v.X, v.Y, v.Z, 0)).MulLeftQ(self)
 
-	v.x = tmp2.x
-	v.y = tmp2.y
-	v.z = tmp2.z
+	v.X = tmp2.x
+	v.Y = tmp2.y
+	v.Z = tmp2.z
 	return v
 }
 
@@ -361,14 +361,14 @@ func (self *Quaternion) IsIdentityTolerance(tolerance float32) bool {
 // param axis The axis
 // param degrees The angle in degrees
 func (self *Quaternion) SetFromAxisV3(axis *Vector3, degrees float32) *Quaternion {
-	return self.SetFromAxis(axis.x, axis.y, axis.z, degrees)
+	return self.SetFromAxis(axis.X, axis.Y, axis.Z, degrees)
 }
 
 // Sets the quaternion components from the given axis and angle around that axis.
 // param axis The axis
 // param radians The angle in radians
 func (self *Quaternion) SetFromAxisRadV3(axis *Vector3, radians float32) *Quaternion {
-	return self.SetFromAxisRad(axis.x, axis.y, axis.z, radians)
+	return self.SetFromAxisRad(axis.X, axis.Y, axis.Z, radians)
 }
 
 // Sets the quaternion components from the given axis and angle around that axis.
@@ -516,7 +516,7 @@ func (self *Quaternion) SetFromAxesNormalize(normalizeAxes bool, xx, xy, xz, yx,
 func (self *Quaternion) SetFromCrossV3(v1, v2 *Vector3) *Quaternion {
 	dot := utils.ClampFloat32(v1.DotV(v2), -1, 1)
 	angle := float32(math.Acos(float64(dot)))
-	return self.SetFromAxisRad(v1.y*v2.z-v1.z*v2.y, v1.z*v2.x-v1.x*v2.z, v1.x*v2.y-v1.y*v2.x, angle)
+	return self.SetFromAxisRad(v1.Y*v2.Z-v1.Z*v2.Y, v1.Z*v2.X-v1.X*v2.Z, v1.X*v2.Y-v1.Y*v2.X, angle)
 }
 
 // Set this quaternion to the rotation between two vectors.
@@ -743,13 +743,13 @@ func (self *Quaternion) GetAxisAngleRad(axis *Vector3) float32 {
 	s := float32(math.Sqrt(float64(1 - self.w*self.w))) // assuming quaternion normalised then w is less than 1, so term always positive.
 	if s < utils.FLOAT_ROUNDING_ERROR {                 // test to avoid divide by zero, s is always positive due to sqrt
 		// if s close to zero then direction of axis not important
-		axis.x = self.x // if it is important that axis is normalised then replace with x=1; y=z=0;
-		axis.y = self.y
-		axis.z = self.z
+		axis.X = self.x // if it is important that axis is normalised then replace with x=1; y=z=0;
+		axis.Y = self.y
+		axis.Z = self.z
 	} else {
-		axis.x = float32(self.x / s) // normalise axis
-		axis.y = float32(self.y / s)
-		axis.z = float32(self.z / s)
+		axis.X = float32(self.x / s) // normalise axis
+		axis.Y = float32(self.y / s)
+		axis.Z = float32(self.z / s)
 	}
 
 	return angle
@@ -803,7 +803,7 @@ func (self *Quaternion) GetSwingTwist(axisX, axisY, axisZ float32, swing, twist 
 // param twist will receive the twist rotation: the rotation around the specified axis
 // @see <a href="http://www.euclideanspace.com/maths/geometry/rotations/for/decomposition">calculation</a>
 func (self *Quaternion) GetSwingTwistV(axis *Vector3, swing, twist *Quaternion) {
-	self.GetSwingTwist(axis.x, axis.y, axis.z, swing, twist)
+	self.GetSwingTwist(axis.X, axis.Y, axis.Z, swing, twist)
 }
 
 // Get the angle in radians of the rotation around the specified axis. The axis must be normalized.
@@ -825,7 +825,7 @@ func (self *Quaternion) GetAngleAroundRad(axisX, axisY, axisZ float32) float32 {
 // param axis the normalized axis for which to get the angle
 // return the angle in radians of the rotation around the specified axis
 func (self *Quaternion) GetAngleAroundRadV(axis *Vector3) float32 {
-	return self.GetAngleAroundRad(axis.x, axis.y, axis.z)
+	return self.GetAngleAroundRad(axis.X, axis.Y, axis.Z)
 }
 
 // Get the angle in degrees of the rotation around the specified axis. The axis must be normalized.
@@ -841,7 +841,7 @@ func (self *Quaternion) GetAngleAround(axisX, axisY, axisZ float32) float32 {
 // param axis the normalized axis for which to get the angle
 // return the angle in degrees of the rotation around the specified axis
 func (self *Quaternion) GetAngleAroundV(axis *Vector3) float32 {
-	return self.GetAngleAround(axis.x, axis.y, axis.z)
+	return self.GetAngleAround(axis.X, axis.Y, axis.Z)
 }
 
 func (self *Quaternion) String() string {

@@ -105,7 +105,7 @@ func (self *Affine2) SetToTranslation(x, y float32) *Affine2 {
 // param trn The translation vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToTranslationV(trn *Vector2) *Affine2 {
-	return self.SetToTranslation(trn.x, trn.y)
+	return self.SetToTranslation(trn.X, trn.Y)
 }
 
 // Sets this matrix to a scaling matrix.
@@ -126,7 +126,7 @@ func (self *Affine2) SetToScaling(scaleX, scaleY float32) *Affine2 {
 // param scale The scale vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToScalingV(scale *Vector2) *Affine2 {
-	return self.SetToScaling(scale.x, scale.y)
+	return self.SetToScaling(scale.X, scale.Y)
 }
 
 // Sets this matrix to a rotation matrix that will rotate any vector in counter-clockwise direction around the z-axis.
@@ -193,7 +193,7 @@ func (self *Affine2) SetToShearing(shearX, shearY float32) *Affine2 {
 // param shear The shear vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToShearingV(shear *Vector2) *Affine2 {
-	return self.SetToShearing(shear.x, shear.y)
+	return self.SetToShearing(shear.X, shear.Y)
 }
 
 // Sets this matrix to a concatenation of translation, rotation and scale. It is a more efficient form for:
@@ -232,7 +232,7 @@ func (self *Affine2) SetToTrnRotScl(x, y, degrees, scaleX, scaleY float32) *Affi
 // param scale The scale vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToTrnRotSclV(trn *Vector2, degrees float32, scale *Vector2) *Affine2 {
-	return self.SetToTrnRotScl(trn.x, trn.y, degrees, scale.x, scale.y)
+	return self.SetToTrnRotScl(trn.X, trn.Y, degrees, scale.X, scale.Y)
 }
 
 // Sets this matrix to a concatenation of translation, rotation and scale. It is a more efficient form for:
@@ -271,7 +271,7 @@ func (self *Affine2) SetToTrnRotRadScl(x, y, radians, scaleX, scaleY float32) *A
 // param scale The scale vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToTrnRotRadSclV(trn *Vector2, radians float32, scale *Vector2) *Affine2 {
-	return self.SetToTrnRotRadScl(trn.x, trn.y, radians, scale.x, scale.y)
+	return self.SetToTrnRotRadScl(trn.X, trn.Y, radians, scale.X, scale.Y)
 }
 
 // Sets this matrix to a concatenation of translation and scale. It is a more efficient form for:
@@ -297,7 +297,7 @@ func (self *Affine2) SetToTrnScl(x, y, scaleX, scaleY float32) *Affine2 {
 // param scale The scale vector.
 // return This matrix for the purpose of chaining operations.
 func (self *Affine2) SetToTrnSclV(trn, scale *Vector2) *Affine2 {
-	return self.SetToTrnScl(trn.x, trn.y, scale.x, scale.y)
+	return self.SetToTrnScl(trn.X, trn.Y, scale.X, scale.Y)
 }
 
 // Sets this matrix to the product of two matrices.
@@ -397,7 +397,7 @@ func (self *Affine2) Translate(x, y float32) *Affine2 {
 // param trn The translation vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) TranslateV(trn *Vector2) *Affine2 {
-	return self.Translate(trn.x, trn.y)
+	return self.Translate(trn.X, trn.Y)
 }
 
 // Premultiplies this matrix by a translation matrix.
@@ -414,7 +414,7 @@ func (self *Affine2) PreTranslate(x, y float32) *Affine2 {
 // param trn The translation vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) PreTranslateV(trn *Vector2) *Affine2 {
-	return self.PreTranslate(trn.x, trn.y)
+	return self.PreTranslate(trn.X, trn.Y)
 }
 
 // Postmultiplies this matrix with a scale matrix.
@@ -433,7 +433,7 @@ func (self *Affine2) Scale(scaleX, scaleY float32) *Affine2 {
 // param scale The scale vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) ScaleV(scale *Vector2) *Affine2 {
-	return self.Scale(scale.x, scale.y)
+	return self.Scale(scale.X, scale.Y)
 }
 
 // Premultiplies this matrix with a scale matrix.
@@ -454,7 +454,7 @@ func (self *Affine2) PreScale(scaleX, scaleY float32) *Affine2 {
 // param scale The scale vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) PreScaleV(scale *Vector2) *Affine2 {
-	return self.PreScale(scale.x, scale.y)
+	return self.PreScale(scale.X, scale.Y)
 }
 
 // Postmultiplies this matrix with a (counter-clockwise) rotation matrix.
@@ -578,7 +578,7 @@ func (self *Affine2) Shear(shearX, shearY float32) *Affine2 {
 // param shear The shear vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) ShearV(shear *Vector2) *Affine2 {
-	return self.Shear(shear.x, shear.y)
+	return self.Shear(shear.X, shear.Y)
 }
 
 // Premultiplies this matrix by a shear matrix.
@@ -606,7 +606,7 @@ func (self *Affine2) PreShear(shearX, shearY float32) *Affine2 {
 // param shear The shear vector.
 // return This matrix for the purpose of chaining.
 func (self *Affine2) PreShearV(shear *Vector2) *Affine2 {
-	return self.PreShear(shear.x, shear.y)
+	return self.PreShear(shear.X, shear.Y)
 }
 
 // Calculates the determinant of the matrix.
@@ -619,8 +619,8 @@ func (self *Affine2) Det() float32 {
 // param position Output vector.
 // return Filled position.
 func (self *Affine2) GetTranslation(position *Vector2) *Vector2 {
-	position.x = self.m02
-	position.y = self.m12
+	position.X = self.m02
+	position.Y = self.m12
 	return position
 }
 
@@ -638,10 +638,10 @@ func (self *Affine2) IsIdt() bool {
 
 // Applies the affine transformation on a vector.
 func (self *Affine2) ApplyTo(point *Vector2) {
-	x := point.x
-	y := point.y
-	point.x = self.m00*x + self.m01*y + self.m02
-	point.y = self.m10*x + self.m11*y + self.m12
+	x := point.X
+	y := point.Y
+	point.X = self.m00*x + self.m01*y + self.m02
+	point.Y = self.m10*x + self.m11*y + self.m12
 }
 
 func (self *Affine2) String() string {

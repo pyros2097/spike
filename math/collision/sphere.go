@@ -11,8 +11,8 @@ import (
 
 // Encapsulates a 3D sphere with a center and a radius
 type Sphere struct {
-	radius float32
-	center *Vector3
+	Radius float32
+	Center *Vector3
 }
 
 // Constructs a sphere with the given center and radius
@@ -25,22 +25,22 @@ func NewSphere(center *Vector3, radius float32) *Sphere {
 // @param sphere the other sphere
 // return whether this and the other sphere overlap
 func (self *Sphere) Overlaps(sphere *Sphere) bool {
-	return self.center.Dst2(sphere.center) < (self.radius+sphere.radius)*(self.radius+sphere.radius)
+	return self.Center.Dst2V(sphere.Center) < (self.Radius+sphere.Radius)*(self.Radius+sphere.Radius)
 }
 
 func (self *Sphere) Volume() float32 {
-	return utils.PI_4_3 * self.radius * self.radius * self.radius
+	return utils.PI_4_3 * self.Radius * self.Radius * self.Radius
 }
 
 func (self *Sphere) SurfaceArea() float32 {
-	return 4 * utils.PI * self.radius * self.radius
+	return 4 * utils.PI * self.Radius * self.Radius
 }
 
 // public int hashCode () {
 // 	final int prime = 71;
 // 	int result = 1;
-// 	result = prime * result + self.center.hashCode();
-// 	result = prime * result + NumberUtils.floatToRawIntBits(self.radius);
+// 	result = prime * result + self.Center.hashCode();
+// 	result = prime * result + NumberUtils.floatToRawIntBits(self.Radius);
 // 	return result;
 // }
 
@@ -48,5 +48,5 @@ func (self *Sphere) SurfaceArea() float32 {
 // 	if (this == o) return true;
 // 	if (o == null || o.getClass() != self.getClass()) return false;
 // 	Sphere s = (Sphere)o;
-// 	return self.radius == s.radius && self.center.equals(s.center);
+// 	return self.Radius == s.radius && self.Center.equals(s.center);
 // }

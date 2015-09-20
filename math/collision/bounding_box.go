@@ -17,7 +17,7 @@ var (
 // Encapsulates an axis aligned bounding box represented by a minimum and a maximum Vector. Additionally you can query for the
 // bounding box's center, dimensions and corner points.
 type BoundingBox struct {
-	min, max, cnt, dim *Vector3
+	Min, Max, Cnt, Dim *Vector3
 }
 
 // Constructs a new bounding box with the minimum and maximum vector set to zeros.
@@ -41,88 +41,88 @@ func NewBoundingBoxVector3(minimum, maximum *Vector3) *BoundingBox {
 // @param out The {@link Vector3} to receive the center of the bounding box.
 // return The vector specified with the out argument.
 func (self *BoundingBox) GetCenter(out *Vector3) *Vector3 {
-	return out.SetV(self.cnt)
+	return out.SetV(self.Cnt)
 }
 
 func (self *BoundingBox) GetCenterX() float32 {
-	return self.cnt.x
+	return self.Cnt.X
 }
 
 func (self *BoundingBox) GetCenterY() float32 {
-	return self.cnt.y
+	return self.Cnt.Y
 }
 
 func (self *BoundingBox) GetCenterZ() float32 {
-	return self.cnt.z
+	return self.Cnt.Z
 }
 
 func (self *BoundingBox) GetCorner000(out *Vector3) *Vector3 {
-	return out.Set(self.min.x, self.min.y, self.min.z)
+	return out.Set(self.Min.X, self.Min.Y, self.Min.Z)
 }
 
 func (self *BoundingBox) GetCorner001(out *Vector3) *Vector3 {
-	return out.Set(self.min.x, self.min.y, self.max.z)
+	return out.Set(self.Min.X, self.Min.Y, self.Max.Z)
 }
 
 func (self *BoundingBox) GetCorner010(out *Vector3) *Vector3 {
-	return out.Set(self.min.x, self.max.y, self.min.z)
+	return out.Set(self.Min.X, self.Max.Y, self.Min.Z)
 }
 
 func (self *BoundingBox) GetCorner011(out *Vector3) *Vector3 {
-	return out.Set(self.min.x, self.max.y, self.max.z)
+	return out.Set(self.Min.X, self.Max.Y, self.Max.Z)
 }
 
 func (self *BoundingBox) GetCorner100(out *Vector3) *Vector3 {
-	return out.Set(self.max.x, self.min.y, self.min.z)
+	return out.Set(self.Max.X, self.Min.Y, self.Min.Z)
 }
 
 func (self *BoundingBox) GetCorner101(out *Vector3) *Vector3 {
-	return out.Set(self.max.x, self.min.y, self.max.z)
+	return out.Set(self.Max.X, self.Min.Y, self.Max.Z)
 }
 
 func (self *BoundingBox) GetCorner110(out *Vector3) *Vector3 {
-	return out.Set(self.max.x, self.max.y, self.min.z)
+	return out.Set(self.Max.X, self.Max.Y, self.Min.Z)
 }
 
 func (self *BoundingBox) GetCorner111(out *Vector3) *Vector3 {
-	return out.Set(self.max.x, self.max.y, self.max.z)
+	return out.Set(self.Max.X, self.Max.Y, self.Max.Z)
 }
 
 // @param out The {@link Vector3} to receive the dimensions of this bounding box on all three axis.
 // return The vector specified with the out argument
 func (self *BoundingBox) GetDimensions(out *Vector3) *Vector3 {
-	return out.SetV(self.dim)
+	return out.SetV(self.Dim)
 }
 
 func (self *BoundingBox) GetWidth() float32 {
-	return self.dim.x
+	return self.Dim.X
 }
 
 func (self *BoundingBox) GetHeight() float32 {
-	return self.dim.y
+	return self.Dim.Y
 }
 
 func (self *BoundingBox) GetDepth() float32 {
-	return self.dim.z
+	return self.Dim.Z
 }
 
 // @param out The {@link Vector3} to receive the minimum values.
 // return The vector specified with the out argument
 func (self *BoundingBox) GetMin(out *Vector3) *Vector3 {
-	return out.Set(self.min)
+	return out.SetV(self.Min)
 }
 
 // @param out The {@link Vector3} to receive the maximum values.
 // return The vector specified with the out argument
 func (self *BoundingBox) GetMax(out *Vector3) *Vector3 {
-	return out.Set(self.max)
+	return out.SetV(self.Max)
 }
 
 // Sets the given bounding box.
 // param bounds The bounds.
 // return This bounding box for chaining.
 func (self *BoundingBox) SetB(bounds *BoundingBox) *BoundingBox {
-	return self.Set(bounds.min, bounds.max)
+	return self.Set(bounds.Min, bounds.Max)
 }
 
 // Sets the given minimum and maximum vector.
@@ -130,48 +130,49 @@ func (self *BoundingBox) SetB(bounds *BoundingBox) *BoundingBox {
 // param maximum The maximum vector
 // return This bounding box for chaining.
 func (self *BoundingBox) Set(min, max *Vector3) *BoundingBox {
+	var mx, my, mz, mmx, mmy, mmz float32
 	switch {
-	case min.x < max.x:
-		mx := min.x
-	case min.x > max.x:
-		mx := max.x
-	case min.y < max.y:
-		my := min.y
-	case min.y > max.y:
-		my := max.y
-	case min.z < max.z:
-		mz := min.z
-	case min.z > max.z:
-		mz := max.z
+	case min.X < max.X:
+		mx = min.X
+	case min.X > max.X:
+		mx = max.X
+	case min.Y < max.Y:
+		my = min.Y
+	case min.Y > max.Y:
+		my = max.Y
+	case min.Z < max.Z:
+		mz = min.Z
+	case min.Z > max.Z:
+		mz = max.Z
 	}
-	self.min.Set(mx, my, mz)
+	self.Min.Set(mx, my, mz)
 	switch {
-	case min.x < max.x:
-		mmx := max.x
-	case min.x > max.x:
-		mmx := min.x
-	case min.y < max.y:
-		mmy := max.y
-	case min.y > max.y:
-		mmy := min.y
-	case min.z < max.z:
-		mmz := max.z
-	case min.z > max.z:
-		mmz := min.z
+	case min.X < max.X:
+		mmx = max.X
+	case min.X > max.X:
+		mmx = min.X
+	case min.Y < max.Y:
+		mmy = max.Y
+	case min.Y > max.Y:
+		mmy = min.Y
+	case min.Z < max.Z:
+		mmz = max.Z
+	case min.Z > max.Z:
+		mmz = min.Z
 	}
-	self.max.Set(mmx, mmy, mmz)
-	self.cnt.Set(min).Add(max).Scl(0.5)
-	self.dim.Set(max).Sub(min)
+	self.Max.Set(mmx, mmy, mmz)
+	self.Cnt.SetV(min).AddV(max).SclScalar(0.5)
+	self.Dim.SetV(max).SubV(min)
 	return self
 }
 
 // Sets the bounding box minimum and maximum vector from the given points.
 // param points The points.
 // return This bounding box for chaining.
-func (self *BoundingBox) SetV(points *[]Vector3) {
+func (self *BoundingBox) SetV(points []*Vector3) *BoundingBox {
 	self.Inf()
 	for _, l_point := range points {
-		self.Ext(l_point)
+		self.ExtV3(l_point)
 	}
 	return self
 }
@@ -180,31 +181,31 @@ func (self *BoundingBox) SetV(points *[]Vector3) {
 // Sets the minimum and maximum vector to positive and negative infinity.
 // return This bounding box for chaining.
 func (self *BoundingBox) Inf() *BoundingBox {
-	self.min.Set(math.MaxFloat32, math.MaxFloat32, math.MaxFloat32)
-	self.max.Set(math.SmallestNonzeroFloat32, math.SmallestNonzeroFloat32, math.SmallestNonzeroFloat32)
-	self.cnt.Set(0, 0, 0)
-	self.dim.Set(0, 0, 0)
+	self.Min.Set(math.MaxFloat32, math.MaxFloat32, math.MaxFloat32)
+	self.Max.Set(math.SmallestNonzeroFloat32, math.SmallestNonzeroFloat32, math.SmallestNonzeroFloat32)
+	self.Cnt.Set(0, 0, 0)
+	self.Dim.Set(0, 0, 0)
 	return self
 }
 
 // Sets the minimum and maximum vector to zeros.
 // return This bounding box for chaining.
 func (self *BoundingBox) Clr() *BoundingBox {
-	return self.Set(self.min.Set(0, 0, 0), self.max.Set(0, 0, 0))
+	return self.Set(self.Min.Set(0, 0, 0), self.Max.Set(0, 0, 0))
 }
 
 // Returns whether this bounding box is valid. This means that {@link #max} is greater than {@link #min}.
 // return True in case the bounding box is valid, false otherwise
 func (self *BoundingBox) IsValid() bool {
-	return self.min.x < self.max.x && self.min.y < self.max.y && self.min.z < self.max.z
+	return self.Min.X < self.Max.X && self.Min.Y < self.Max.Y && self.Min.Z < self.Max.Z
 }
 
 // Extends the bounding box to incorporate the given {@link Vector3}.
 // param point The vector
 // return This bounding box for chaining.
 func (self *BoundingBox) ExtV3(point *Vector3) *BoundingBox {
-	return self.Set(min.Set(min(self.min.x, point.x), min(min.y, point.y), min(min.z, point.z)),
-		self.max.set(math.Max(self.max.x, point.x), math.Max(max.y, point.y), math.Max(max.z, point.z)))
+	return self.Set(self.Min.Set(min(self.Min.X, point.X), min(self.Min.Y, point.Y), min(self.Min.Z, point.Z)),
+		self.Max.Set(max(self.Max.X, point.X), max(self.Max.Y, point.Y), max(self.Max.Z, point.Z)))
 }
 
 // Extends the bounding box by the given vector.
@@ -212,31 +213,32 @@ func (self *BoundingBox) ExtV3(point *Vector3) *BoundingBox {
 // param y The y-coordinate
 // param z The z-coordinate
 // return This bounding box for chaining.
-func (self *BoundingBox) Ext(x, y, z float32) {
-	return self.Set(self.min.Set(min(self.min.x, x), min(min.y, y), min(min.z, z)), self.max.Set(max(self.max.x, x), max(max.y, y), max(max.z, z)))
+func (self *BoundingBox) Ext(x, y, z float32) *BoundingBox {
+	return self.Set(self.Min.Set(min(self.Min.X, x), min(self.Min.Y, y), min(self.Min.Z, z)),
+		self.Max.Set(max(self.Max.X, x), max(self.Max.Y, y), max(self.Max.Z, z)))
 }
 
 // Extends this bounding box by the given bounding box.
-// param a_bounds The bounding box
+// param bounds The bounding box
 // return This bounding box for chaining.
-func (self *BoundingBox) ExtB(a_bounds *BoundingBox) *BoundingBox {
-	return self.Set(self.min.Set(min(self.min.x, a_bounds.min.x), min(min.y, a_bounds.min.y), min(min.z, a_bounds.min.z)),
-		self.max.set(max(self.max.x, a_bounds.max.x), max(max.y, a_bounds.max.y), max(max.z, a_bounds.max.z)))
+func (self *BoundingBox) ExtB(bounds *BoundingBox) *BoundingBox {
+	return self.Set(self.Min.Set(min(self.Min.X, bounds.Min.X), min(self.Min.Y, bounds.Min.Y), min(self.Min.Z, bounds.Min.Z)),
+		self.Max.Set(max(self.Max.X, bounds.Max.X), max(self.Max.Y, bounds.Max.Y), max(self.Max.Z, bounds.Max.Z)))
 }
 
 // Extends this bounding box by the given transformed bounding box.
 // param bounds The bounding box
 // param transform The transformation matrix to apply to bounds, before using it to extend this bounding box.
 // return This bounding box for chaining.
-func (self *BoundingBox) ExtBT(bounds *BoundingBox, transform *Matrix4) {
-	self.Ext(tmpVector.Set(bounds.min.x, bounds.min.y, bounds.min.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.min.x, bounds.min.y, bounds.max.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.min.x, bounds.max.y, bounds.min.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.min.x, bounds.max.y, bounds.max.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.max.x, bounds.min.y, bounds.min.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.max.x, bounds.min.y, bounds.max.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.max.x, bounds.max.y, bounds.min.z).Mul(transform))
-	self.Ext(tmpVector.Set(bounds.max.x, bounds.max.y, bounds.max.z).Mul(transform))
+func (self *BoundingBox) ExtBT(bounds *BoundingBox, transform *Matrix4) *BoundingBox {
+	self.ExtV3(tmpVector.Set(bounds.Min.X, bounds.Min.Y, bounds.Min.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Min.X, bounds.Min.Y, bounds.Max.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Min.X, bounds.Max.Y, bounds.Min.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Min.X, bounds.Max.Y, bounds.Max.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Max.X, bounds.Min.Y, bounds.Min.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Max.X, bounds.Min.Y, bounds.Max.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Max.X, bounds.Max.Y, bounds.Min.Z).Mul(transform))
+	self.ExtV3(tmpVector.Set(bounds.Max.X, bounds.Max.Y, bounds.Max.Z).Mul(transform))
 	return self
 }
 
@@ -245,21 +247,21 @@ func (self *BoundingBox) ExtBT(bounds *BoundingBox, transform *Matrix4) {
 // param transform The matrix
 // return This bounding box for chaining.
 func (self *BoundingBox) Mul(transform *Matrix4) *BoundingBox {
-	x0 := self.min.x
-	y0 := self.min.y
-	z0 := self.min.z
-	x1 := self.max.x
-	y1 := self.max.y
-	z1 := self.max.z
+	x0 := self.Min.X
+	y0 := self.Min.Y
+	z0 := self.Min.Z
+	x1 := self.Max.X
+	y1 := self.Max.Y
+	z1 := self.Max.Z
 	self.Inf()
-	self.Ext(tmpVector.Set(x0, y0, z0).Mul(transform))
-	self.Ext(tmpVector.Set(x0, y0, z1).Mul(transform))
-	self.Ext(tmpVector.Set(x0, y1, z0).Mul(transform))
-	self.Ext(tmpVector.Set(x0, y1, z1).Mul(transform))
-	self.Ext(tmpVector.Set(x1, y0, z0).Mul(transform))
-	self.Ext(tmpVector.Set(x1, y0, z1).Mul(transform))
-	self.Ext(tmpVector.Set(x1, y1, z0).Mul(transform))
-	self.Ext(tmpVector.Set(x1, y1, z1).Mul(transform))
+	self.ExtV3(tmpVector.Set(x0, y0, z0).Mul(transform))
+	self.ExtV3(tmpVector.Set(x0, y0, z1).Mul(transform))
+	self.ExtV3(tmpVector.Set(x0, y1, z0).Mul(transform))
+	self.ExtV3(tmpVector.Set(x0, y1, z1).Mul(transform))
+	self.ExtV3(tmpVector.Set(x1, y0, z0).Mul(transform))
+	self.ExtV3(tmpVector.Set(x1, y0, z1).Mul(transform))
+	self.ExtV3(tmpVector.Set(x1, y1, z0).Mul(transform))
+	self.ExtV3(tmpVector.Set(x1, y1, z1).Mul(transform))
 	return self
 }
 
@@ -267,7 +269,8 @@ func (self *BoundingBox) Mul(transform *Matrix4) *BoundingBox {
 // param b The bounding box
 // return Whether the given bounding box is contained
 func (self *BoundingBox) Contains(b *BoundingBox) bool {
-	return !self.IsValid() || (self.min.x <= b.min.x && self.min.y <= b.min.y && self.min.z <= b.min.z && max.x >= b.max.x && self.max.y >= b.max.y && self.max.z >= b.max.z)
+	return !self.IsValid() || (self.Min.X <= b.Min.X && self.Min.Y <= b.Min.Y &&
+		self.Min.Z <= b.Min.Z && self.Max.X >= b.Max.X && self.Max.Y >= b.Max.Y && self.Max.Z >= b.Max.Z)
 }
 
 // Returns whether the given bounding box is intersecting this bounding box (at least one point in).
@@ -279,14 +282,14 @@ func (self *BoundingBox) Intersects(b *BoundingBox) bool {
 	}
 	// test using SAT (separating axis theorem)
 
-	lx := math.Abs(self.cnt.x - b.cnt.x)
-	sumx := (self.dim.x / 2.0) + (b.dim.x / 2.0)
+	lx := float32(math.Abs(float64(self.Cnt.X - b.Cnt.X)))
+	sumx := (self.Dim.X / 2.0) + (b.Dim.X / 2.0)
 
-	ly := math.Abs(self.cnt.y - b.cnt.y)
-	sumy := (self.dim.y / 2.0) + (b.dim.y / 2.0)
+	ly := float32(math.Abs(float64(self.Cnt.Y - b.Cnt.Y)))
+	sumy := (self.Dim.Y / 2.0) + (b.Dim.Y / 2.0)
 
-	lz := math.Abs(self.cnt.z - b.cnt.z)
-	sumz := (self.dim.z / 2.0) + (b.dim.z / 2.0)
+	lz := float32(math.Abs(float64(self.Cnt.Z - b.Cnt.Z)))
+	sumz := (self.Dim.Z / 2.0) + (b.Dim.Z / 2.0)
 
 	return (lx <= sumx && ly <= sumy && lz <= sumz)
 }
@@ -295,12 +298,12 @@ func (self *BoundingBox) Intersects(b *BoundingBox) bool {
 // param v The vector
 // return Whether the vector is contained or not.
 func (self *BoundingBox) ContainsV3(v *Vector3) bool {
-	return self.min.x <= v.x && self.max.x >= v.x && self.min.y <= v.y && self.max.y >= v.y && self.min.z <= v.z && self.max.z >= v.z
+	return self.Min.X <= v.X && self.Max.X >= v.X && self.Min.Y <= v.Y && self.Max.Y >= v.Y && self.Min.Z <= v.Z && self.Max.Z >= v.Z
 }
 
 func (self *BoundingBox) String() string {
 	return ""
-	// return "[" + self.min + "|" + self.max + "]"
+	// return "[" + self.Min + "|" + self.Max + "]"
 }
 
 func min(a, b float32) float32 {

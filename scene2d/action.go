@@ -96,6 +96,6 @@ func (self *Action) Reset() {
 	self.Restart()
 }
 
-func (self *Action) toString() string {
+func (self *Action) String() string {
 	return "Action"
 }

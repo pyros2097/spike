@@ -14,8 +14,8 @@ var (
 
 // Encapsulates a ray having a starting position and a unit length direction.
 type Ray struct {
-	origin    *Vector3
-	direction *Vector3
+	Origin    *Vector3
+	Direction *Vector3
 }
 
 func NewRayEmpty() *Ray {
@@ -27,30 +27,30 @@ func NewRayEmpty() *Ray {
 // param direction The direction
 func NewRay(origin, direction *Vector3) *Ray {
 	ray := &Ray{}
-	ray.origin.SetV(origin)
-	ray.direction.SetV(direction).Nor()
+	ray.Origin.SetV(origin)
+	ray.Direction.SetV(direction).Nor()
 	return ray
 }
 
 // return a copy of this ray.
 func (self *Ray) Copy() *Ray {
-	return NewRay(self.origin, self.direction)
+	return NewRay(self.Origin, self.Direction)
 }
 
 // Returns the endpoint given the distance. This is calculated as startpoint + distance * direction.
 // param out The vector to set to the result
 // param distance The distance from the end point to the start point.
 func (self *Ray) GetEndPoint(out *Vector3, distance float32) *Vector3 {
-	return out.SetV(self.direction).SclV(distance).Add(self.origin)
+	return out.SetV(self.Direction).SclScalar(distance).AddV(self.Origin)
 }
 
 // Multiplies the ray by the given matrix. Use this to transform a ray into another coordinate system.
 // param matrix The matrix
 func (self *Ray) Mul(matrix *Matrix4) *Ray {
-	tmp.SetV(self.origin).AddV(self.direction)
-	tmp.MulV(matrix)
-	self.origin.MulV(matrix)
-	self.direction.SetV(tmp.SubV(self.origin))
+	tmp.SetV(self.Origin).AddV(self.Direction)
+	tmp.Mul(matrix)
+	self.Origin.Mul(matrix)
+	self.Direction.SetV(tmp.SubV(self.Origin))
 	return self
 }
 
@@ -58,8 +58,8 @@ func (self *Ray) Mul(matrix *Matrix4) *Ray {
 // param origin The starting position
 // param direction The direction
 func (self *Ray) SetV3(origin, direction *Vector3) *Ray {
-	self.origin.SetV(origin)
-	self.direction.SetV(direction)
+	self.Origin.SetV(origin)
+	self.Direction.SetV(direction)
 	return self
 }
 
@@ -71,16 +71,16 @@ func (self *Ray) SetV3(origin, direction *Vector3) *Ray {
 // param dy The y-component of the direction
 // param dz The z-component of the direction
 func (self *Ray) Set(x, y, z, dx, dy, dz float32) *Ray {
-	self.origin.Set(x, y, z)
-	self.direction.Set(dx, dy, dz)
+	self.Origin.Set(x, y, z)
+	self.Direction.Set(dx, dy, dz)
 	return self
 }
 
 // Sets the starting position and direction from the given ray
 // param ray The ray
 func (self *Ray) SetRay(ray *Ray) *Ray {
-	self.origin.Set(ray.origin)
-	self.direction.Set(ray.direction)
+	self.Origin.SetV(ray.Origin)
+	self.Direction.SetV(ray.Direction)
 	return self
 }
 
@@ -88,18 +88,18 @@ func (self *Ray) SetRay(ray *Ray) *Ray {
 // 	if (o == this) return true;
 // 	if (o == null || o.getClass() != self.getClass()) return false;
 // 	Ray r = (Ray)o;
-// 	return self.direction.equals(r.direction) && self.origin.equals(r.origin);
+// 	return self.Direction.equals(r.direction) && self.Origin.equals(r.origin);
 // }
 
 // func (self *Ray) HashCode() int {
 // 	final int prime = 73;
 // 	int result = 1;
-// 	result = prime * result + self.direction.hashCode();
-// 	result = prime * result + self.origin.hashCode();
+// 	result = prime * result + self.Direction.hashCode();
+// 	result = prime * result + self.Origin.hashCode();
 // 	return result;
 // }
 
 func (self *Ray) String() string {
 	return ""
-	// return "ray [" + self.origin + ":" + self.direction + "]"
+	// return "ray [" + self.Origin + ":" + self.Direction + "]"
 }

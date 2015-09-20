@@ -164,15 +164,15 @@ func (self *Matrix3) SetToRotationAxisDeg(axis *Vector3, degrees float32) *Matri
 func (self *Matrix3) SetToRotationAxis(axis *Vector3, cos, sin float32) *Matrix3 {
 	val := self.val
 	oc := 1 - cos
-	val[M3_00] = oc*axis.x*axis.x + cos
-	val[M3_10] = oc*axis.x*axis.y - axis.z*sin
-	val[M3_20] = oc*axis.z*axis.x + axis.y*sin
-	val[M3_01] = oc*axis.x*axis.y + axis.z*sin
-	val[M3_11] = oc*axis.y*axis.y + cos
-	val[M3_21] = oc*axis.y*axis.z - axis.x*sin
-	val[M3_02] = oc*axis.z*axis.x - axis.y*sin
-	val[M3_12] = oc*axis.y*axis.z + axis.x*sin
-	val[M3_22] = oc*axis.z*axis.z + cos
+	val[M3_00] = oc*axis.X*axis.X + cos
+	val[M3_10] = oc*axis.X*axis.Y - axis.Z*sin
+	val[M3_20] = oc*axis.Z*axis.X + axis.Y*sin
+	val[M3_01] = oc*axis.X*axis.Y + axis.Z*sin
+	val[M3_11] = oc*axis.Y*axis.Y + cos
+	val[M3_21] = oc*axis.Y*axis.Z - axis.X*sin
+	val[M3_02] = oc*axis.Z*axis.X - axis.Y*sin
+	val[M3_12] = oc*axis.Y*axis.Z + axis.X*sin
+	val[M3_22] = oc*axis.Z*axis.Z + cos
 	return self
 }
 
@@ -212,8 +212,8 @@ func (self *Matrix3) SetToTranslationV(translation *Vector2) *Matrix3 {
 	val[M3_11] = 1
 	val[M3_21] = 0
 
-	val[M3_02] = translation.x
-	val[M3_12] = translation.y
+	val[M3_02] = translation.X
+	val[M3_12] = translation.Y
 	val[M3_22] = 1
 
 	return self
@@ -242,11 +242,11 @@ func (self *Matrix3) SetToScaling(scaleX, scaleY float32) *Matrix3 {
 // return This matrix for the purpose of chaining operations.
 func (self *Matrix3) SetToScalingV(scale *Vector2) *Matrix3 {
 	val := self.val
-	val[M3_00] = scale.x
+	val[M3_00] = scale.X
 	val[M3_10] = 0
 	val[M3_20] = 0
 	val[M3_01] = 0
-	val[M3_11] = scale.y
+	val[M3_11] = scale.Y
 	val[M3_21] = 0
 	val[M3_02] = 0
 	val[M3_12] = 0
@@ -360,8 +360,8 @@ func (self *Matrix3) Set(values [9]float32) *Matrix3 {
 // vector The translation vector.
 // return This matrix for the purpose of chaining.
 func (self *Matrix3) TrnV(vector *Vector2) *Matrix3 {
-	self.val[M3_02] += vector.x
-	self.val[M3_12] += vector.y
+	self.val[M3_02] += vector.X
+	self.val[M3_12] += vector.Y
 	return self
 }
 
@@ -379,8 +379,8 @@ func (self *Matrix3) Trn(x, y float32) *Matrix3 {
 // vector The translation vector. (The z-component of the vector is ignored because this is a 3x3 matrix)
 // return This matrix for the purpose of chaining.
 func (self *Matrix3) TrnV3(vector *Vector3) *Matrix3 {
-	self.val[M3_02] += vector.x
-	self.val[M3_12] += vector.y
+	self.val[M3_02] += vector.X
+	self.val[M3_12] += vector.Y
 	return self
 }
 
@@ -420,8 +420,8 @@ func (self *Matrix3) TranslateV(translation *Vector2) *Matrix3 {
 	tmp[M3_11] = 1
 	tmp[M3_21] = 0
 
-	tmp[M3_02] = translation.x
-	tmp[M3_12] = translation.y
+	tmp[M3_02] = translation.X
+	tmp[M3_12] = translation.Y
 	tmp[M3_22] = 1
 	MulM3(self.val, self.tmp)
 	return self
@@ -488,11 +488,11 @@ func (self *Matrix3) Scale(scaleX, scaleY float32) *Matrix3 {
 // return This matrix for the purpose of chaining.
 func (self *Matrix3) ScaleV(scale *Vector2) *Matrix3 {
 	tmp := self.tmp
-	tmp[M3_00] = scale.x
+	tmp[M3_00] = scale.X
 	tmp[M3_10] = 0
 	tmp[M3_20] = 0
 	tmp[M3_01] = 0
-	tmp[M3_11] = scale.y
+	tmp[M3_11] = scale.Y
 	tmp[M3_21] = 0
 	tmp[M3_02] = 0
 	tmp[M3_12] = 0
@@ -508,15 +508,15 @@ func (self *Matrix3) GetValues() [9]float32 {
 }
 
 func (self *Matrix3) GetTranslation(position *Vector2) *Vector2 {
-	position.x = self.val[M3_02]
-	position.y = self.val[M3_12]
+	position.X = self.val[M3_02]
+	position.Y = self.val[M3_12]
 	return position
 }
 
 func (self *Matrix3) GetScale(scale *Vector2) *Vector2 {
 	val := self.val
-	scale.x = float32(math.Sqrt(float64(val[M3_00]*val[M3_00] + val[M3_01]*val[M3_01])))
-	scale.y = float32(math.Sqrt(float64(val[M3_10]*val[M3_10] + val[M3_11]*val[M3_11])))
+	scale.X = float32(math.Sqrt(float64(val[M3_00]*val[M3_00] + val[M3_01]*val[M3_01])))
+	scale.Y = float32(math.Sqrt(float64(val[M3_10]*val[M3_10] + val[M3_11]*val[M3_11])))
 	return scale
 }
 
@@ -541,8 +541,8 @@ func (self *Matrix3) Scl(scale float32) *Matrix3 {
 // scale The {@link Vector3} to use to scale this matrix.
 // return This matrix for the purpose of chaining methods together.
 func (self *Matrix3) SclV(scale *Vector2) *Matrix3 {
-	self.val[M3_00] *= scale.x
-	self.val[M3_11] *= scale.y
+	self.val[M3_00] *= scale.X
+	self.val[M3_11] *= scale.Y
 	return self
 }
 
@@ -550,8 +550,8 @@ func (self *Matrix3) SclV(scale *Vector2) *Matrix3 {
 // scale The {@link Vector3} to use to scale this matrix. The z component will be ignored.
 // return This matrix for the purpose of chaining methods together.
 func (self *Matrix3) SclV3(scale *Vector3) *Matrix3 {
-	self.val[M3_00] *= scale.x
-	self.val[M3_11] *= scale.y
+	self.val[M3_00] *= scale.X
+	self.val[M3_11] *= scale.Y
 	return self
 }
 

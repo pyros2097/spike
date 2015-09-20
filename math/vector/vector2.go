@@ -20,7 +20,7 @@ var (
 // Encapsulates a 2D vector. Allows chaining methods by returning a reference to itself
 // Implements IVector
 type Vector2 struct {
-	x, y float32
+	X, Y float32
 }
 
 // Constructs a vector with the given components
@@ -35,7 +35,7 @@ func NewVector2Empty() *Vector2 {
 
 // Constructs a vector from the given vector
 func NewVector2Copy(v *Vector2) *Vector2 {
-	return &Vector2{v.x, v.y}
+	return &Vector2{v.X, v.Y}
 }
 
 func (self *Vector2) Copy() *Vector2 {
@@ -43,66 +43,66 @@ func (self *Vector2) Copy() *Vector2 {
 }
 
 func (self *Vector2) Len() float32 {
-	return float32(math.Sqrt(float64(self.x*self.x + self.y*self.y)))
+	return float32(math.Sqrt(float64(self.X*self.X + self.Y*self.Y)))
 }
 
 func (self *Vector2) Len2() float32 {
-	return self.x*self.x + self.y*self.y
+	return self.X*self.X + self.Y*self.Y
 }
 
-func LenD(x, y float32) float32 {
+func LenV2(x, y float32) float32 {
 	return float32(math.Sqrt(float64(x*x + y*y)))
 }
 
-func LenD2(x, y float32) float32 {
+func Len2V2(x, y float32) float32 {
 	return x*x + y*y
 }
 
 func (self *Vector2) SetV(v *Vector2) *Vector2 {
-	self.x = v.x
-	self.y = v.y
+	self.X = v.X
+	self.Y = v.Y
 	return self
 }
 
 // Sets the components of this vector
 func (self *Vector2) Set(x, y float32) *Vector2 {
-	self.x = x
-	self.y = y
+	self.X = x
+	self.Y = y
 	return self
 }
 
 func (self *Vector2) SubV(v *Vector2) *Vector2 {
-	self.x -= v.x
-	self.y -= v.y
+	self.X -= v.X
+	self.Y -= v.Y
 	return self
 }
 
 // Substracts the other vector from this vector.
 func (self *Vector2) Sub(x, y float32) *Vector2 {
-	self.x -= x
-	self.y -= y
+	self.X -= x
+	self.Y -= y
 	return self
 }
 
 func (self *Vector2) Nor() *Vector2 {
 	length := self.Len()
 	if length != 0 {
-		self.x /= length
-		self.y /= length
+		self.X /= length
+		self.Y /= length
 	}
 	return self
 }
 
 func (self *Vector2) AddV(v *Vector2) *Vector2 {
-	self.x += v.x
-	self.y += v.y
+	self.X += v.X
+	self.Y += v.Y
 	return self
 }
 
 // Adds the given components to this vector
 func (self *Vector2) Add(x, y float32) *Vector2 {
-	self.x += x
-	self.y += y
+	self.X += x
+	self.Y += y
 	return self
 }
 
@@ -111,41 +111,41 @@ func DotV2(x1, y1, x2, y2 float32) float32 {
 }
 
 func (self *Vector2) DotV(v *Vector2) float32 {
-	return self.x*v.x + self.y*v.y
+	return self.X*v.X + self.Y*v.Y
 }
 
 func (self *Vector2) Dot(ox, oy float32) float32 {
-	return self.x*ox + self.y*oy
+	return self.X*ox + self.Y*oy
 }
 
 func (self *Vector2) SclScalar(scalar float32) *Vector2 {
-	self.x *= scalar
-	self.y *= scalar
+	self.X *= scalar
+	self.Y *= scalar
 	return self
 }
 
 // Multiplies this vector by a scalar
 func (self *Vector2) Scl(x, y float32) *Vector2 {
-	self.x *= x
-	self.y *= y
+	self.X *= x
+	self.Y *= y
 	return self
 }
 
 func (self *Vector2) SclV(v *Vector2) *Vector2 {
-	self.x *= v.x
-	self.y *= v.y
+	self.X *= v.X
+	self.Y *= v.Y
 	return self
 }
 
 func (self *Vector2) MulAddScalar(v *Vector2, scalar float32) *Vector2 {
-	self.x += v.x * scalar
-	self.y += v.y * scalar
+	self.X += v.X * scalar
+	self.Y += v.Y * scalar
 	return self
 }
 
 func (self *Vector2) MulAdd(v *Vector2, mulVec *Vector2) *Vector2 {
-	self.x += v.x * mulVec.x
-	self.y += v.y * mulVec.y
+	self.X += v.X * mulVec.X
+	self.Y += v.Y * mulVec.Y
 	return self
 }
 
@@ -156,14 +156,14 @@ func DstV2(x1, y1, x2, y2 float32) float32 {
 }
 
 func (self *Vector2) DstV(v *Vector2) float32 {
-	x_d := v.x - self.x
-	y_d := v.y - self.y
+	x_d := v.X - self.X
+	y_d := v.Y - self.Y
 	return float32(math.Sqrt(float64(x_d*x_d + y_d*y_d)))
 }
 
 func (self *Vector2) Dst(x, y float32) float32 {
-	x_d := x - self.x
-	y_d := y - self.y
+	x_d := x - self.X
+	y_d := y - self.Y
 	return float32(math.Sqrt(float64(x_d*x_d + y_d*y_d)))
 }
 
@@ -174,14 +174,14 @@ func Dst2V2(x1, y1, x2, y2 float32) float32 {
 }
 
 func (self *Vector2) Dst2V(v *Vector2) float32 {
-	x_d := v.x - self.x
-	y_d := v.y - self.y
+	x_d := v.X - self.X
+	y_d := v.Y - self.Y
 	return x_d*x_d + y_d*y_d
 }
 
 func (self *Vector2) Dst2(x, y float32) float32 {
-	x_d := x - self.x
-	y_d := y - self.y
+	x_d := x - self.X
+	y_d := y - self.Y
 	return x_d*x_d + y_d*y_d
 }
 
@@ -227,25 +227,25 @@ func (self *Vector2) SetLength2(len2 float32) *Vector2 {
 
 // Left-multiplies this vector by the given matrix
 func (self *Vector2) Mul(mat Matrix3) *Vector2 {
-	self.x = self.x*mat.val[0] + self.y*mat.val[3] + mat.val[6]
-	self.y = self.x*mat.val[1] + self.y*mat.val[4] + mat.val[7]
+	self.X = self.X*mat.val[0] + self.Y*mat.val[3] + mat.val[6]
+	self.Y = self.X*mat.val[1] + self.Y*mat.val[4] + mat.val[7]
 	return self
 }
 
 // Calculates the 2D cross product between this and the given vector
 func (self *Vector2) CrsV(v *Vector2) float32 {
-	return self.x*v.y - self.y*v.x
+	return self.X*v.Y - self.Y*v.X
 }
 
 // Calculates the 2D cross product between this and the given vector.
 func (self *Vector2) Crs(x, y float32) float32 {
-	return self.x*y - self.y*x
+	return self.X*y - self.Y*x
 }
 
 // @return the angle in degrees of this vector (point) relative to the x-axis.
 // Angles are towards the positive y-axis (typically counter-clockwise) and between 0 and 360.
 func (self *Vector2) Angle() float32 {
-	angle := float32(math.Atan2(float64(self.y), float64(self.x)) * float64(utils.RadiansToDegrees))
+	angle := float32(math.Atan2(float64(self.Y), float64(self.X)) * float64(utils.RadiansToDegrees))
 	if angle < 0 {
 		angle += 360
 	}
@@ -261,7 +261,7 @@ func (self *Vector2) AngleVector2(reference *Vector2) float32 {
 // @return the angle in radians of this vector (point) relative to the x-axis.
 // Angles are towards the positive y-axis. (typically counter-clockwise)
 func (self *Vector2) AngleRad() float32 {
-	return float32(math.Atan2(float64(self.y), float64(self.x)))
+	return float32(math.Atan2(float64(self.Y), float64(self.X)))
 }
 
 // @return the angle in radians of this vector (point) relative to the given vector.
@@ -295,29 +295,29 @@ func (self *Vector2) Rotate(degrees float32) *Vector2 {
 func (self *Vector2) RotateRad(radians float32) *Vector2 {
 	cos := float32(math.Cos(float64(radians)))
 	sin := float32(math.Sin(float64(radians)))
-	self.x = self.x*cos - self.y*sin
-	self.y = self.x*sin + self.y*cos
+	self.X = self.X*cos - self.Y*sin
+	self.Y = self.X*sin + self.Y*cos
 	return self
 }
 
 // Rotates the *Vector2 by 90 degrees in the specified direction,
 // where >= 0 is counter-clockwise and < 0 is clockwise.
 func (self *Vector2) Rotate90(dir int) *Vector2 {
-	x := self.x
+	x := self.X
 	if dir >= 0 {
-		self.x = -self.y
-		self.y = self.x
+		self.X = -self.Y
+		self.Y = self.X
 	} else {
-		self.x = self.y
-		self.y = -x
+		self.X = self.Y
+		self.Y = -x
 	}
 	return self
 }
 
 func (self *Vector2) Lerp(target *Vector2, alpha float32) *Vector2 {
 	invAlpha := 1.0 - alpha
-	self.x = (self.x * invAlpha) + (target.x * alpha)
-	self.y = (self.y * invAlpha) + (target.y * alpha)
+	self.X = (self.X * invAlpha) + (target.X * alpha)
+	self.Y = (self.Y * invAlpha) + (target.Y * alpha)
 	return self
 }
 
@@ -341,8 +341,8 @@ func (self *Vector2) Equals(v *Vector2) bool {
 	if v == nil {
 		return false
 	}
-	// if (NumberUtils.floatToIntBits(x) != NumberUtils.floatToIntBits(other.x)) return false;
-	// if (NumberUtils.floatToIntBits(y) != NumberUtils.floatToIntBits(other.y)) return false;
+	// if (NumberUtils.floatToIntBits(x) != NumberUtils.floatToIntBits(other.X)) return false;
+	// if (NumberUtils.floatToIntBits(y) != NumberUtils.floatToIntBits(other.Y)) return false;
 	return true
 }
 
@@ -350,10 +350,10 @@ func (self *Vector2) EpsilonEqualsV(other *Vector2, epsilon float32) bool {
 	if other == nil {
 		return false
 	}
-	if math.Abs(float64(other.x-self.x)) > float64(epsilon) {
+	if math.Abs(float64(other.X-self.X)) > float64(epsilon) {
 		return false
 	}
-	if math.Abs(float64(other.y-self.y)) > float64(epsilon) {
+	if math.Abs(float64(other.Y-self.Y)) > float64(epsilon) {
 		return false
 	}
 	return true
@@ -362,10 +362,10 @@ func (self *Vector2) EpsilonEqualsV(other *Vector2, epsilon float32) bool {
 // Compares this vector with the other vector, using the supplied epsilon for fuzzy equality testing.
 // @return whether the vectors are the same
 func (self *Vector2) EpsilonEquals(x, y, epsilon float32) bool {
-	if math.Abs(float64(x-self.x)) > float64(epsilon) {
+	if math.Abs(float64(x-self.X)) > float64(epsilon) {
 		return false
 	}
-	if math.Abs(float64(y-self.y)) > float64(epsilon) {
+	if math.Abs(float64(y-self.Y)) > float64(epsilon) {
 		return false
 	}
 	return true
@@ -380,7 +380,7 @@ func (self *Vector2) IsUnitMargin(margin float32) bool {
 }
 
 func (self *Vector2) IsZero() bool {
-	return self.x == 0 && self.y == 0
+	return self.X == 0 && self.Y == 0
 }
 
 func (self *Vector2) IsZeroMargin(margin float32) bool {
@@ -388,11 +388,11 @@ func (self *Vector2) IsZeroMargin(margin float32) bool {
 }
 
 func (self *Vector2) IsOnLine(other *Vector2) bool {
-	return utils.IsZero(self.x*other.y - self.y*other.x)
+	return utils.IsZero(self.X*other.Y - self.Y*other.X)
 }
 
 func (self *Vector2) IsOnLineEpsilon(other *Vector2, epsilon float32) bool {
-	return utils.IsZeroTolerance(self.x*other.y-self.y*other.x, epsilon)
+	return utils.IsZeroTolerance(self.X*other.Y-self.Y*other.X, epsilon)
 }
 
 func (self *Vector2) IsCollinearEpsilon(other *Vector2, epsilon float32) bool {
@@ -428,8 +428,8 @@ func (self *Vector2) HasOppositeDirection(v *Vector2) bool {
 }
 
 func (self *Vector2) SetZero() *Vector2 {
-	self.x = 0
-	self.y = 0
+	self.X = 0
+	self.Y = 0
 	return self
 }
 
