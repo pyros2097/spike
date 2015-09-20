@@ -12,7 +12,7 @@ import (
 // A convenient 2D circle class.
 // Implements Shape2D
 type Circle struct {
-	x, y, radius float32
+	X, Y, Radius float32
 }
 
 // Constructs a new circle with all values set to zero
@@ -29,84 +29,84 @@ func NewCircle(x, y, radius float32) *Circle {
 // position The position {@link Vector2}.
 // radius The radius
 func NewCircleV(position *Vector2, radius float32) *Circle {
-	return &Circle{position.x, position.y, radius}
+	return &Circle{position.X, position.Y, radius}
 }
 
 // Copy constructor
 // circle The circle to construct a copy of.
 func NewCircleC(c *Circle) *Circle {
-	return &Circle{c.x, c.y, radius}
+	return &Circle{c.X, c.Y, c.Radius}
 }
 
 // Creates a new {@link Circle} in terms of its center and a point on its edge.
 // center The center of the new circle
 // edge Any point on the edge of the given circle
 func NewCircleV2(center, edge *Vector2) *Circle {
-	return &Circle{center.x, center.y, LenV2(center.x-edge.x, center.y-edge.y)}
+	return &Circle{center.X, center.Y, LenV2(center.X-edge.X, center.Y-edge.Y)}
 }
 
 // Sets a new location and radius for this circle.
 func (self *Circle) Set(x, y, radius float32) {
-	self.x = x
-	self.y = y
-	self.radius = radius
+	self.X = x
+	self.Y = y
+	self.Radius = radius
 }
 
 // Sets a new location and radius for this circle.
 func (self *Circle) SetV(position *Vector2, radius float32) {
-	self.x = position.x
-	self.y = position.y
-	self.radius = radius
+	self.X = position.X
+	self.Y = position.Y
+	self.Radius = radius
 }
 
 // Sets a new location and radius for this circle, based upon another circle.
 // circle The circle to copy the position and radius of.
 func (self *Circle) SetC(circle *Circle) {
-	self.x = circle.x
-	self.y = circle.y
-	self.radius = circle.radius
+	self.X = circle.X
+	self.Y = circle.Y
+	self.Radius = circle.Radius
 }
 
 // Sets this {@link Circle}'s values in terms of its center and a point on its edge.
 // center The new center of the circle
 // edge Any point on the edge of the given circle
 func (self *Circle) SetV2(center, edge *Vector2) {
-	self.x = center.x
-	self.y = center.y
-	self.radius = LenV2(center.x-edge.x, center.y-edge.y)
+	self.X = center.X
+	self.Y = center.Y
+	self.Radius = LenV2(center.X-edge.X, center.Y-edge.Y)
 }
 
 // Sets the x and y-coordinates of circle center from vector
 // position The position vector
 func (self *Circle) SetPosition(position *Vector2) {
-	self.x = position.x
-	self.y = position.y
+	self.X = position.X
+	self.Y = position.Y
 }
 
 // Sets the x and y-coordinates of circle center
 // x The x-coordinate
 // y The y-coordinate
 func (self *Circle) setPosition(x, y float32) {
-	self.x = x
-	self.y = y
+	self.X = x
+	self.Y = y
 }
 
 // Sets the x-coordinate of circle center
 // x The x-coordinate
 func (self *Circle) setX(x float32) {
-	self.x = x
+	self.X = x
 }
 
 // Sets the y-coordinate of circle center
 // y The y-coordinate
 func (self *Circle) setY(y float32) {
-	self.y = y
+	self.Y = y
 }
 
 // Sets the radius of circle
 // radius The radius
 func (self *Circle) SetRadius(radius float32) {
-	self.radius = radius
+	self.Radius = radius
 }
 
 // Checks whether or not this circle contains a given point.
@@ -114,52 +114,52 @@ func (self *Circle) SetRadius(radius float32) {
 // y Y coordinate
 // true if this circle contains the given point.
 func (self *Circle) Contains(x, y float32) bool {
-	x = self.x - x
-	y = self.y - y
-	return x*x+y*y <= self.radius*self.radius
+	x = self.X - x
+	y = self.Y - y
+	return x*x+y*y <= self.Radius*self.Radius
 }
 
 // Checks whether or not this circle contains a given point.
 // point The {@link Vector2} that contains the point coordinates.
 // true if this circle contains this point; false otherwise.
 func (self *Circle) ContainsV(point *Vector2) bool {
-	dx := self.x - point.x
-	dy := self.y - point.y
-	return dx*dx+dy*dy <= self.radius*self.radius
+	dx := self.X - point.X
+	dy := self.Y - point.Y
+	return dx*dx+dy*dy <= self.Radius*self.Radius
 }
 
 // c the other {@link Circle}
 // whether this circle contains the other circle.
 func (self *Circle) ContainsC(c *Circle) bool {
-	radiusDiff := self.radius - c.radius
+	radiusDiff := self.Radius - c.Radius
 	if radiusDiff < 0 {
 		return false // Can't contain bigger circle
 	}
-	dx := self.x - c.x
-	dy := self.y - c.y
+	dx := self.X - c.X
+	dy := self.Y - c.Y
 	dst := dx*dx + dy*dy
-	radiusSum := self.radius + c.radius
+	radiusSum := self.Radius + c.Radius
 	return (!(radiusDiff*radiusDiff < dst) && (dst < radiusSum*radiusSum))
 }
 
 // // c the other {@link Circle}
 // // whether this circle overlaps the other circle.
 func (self *Circle) Overlaps(c *Circle) bool {
-	dx := self.x - c.x
-	dy := self.y - c.y
+	dx := self.X - c.X
+	dy := self.Y - c.Y
 	distance := dx*dx + dy*dy
-	radiusSum := self.radius + c.radius
+	radiusSum := self.Radius + c.Radius
 	return distance < radiusSum*radiusSum
 }
 
 // The circumference of this circle (as 2 * {@link MathUtils#PI2}) * {@code radius}
 func (self *Circle) Circumference() float32 {
-	return self.radius * utils.PI2
+	return self.Radius * utils.PI2
 }
 
 // The area of this circle (as {@link MathUtils#PI} * radius * radius).
 func (self *Circle) Area() float32 {
-	return self.radius * self.radius * utils.PI
+	return self.Radius * self.Radius * utils.PI
 }
 
 // @Override
@@ -167,7 +167,7 @@ func (self *Circle) Area() float32 {
 // 	if (o == this) return true;
 // 	if (o == null || o.getClass() != self.getClass()) return false;
 // 	Circle c = (Circle)o;
-// 	return self.x == c.x && self.y == c.y && self.radius == c.radius;
+// 	return self.X == c.x && self.Y == c.y && self.Radius == c.radius;
 // }
 
 // @Override
