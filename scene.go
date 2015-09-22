@@ -8,7 +8,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/pyros2097/gdx/scene2d"
+	"github.com/pyros2097/spike/scene2d"
 )
 
 type GestureType int

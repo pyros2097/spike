@@ -5,7 +5,7 @@
 package vector
 
 import (
-	"github.com/pyros2097/gdx/math/utils"
+	"github.com/pyros2097/spike/math/utils"
 )
 
 // A specialized 3x3 matrix that can represent sequences of 2D translations, scales, flips, rotations, and shears. <a

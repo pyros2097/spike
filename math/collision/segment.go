@@ -5,7 +5,7 @@
 package collision
 
 import (
-	. "github.com/pyros2097/gdx/math/vector"
+	. "github.com/pyros2097/spike/math/vector"
 )
 
 // A Segment is a line in 3-space having a staring and an ending position.

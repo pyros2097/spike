@@ -7,8 +7,8 @@ package vector
 import (
 	"math"
 
-	. "github.com/pyros2097/gdx/math/interpolation"
-	"github.com/pyros2097/gdx/math/utils"
+	. "github.com/pyros2097/spike/math/interpolation"
+	"github.com/pyros2097/spike/math/utils"
 )
 
 var (

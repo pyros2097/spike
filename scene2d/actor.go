@@ -5,8 +5,8 @@
 package scene2d
 
 import (
-	"github.com/pyros2097/gdx/graphics"
-	"github.com/pyros2097/gdx/utils"
+	"github.com/pyros2097/spike/graphics"
+	"github.com/pyros2097/spike/utils"
 )
 
 /** 2D scene graph node. An actor has a position, rectangular size, origin, scale, rotation, Z index, and color. The position
@@ -53,6 +53,8 @@ type Actor struct {
 	color            *graphics.Color // make this 1 1 1 1
 }
 
+// Todo add OnAct OnDraw OnClick OnTouchUp OnFollow OnScroll OnGesture
+// Use composition over inheritance
 type Batch interface {
 	Begin()
 	End()

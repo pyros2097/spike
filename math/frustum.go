@@ -7,8 +7,8 @@ package math
 import (
 	"math"
 
-	. "github.com/pyros2097/gdx/math/collision"
-	. "github.com/pyros2097/gdx/math/vector"
+	. "github.com/pyros2097/spike/math/collision"
+	. "github.com/pyros2097/spike/math/vector"
 )
 
 var (

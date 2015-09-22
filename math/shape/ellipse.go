@@ -7,8 +7,8 @@ package shape
 import (
 	"math"
 
-	"github.com/pyros2097/gdx/math/utils"
-	. "github.com/pyros2097/gdx/math/vector"
+	"github.com/pyros2097/spike/math/utils"
+	. "github.com/pyros2097/spike/math/vector"
 )
 
 // A convenient 2D ellipse class, based on the circle class

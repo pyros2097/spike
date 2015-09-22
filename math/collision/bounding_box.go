@@ -7,7 +7,7 @@ package collision
 import (
 	"math"
 
-	. "github.com/pyros2097/gdx/math/vector"
+	. "github.com/pyros2097/spike/math/vector"
 )
 
 var (
