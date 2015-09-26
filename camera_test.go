@@ -1,4 +1,4 @@
-package graphics
+package spike
 
 // public static void main(String[] argv) {
 // PerspectiveCamera camera = new PerspectiveCamera(45, 2, 2);

@@ -132,13 +132,3 @@ func (self *Event) setCapture(capture bool) {
 func (self *Event) isCapture() bool {
 	return self.capture
 }
-
-// func (self *Event) setStage (stage) {
-//     self.stage = stage
-//   }
-
-//   * The stage for the actor the event was fired on.
-//   get stage () {
-//     return self.stage
-//   }
-// }

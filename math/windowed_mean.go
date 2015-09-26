@@ -59,11 +59,11 @@ func (self *WindowedMean) AddValue(value float32) {
 func (self *WindowedMean) GetMean() float32 {
 	if self.HasEnoughData() {
 		if self.dirty == true {
-			mean := 0
+			var mean float32
 			for i := 0; i < len(self.values); i++ {
-				mean += values[i]
+				mean += self.values[i]
 			}
-			self.mean = mean / len(self.values)
+			self.mean = mean / float32(len(self.values))
 			self.dirty = false
 		}
 		return self.mean
@@ -83,7 +83,7 @@ func (self *WindowedMean) GetOldest() float32 {
 // return the value last added
 func (self *WindowedMean) GetLatest() float32 {
 	if self.last_value-1 == -1 {
-		self.values[len(self.values)-1]
+		return self.values[len(self.values)-1]
 	}
 	return self.values[self.last_value-1]
 }
@@ -100,7 +100,7 @@ func (self *WindowedMean) StandardDeviation() float32 {
 		sum += (self.values[i] - mean) * (self.values[i] - mean)
 	}
 
-	return float32(math.Sqrt(float64(sum / len(values))))
+	return float32(math.Sqrt(float64(sum / float32(len(self.values)))))
 }
 
 func (self *WindowedMean) GetWindowSize() int {

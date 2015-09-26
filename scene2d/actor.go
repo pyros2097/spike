@@ -6,27 +6,26 @@ package scene2d
 
 import (
 	"github.com/pyros2097/spike/graphics"
+	"github.com/pyros2097/spike/input/touchable"
 	"github.com/pyros2097/spike/utils"
 )
 
-/** 2D scene graph node. An actor has a position, rectangular size, origin, scale, rotation, Z index, and color. The position
- * corresponds to the unrotated, unscaled bottom left corner of the actor. The position is relative to the actor's parent. The
- * origin is relative to the position and is used for scale and rotation.
- * <p>
- * An actor has a list of in progress {@link Action actions} that are applied to the actor (often over time). These are generally
- * used to change the presentation of the actor (moving it, resizing it, etc). See {@link #act(float)}, {@link Action} and its
- * many subclasses.
- * <p>
- * An actor has two kinds of listeners associated with it: "capture" and regular. The listeners are notified of events the actor
- * or its children receive. The regular listeners are designed to allow an actor to respond to events that have been delivered.
- * The capture listeners are designed to allow a parent or container actor to handle events before child actors. See {@link #fire}
- * for more details.
- * <p>
- * An {@link InputListener} can receive all the basic input events. More complex listeners (like {@link ClickListener} and
- * {@link ActorGestureListener}) can listen for and combine primitive events and recognize complex interactions like multi-touch
- * or pinch.
- * @author mzechner
- * @author Nathan Sweet */
+// 2D scene graph node. An actor has a position, rectangular size, origin, scale, rotation, Z index, and color. The position
+// corresponds to the unrotated, unscaled bottom left corner of the actor. The position is relative to the actor's parent. The
+// origin is relative to the position and is used for scale and rotation.
+//
+// An actor has a list of in progress {@link Action actions} that are applied to the actor (often over time). These are generally
+// used to change the presentation of the actor (moving it, resizing it, etc). See {@link #act(float)}, {@link Action} and its
+// many subclasses.
+//
+// An actor has two kinds of listeners associated with it: "capture" and regular. The listeners are notified of events the actor
+// or its children receive. The regular listeners are designed to allow an actor to respond to events that have been delivered.
+// The capture listeners are designed to allow a parent or container actor to handle events before child actors. See {@link #fire}
+// for more details.
+//
+// An {@link InputListener} can receive all the basic input events. More complex listeners (like {@link ClickListener} and
+// {@link ActorGestureListener}) can listen for and combine primitive events and recognize complex interactions like multi-touch
+// or pinch.
 type IActor interface {
 	Draw(batch Batch, parentAlpha float32)
 	Act(delta float32)
@@ -48,9 +47,12 @@ type Actor struct {
 	visible, debug   bool
 	actions          []*Action
 	parent           *Actor
-	touchable        Touchable
+	touchable        touchable.Touchable
 	userObject       interface{}
 	color            *graphics.Color // make this 1 1 1 1
+	//   private final DelayedRemovalArray<EventListener> listeners = new DelayedRemovalArray(0);
+	//   private final DelayedRemovalArray<EventListener> captureListeners = new DelayedRemovalArray(0);
+
 }
 
 // Todo add OnAct OnDraw OnClick OnTouchUp OnFollow OnScroll OnGesture
@@ -60,21 +62,21 @@ type Batch interface {
 	End()
 }
 
-/** Draws the actor. The batch is configured to draw in the parent's coordinate system.
- * {@link Batch#draw(com.badlogic.gdx.graphics.g2d.TextureRegion, float, float, float, float, float, float, float, float, float)
- * This draw method} is convenient to draw a rotated and scaled TextureRegion. {@link Batch#begin()} has already been called on
- * the batch. If {@link Batch#end()} is called to draw without the batch then {@link Batch#begin()} must be called before the
- * method returns.
- * <p>
- * The default implementation does nothing.
- * @param parentAlpha Should be multiplied with the actor's alpha, allowing a parent's alpha to affect all children. */
+// Draws the actor. The batch is configured to draw in the parent's coordinate system.
+// {@link Batch#draw(com.badlogic.gdx.graphics.g2d.TextureRegion, float, float, float, float, float, float, float, float, float)
+// This draw method} is convenient to draw a rotated and scaled TextureRegion. {@link Batch#begin()} has already been called on
+// the batch. If {@link Batch#end()} is called to draw without the batch then {@link Batch#begin()} must be called before the
+// method returns.
+// <p>
+// The default implementation does nothing.
+// param parentAlpha Should be multiplied with the actor's alpha, allowing a parent's alpha to affect all children.
 func (self *Actor) Draw(batch Batch, parentAlpha float32) {
 }
 
-/** Updates the actor based on time. Typically this is called each frame by {@link Stage#act(float)}.
- * <p>
- * The default implementation calls {@link Action#act(float)} on each action and removes actions that are complete.
- * @param delta Time in seconds since the last frame. */
+// Updates the actor based on time. Typically this is called each frame by {@link Stage#act(float)}.
+//
+// The default implementation calls {@link Action#act(float)} on each action and removes actions that are complete.
+// param delta Time in seconds since the last frame.
 func (self *Actor) Act(delta float32) {
 	if len(self.actions) > 0 {
 		for i := 0; i < len(self.actions); i++ {
@@ -164,22 +166,22 @@ func (self *Actor) GetParent() *Actor {
 }
 
 // Called by the framework when an actor is added to or removed from a group.
-// @param parent May be null if the actor has been removed from the parent.
+// param parent May be null if the actor has been removed from the parent.
 func (self *Actor) SetParent(parent *Actor) {
 	self.parent = parent
 }
 
 // Returns true if input events are processed by self actor.
 func (self *Actor) IsTouchable() bool {
-	return self.touchable == TouchableEnabled
+	return self.touchable == touchable.Enabled
 }
 
-func (self *Actor) GetTouchable() Touchable {
+func (self *Actor) GetTouchable() touchable.Touchable {
 	return self.touchable
 }
 
 //  Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}.
-func (self *Actor) SetTouchable(touchable Touchable) {
+func (self *Actor) SetTouchable(touchable touchable.Touchable) {
 	self.touchable = touchable
 }
 
@@ -398,21 +400,23 @@ func (self *Actor) setOrigin(originX, originY float32) {
 }
 
 // Sets the origin position to the specified {@link Align alignment}.
-//   func (self *Actor) setOrigin (int alignment) {
-//     if ((alignment & left) != 0)
-//       originX = 0;
-//     else if ((alignment & right) != 0)
-//       originX = width;
-//     else
-//       originX = width / 2;
+func (self *Actor) SetOriginAlign(alignment utils.Alignment) {
+	if (alignment & utils.AlignmentLeft) != 0 {
+		self.originX = 0
+	} else if (alignment & utils.AlignmentRight) != 0 {
+		self.originX = self.w
+	} else {
+		self.originX = self.w / 2
+	}
 
-//     if ((alignment & bottom) != 0)
-//       originY = 0;
-//     else if ((alignment & top) != 0)
-//       originY = height;
-//     else
-//       originY = height / 2;
-//   }
+	if (alignment & utils.AlignmentBottom) != 0 {
+		self.originY = 0
+	} else if (alignment & utils.AlignmentTop) != 0 {
+		self.originY = self.h
+	} else {
+		self.originY = self.h / 2
+	}
+}
 
 func (self *Actor) GetScaleX() float32 {
 	return self.scaleX
@@ -455,13 +459,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 	self.rotation += amountInDegrees
 }
 
-// public class Actor {
-//   private Stage stage;
-//   Group parent;
-//   private final DelayedRemovalArray<EventListener> listeners = new DelayedRemovalArray(0);
-//   private final DelayedRemovalArray<EventListener> captureListeners = new DelayedRemovalArray(0);
-
-//   /** Sets self actor as the event {@link Event#setTarget(Actor) target} and propagates the event to self actor and ancestor
+//   // Sets self actor as the event {@link Event#setTarget(Actor) target} and propagates the event to self actor and ancestor
 //    * actors as necessary. If self actor is not in the stage, the stage must be set before calling self method.
 //    * <p>
 //    * Events are fired in 2 phases.
@@ -516,11 +514,11 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     }
 //   }
 
-//   /** Notifies self actor's listeners of the event. The event is not propagated to any parents. Before notifying the listeners,
+//   // Notifies self actor's listeners of the event. The event is not propagated to any parents. Before notifying the listeners,
 //    * self actor is set as the {@link Event#getListenerActor() listener actor}. The event {@link Event#setTarget(Actor) target}
 //    * must be set before calling self method. If self actor is not in the stage, the stage must be set before calling self method.
-//    * @param capture If true, the capture listeners will be notified instead of the regular listeners.
-//    * @return true of the event was {@link Event#cancel() cancelled}. */
+//    * param capture If true, the capture listeners will be notified instead of the regular listeners.
+//    * @return true of the event was {@link Event#cancel() cancelled}.
 //   public boolean notify (Event event, boolean capture) {
 //     if (event.getTarget() == null) throw new IllegalArgumentException("The event target cannot be null.");
 
@@ -550,7 +548,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return event.isCancelled();
 //   }
 
-//   /** Returns the deepest actor that contains the specified point and is {@link #getTouchable() touchable} and
+//   // Returns the deepest actor that contains the specified point and is {@link #getTouchable() touchable} and
 //    * {@link #isVisible() visible}, or null if no actor was hit. The point is specified in the actor's local coordinate system (0,0
 //    * is the bottom left of the actor and width,height is the upper right).
 //    * <p>
@@ -559,17 +557,17 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //    * <p>
 //    * The default implementation returns self actor if the point is within self actor's bounds.
 //    *
-//    * @param touchable If true, the hit detection will respect the {@link #setTouchable(Touchable) touchability}.
-//    * @see Touchable */
+//    * param touchable If true, the hit detection will respect the {@link #setTouchable(Touchable) touchability}.
+//    * @see Touchable
 //   public Actor hit (float x, float y, boolean touchable) {
 //     if (touchable && self.touchable != Touchable.enabled) return null;
 //     return x >= 0 && x < width && y >= 0 && y < height ? self : null;
 //   }
 
-//   /** Add a listener to receive events that {@link #hit(float, float, boolean) hit} self actor. See {@link #fire(Event)}.
+//   // Add a listener to receive events that {@link #hit(float, float, boolean) hit} self actor. See {@link #fire(Event)}.
 //    *
 //    * @see InputListener
-//    * @see ClickListener */
+//    * @see ClickListener
 //   public boolean addListener (EventListener listener) {
 //     if (!listeners.contains(listener, true)) {
 //       listeners.add(listener);
@@ -586,8 +584,8 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return listeners;
 //   }
 
-//   /** Adds a listener that is only notified during the capture phase.
-//    * @see #fire(Event) */
+//   // Adds a listener that is only notified during the capture phase.
+//    * @see #fire(Event)
 //   public boolean addCaptureListener (EventListener listener) {
 //     if (!captureListeners.contains(listener, true)) captureListeners.add(listener);
 //     return true;
@@ -601,7 +599,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return captureListeners;
 //   }
 
-//   /** Returns true if self actor is the same as or is the descendant of the specified actor. */
+//   // Returns true if self actor is the same as or is the descendant of the specified actor.
 //   public boolean isDescendantOf (Actor actor) {
 //     if (actor == null) throw new IllegalArgumentException("actor cannot be null.");
 //     Actor parent = self;
@@ -612,7 +610,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     }
 //   }
 
-//   /** Returns true if self actor is the same as or is the ascendant of the specified actor. */
+//   // Returns true if self actor is the same as or is the ascendant of the specified actor.
 //   public boolean isAscendantOf (Actor actor) {
 //     if (actor == null) throw new IllegalArgumentException("actor cannot be null.");
 //     while (true) {
@@ -622,19 +620,19 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     }
 //   }
 
-//   /** Changes the z-order for self actor so it is in front of all siblings. */
+//   // Changes the z-order for self actor so it is in front of all siblings.
 //   public void toFront () {
 //     setZIndex(Integer.MAX_VALUE);
 //   }
 
-//   /** Changes the z-order for self actor so it is in back of all siblings. */
+//   // Changes the z-order for self actor so it is in back of all siblings.
 //   public void toBack () {
 //     setZIndex(0);
 //   }
 
-//   /** Sets the z-index of self actor. The z-index is the index into the parent's {@link Group#getChildren() children}, where a
+//   // Sets the z-index of self actor. The z-index is the index into the parent's {@link Group#getChildren() children}, where a
 //    * lower index is below a higher index. Setting a z-index higher than the number of children will move the child to the front.
-//    * Setting a z-index less than zero is invalid. */
+//    * Setting a z-index less than zero is invalid.
 //   public void setZIndex (int index) {
 //     if (index < 0) throw new IllegalArgumentException("ZIndex cannot be < 0.");
 //     Group parent = self.parent;
@@ -648,24 +646,24 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //       children.insert(index, self);
 //   }
 
-//   /** Returns the z-index of self actor.
-//    * @see #setZIndex(int) */
+//   // Returns the z-index of self actor.
+//    * @see #setZIndex(int)
 //   public int getZIndex () {
 //     Group parent = self.parent;
 //     if (parent == null) return -1;
 //     return parent.children.indexOf(self, true);
 //   }
 
-//   /** Calls {@link #clipBegin(float, float, float, float)} to clip self actor's bounds. */
+//   // Calls {@link #clipBegin(float, float, float, float)} to clip self actor's bounds.
 //   public boolean clipBegin () {
 //     return clipBegin(x, y, width, height);
 //   }
 
-//   /** Clips the specified screen aligned rectangle, specified relative to the transform matrix of the stage's Batch. The transform
+//   // Clips the specified screen aligned rectangle, specified relative to the transform matrix of the stage's Batch. The transform
 //    * matrix and the stage's camera must not have rotational components. Calling self method must be followed by a call to
 //    * {@link #clipEnd()} if true is returned.
 //    * @return false if the clipping area is zero and no drawing should occur.
-//    * @see ScissorStack */
+//    * @see ScissorStack
 //   public boolean clipBegin (float x, float y, float width, float height) {
 //     if (width <= 0 || height <= 0) return false;
 //     Rectangle tableBounds = Rectangle.tmp;
@@ -681,32 +679,32 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return false;
 //   }
 
-//   /** Ends clipping begun by {@link #clipBegin(float, float, float, float)}. */
+//   // Ends clipping begun by {@link #clipBegin(float, float, float, float)}.
 //   public void clipEnd () {
 //     Pools.free(ScissorStack.popScissors());
 //   }
 
-//   /** Transforms the specified point in screen coordinates to the actor's local coordinate system. */
+//   // Transforms the specified point in screen coordinates to the actor's local coordinate system.
 //   public Vector2 screenToLocalCoordinates (Vector2 screenCoords) {
 //     Stage stage = self.stage;
 //     if (stage == null) return screenCoords;
 //     return stageToLocalCoordinates(stage.screenToStageCoordinates(screenCoords));
 //   }
 
-//   /** Transforms the specified point in the stage's coordinates to the actor's local coordinate system. */
+//   // Transforms the specified point in the stage's coordinates to the actor's local coordinate system.
 //   public Vector2 stageToLocalCoordinates (Vector2 stageCoords) {
 //     if (parent != null) parent.stageToLocalCoordinates(stageCoords);
 //     parentToLocalCoordinates(stageCoords);
 //     return stageCoords;
 //   }
 
-//   /** Transforms the specified point in the actor's coordinates to be in the stage's coordinates.
-//    * @see Stage#toScreenCoordinates(Vector2, com.badlogic.gdx.math.Matrix4) */
+//   // Transforms the specified point in the actor's coordinates to be in the stage's coordinates.
+//    * @see Stage#toScreenCoordinates(Vector2, com.badlogic.gdx.math.Matrix4)
 //   public Vector2 localToStageCoordinates (Vector2 localCoords) {
 //     return localToAscendantCoordinates(null, localCoords);
 //   }
 
-//   /** Transforms the specified point in the actor's coordinates to be in the parent's coordinates. */
+//   // Transforms the specified point in the actor's coordinates to be in the parent's coordinates.
 //   public Vector2 localToParentCoordinates (Vector2 localCoords) {
 //     final float rotation = -self.rotation;
 //     final float scaleX = self.scaleX;
@@ -736,7 +734,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return localCoords;
 //   }
 
-//   /** Converts coordinates for self actor to those of a parent actor. The ascendant does not need to be a direct parent. */
+//   // Converts coordinates for self actor to those of a parent actor. The ascendant does not need to be a direct parent.
 //   public Vector2 localToAscendantCoordinates (Actor ascendant, Vector2 localCoords) {
 //     Actor actor = self;
 //     while (actor != null) {
@@ -747,7 +745,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return localCoords;
 //   }
 
-//   /** Converts the coordinates given in the parent's coordinate system to self actor's coordinate system. */
+//   // Converts the coordinates given in the parent's coordinate system to self actor's coordinate system.
 //   public Vector2 parentToLocalCoordinates (Vector2 parentCoords) {
 //     final float rotation = self.rotation;
 //     final float scaleX = self.scaleX;
@@ -777,12 +775,12 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return parentCoords;
 //   }
 
-//   /** Draws self actor's debug lines if {@link #getDebug()} is true. */
+//   // Draws self actor's debug lines if {@link #getDebug()} is true.
 //   public void drawDebug (ShapeRenderer shapes) {
 //     drawDebugBounds(shapes);
 //   }
 
-//   /** Draws a rectange for the bounds of self actor if {@link #getDebug()} is true. */
+//   // Draws a rectange for the bounds of self actor if {@link #getDebug()} is true.
 //   protected void drawDebugBounds (ShapeRenderer shapes) {
 //     if (!debug) return;
 //     shapes.set(ShapeType.Line);
@@ -790,7 +788,7 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     shapes.rect(x, y, originX, originY, width, height, scaleX, scaleY, rotation);
 //   }
 
-//   /** If true, {@link #drawDebug(ShapeRenderer)} will be called for self actor. */
+//   // If true, {@link #drawDebug(ShapeRenderer)} will be called for self actor.
 //   public void setDebug (boolean enabled) {
 //     debug = enabled;
 //     if (enabled) Stage.debug = true;
@@ -800,19 +798,12 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //     return debug;
 //   }
 
-//   /** Calls {@link #setDebug(boolean)} with {@code true}. */
+//   // Calls {@link #setDebug(boolean)} with {@code true}.
 //   public Actor debug () {
 //     setDebug(true);
 //     return self;
 //   }
 
-//   public String toString () {
-//     String name = self.name;
-//     if (name == null) {
-//       name = getClass().getName();
-//       int dotIndex = name.lastIndexOf('.');
-//       if (dotIndex != -1) name = name.substring(dotIndex + 1);
-//     }
-//     return name;
-//   }
-// }
+func (self *Actor) String() string {
+	return self.name
+}

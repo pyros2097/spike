@@ -27,14 +27,14 @@ func NewGridPoint2Copy(point *GridPoint2) *GridPoint2 {
 // Sets the coordinates of this 2D grid point to that of another.
 // point The 2D grid point to copy the coordinates of.
 // return this 2D grid point for chaining.
-func (self *GridPoint2) SetG(point *GridPoint2) {
+func (self *GridPoint2) SetG(point *GridPoint2) *GridPoint2 {
 	self.x = point.x
 	self.y = point.y
 	return self
 }
 
 // Sets the coordinates of this 2D grid point.
-func (self *GridPoint2) Set(x, y int) {
+func (self *GridPoint2) Set(x, y int) *GridPoint2 {
 	self.x = x
 	self.y = y
 	return self
@@ -56,5 +56,6 @@ func (self *GridPoint2) HashCode() int {
 }
 
 func (self *GridPoint2) String() string {
-	return "(" + self.x + ", " + self.y + ")"
+	return ""
+	// return "(" + self.x + ", " + self.y + ")"
 }

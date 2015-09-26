@@ -4,6 +4,10 @@
 
 package math
 
+import (
+	. "github.com/pyros2097/spike/math/vector"
+)
+
 // Enum specifying on which side a point lies respective to the plane and it's normal. {@link PlaneSide#Front} is the side to
 // which the normal points.
 type PlaneSide int
@@ -29,14 +33,14 @@ func NewPlaneEmpty() *Plane {
 // param normal The plane normal
 // param d The distance to the origin
 func NewPlane(normal *Vector3, d float32) *Plane {
-	return &Plane{normal: NewVector3Empty().Set(normal).Nor(), d: d}
+	return &Plane{normal: NewVector3Empty().SetV(normal).Nor(), d: d}
 }
 
 // Constructs a new plane based on the normal and a point on the plane.
 // param normal The normal
 // param point The point on the plane
 func NewPlanePoint(normal, point *Vector3) *Plane {
-	normal = NewVector3Empty().Set(normal).Nor()
+	normal = NewVector3Empty().SetV(normal).Nor()
 	return &Plane{normal: normal, d: -normal.DotV(point)}
 }
 
@@ -47,7 +51,7 @@ func NewPlanePoint(normal, point *Vector3) *Plane {
 // param point3 The third point
 func NewPlanePoint3(point1, point2, point3 *Vector3) *Plane {
 	plane := &Plane{normal: NewVector3Empty(), d: 0}
-	plane.Set(point1, point2, point3)
+	plane.SetP3(point1, point2, point3)
 	return plane
 }
 
@@ -57,7 +61,7 @@ func NewPlanePoint3(point1, point2, point3 *Vector3) *Plane {
 // param point2
 // param point3
 func (self *Plane) SetP3(point1, point2, point3 *Vector3) {
-	self.normal.SetV(point1).SubV(point2).Crs(point2.x-point3.x, point2.y-point3.y, point2.z-point3.z).Nor()
+	self.normal.SetV(point1).SubV(point2).Crs(point2.X-point3.X, point2.Y-point3.Y, point2.Z-point3.Z).Nor()
 	self.d = -point1.DotV(self.normal)
 }
 
@@ -101,7 +105,7 @@ func (self *Plane) Distance(point *Vector3) float32 {
 // plane normal points to.
 // param point The point
 // return The side the point lies relative to the plane
-func (self *Plane) TestPointV(point *Vector3) PlaneSide {
+func (self *Plane) TestPointV3(point *Vector3) PlaneSide {
 	dist := self.normal.DotV(point) + self.d
 	if dist == 0 {
 		return PlaneOn
@@ -131,7 +135,7 @@ func (self *Plane) TestPoint(x, y, z float32) PlaneSide {
 // param direction the direction
 // return whether the plane is front facing
 func (self *Plane) IsFrontFacing(direction *Vector3) bool {
-	return dot <= self.normal.DotV(direction)
+	return self.normal.DotV(direction) <= 0
 }
 
 func (self *Plane) GetNormal() *Vector3 {
@@ -143,5 +147,6 @@ func (self *Plane) GetD() float32 {
 }
 
 func (self *Plane) String() string {
-	return self.normal.String() + ", " + self.d
+	return ""
+	// return self.normal.String() + ", " + self.d
 }

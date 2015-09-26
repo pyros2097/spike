@@ -7,7 +7,7 @@ package vector
 import (
 	"math"
 
-	. "github.com/pyros2097/spike/math/interpolation"
+	"github.com/pyros2097/spike/math/interpolation"
 	"github.com/pyros2097/spike/math/utils"
 )
 
@@ -446,8 +446,8 @@ func (self *Vector3) Lerp(target *Vector3, alpha float32) *Vector3 {
 	return self
 }
 
-func (self *Vector3) Interpolate(target *Vector3, alpha float32, interpolator Interpolation) *Vector3 {
-	return self.Lerp(target, InterpolationStartEnd(0, 1, alpha, interpolator))
+func (self *Vector3) Interpolate(target *Vector3, alpha float32, interpolator interpolation.Interpolation) *Vector3 {
+	return self.Lerp(target, interpolation.StartEnd(0, 1, alpha, interpolator))
 }
 
 // Spherically interpolates between this vector and the target vector by alpha which is in the range [0,1]. The result is

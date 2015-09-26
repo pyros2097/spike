@@ -72,13 +72,12 @@ func IntersectSegmentPlane(start, end, plane *Plane, intersection *Vector3) {
 // Determines on which side of the given line the point is. Returns -1 if the point is on the left side of the line, 0 if the
 // point is on the line and 1 if the point is on the right side of the line. Left and right are relative to the lines direction
 // which is linePoint1 to linePoint2.
-func int pointLineSide (Vector2 linePoint1, Vector2 linePoint2, Vector2 point) {
+func PointLineSideV2(linePoint1, linePoint2, point *Vector2) int {
   return (int)Math.signum((linePoint2.x - linePoint1.x) * (point.y - linePoint1.y) - (linePoint2.y - linePoint1.y)
     * (point.x - linePoint1.x));
 }
 
-func int pointLineSide (float linePoint1X, float linePoint1Y, float linePoint2X, float linePoint2Y, float pointX,
-  float pointY) {
+func PointLineSide(linePoint1X, linePoint1Y, linePoint2X, linePoint2Y, pointX, pointY float32) int {
   return (int)Math.signum((linePoint2X - linePoint1X) * (pointY - linePoint1Y) - (linePoint2Y - linePoint1Y)
     * (pointX - linePoint1X));
 }
@@ -87,7 +86,7 @@ func int pointLineSide (float linePoint1X, float linePoint1Y, float linePoint2X,
 // param polygon The polygon vertices passed as an array
 // param point The point
 // return true if the point is in the polygon
-func boolean isPointInPolygon (Array<Vector2> polygon, Vector2 point) {
+func IsPointInPolygon(Array<Vector2> polygon, Vector2 point) bool {
   Vector2 lastVertice = polygon.peek();
   boolean oddNodes = false;
   for (int i = 0; i < polygon.size; i++) {
@@ -105,7 +104,7 @@ func boolean isPointInPolygon (Array<Vector2> polygon, Vector2 point) {
 // Returns true if the specified point is in the polygon.
 // param offset Starting polygon index.
 // param count Number of array indices to use after offset.
-func boolean isPointInPolygon (float[] polygon, int offset, int count, float x, float y) {
+func isPointInPolygon(float[] polygon, int offset, int count, float x, float y) bool {
   boolean oddNodes = false;
   int j = offset + count - 2;
   for (int i = offset, n = j; i <= n; i += 2) {
@@ -121,23 +120,23 @@ func boolean isPointInPolygon (float[] polygon, int offset, int count, float x, 
 }
 
 // Returns the distance between the given line and point. Note the specified line is not a line segment.
-func float distanceLinePoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
+func DistanceLinePoint(startX, startY, endX, endY, pointX, pointY float32) float32 {
   float normalLength = (float)Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY));
   return Math.abs((pointX - startX) * (endY - startY) - (pointY - startY) * (endX - startX)) / normalLength;
 }
 
 // Returns the distance between the given segment and point.
-func float distanceSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY) {
+func DistanceSegmentPoint(startX, startY, endX, endY, pointX, pointY float32) float32 {
   return nearestSegmentPoint(startX, startY, endX, endY, pointX, pointY, v2tmp).dst(pointX, pointY);
 }
 
 // Returns the distance between the given segment and point.
-func float distanceSegmentPoint (Vector2 start, Vector2 end, Vector2 point) {
+func DistanceSegmentPoint(start, end, point *Vector3) float32 {
   return nearestSegmentPoint(start, end, point, v2tmp).dst(point);
 }
 
 // Returns a point on the segment nearest to the specified point.
-func Vector2 nearestSegmentPoint (Vector2 start, Vector2 end, Vector2 point, Vector2 nearest) {
+func NearestSegmentPointV2(start, end, point, nearest *Vector2) *Vector2 {
   float length2 = start.dst2(end);
   if (length2 == 0) return nearest.set(start);
   float t = ((point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y)) / length2;
@@ -147,9 +146,8 @@ func Vector2 nearestSegmentPoint (Vector2 start, Vector2 end, Vector2 point, Vec
 }
 
 // Returns a point on the segment nearest to the specified point.
-func Vector2 nearestSegmentPoint (float startX, float startY, float endX, float endY, float pointX, float pointY,
-  Vector2 nearest) {
-  final float xDiff = endX - startX;
+func NearestSegmentPoint(startX, startY, endX, endY, pointX, pointY, nearest *Vector2) *Vector2 {
+  final xDiff = endX - startX;
   final float yDiff = endY - startY;
   float length2 = xDiff * xDiff + yDiff * yDiff;
   if (length2 == 0) return nearest.set(startX, startY);
@@ -159,56 +157,55 @@ func Vector2 nearestSegmentPoint (float startX, float startY, float endX, float 
   return nearest.set(startX + t * (endX - startX), startY + t * (endY - startY));
 }
 
-//   // Returns whether the given line segment intersects the given circle.
-//   // param start The start point of the line segment
-//   // param end The end point of the line segment
-//   // param center The center of the circle
-//   // param squareRadius The squared radius of the circle
-//   // return Whether the line segment and the circle intersect
-//   func boolean intersectSegmentCircle (Vector2 start, Vector2 end, Vector2 center, float squareRadius) {
-//     tmp.set(end.x - start.x, end.y - start.y, 0);
-//     tmp1.set(center.x - start.x, center.y - start.y, 0);
-//     float l = tmp.len();
-//     float u = tmp1.dot(tmp.nor());
-//     if (u <= 0) {
-//       tmp2.set(start.x, start.y, 0);
-//     } else if (u >= l) {
-//       tmp2.set(end.x, end.y, 0);
-//     } else {
-//       tmp3.set(tmp.scl(u)); // remember tmp is already normalized
-//       tmp2.set(tmp3.x + start.x, tmp3.y + start.y, 0);
-//     }
+// Returns whether the given line segment intersects the given circle.
+// param start The start point of the line segment
+// param end The end point of the line segment
+// param center The center of the circle
+// param squareRadius The squared radius of the circle
+// return Whether the line segment and the circle intersect
+func IntersectSegmentCircle(start, end, center *Vector2, squareRadius float32) bool {
+  tmp.set(end.x - start.x, end.y - start.y, 0);
+  tmp1.set(center.x - start.x, center.y - start.y, 0);
+  float l = tmp.len();
+  float u = tmp1.dot(tmp.nor());
+  if (u <= 0) {
+    tmp2.set(start.x, start.y, 0);
+  } else if (u >= l) {
+    tmp2.set(end.x, end.y, 0);
+  } else {
+    tmp3.set(tmp.scl(u)); // remember tmp is already normalized
+    tmp2.set(tmp3.x + start.x, tmp3.y + start.y, 0);
+  }
 
-//     float x = center.x - tmp2.x;
-//     float y = center.y - tmp2.y;
+  float x = center.x - tmp2.x;
+  float y = center.y - tmp2.y;
 
-//     return x * x + y * y <= squareRadius;
-//   }
+  return x * x + y * y <= squareRadius;
+}
 
-//   // Checks whether the line segment and the circle intersect and returns by how much and in what direction the line has to move
-//    * away from the circle to not intersect.
-//    *
-//   // param start The line segment starting point
-//   // param end The line segment end point
-//   // param point The center of the circle
-//   // param radius The radius of the circle
-//   // param displacement The displacement vector set by the method having unit length
-//   // return The displacement or Float.POSITIVE_INFINITY if no intersection is present
-//   func float intersectSegmentCircleDisplace (Vector2 start, Vector2 end, Vector2 point, float radius,
-//     Vector2 displacement) {
-//     float u = (point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y);
-//     float d = start.dst(end);
-//     u /= d * d;
-//     if (u < 0 || u > 1) return Float.POSITIVE_INFINITY;
-//     tmp.set(end.x, end.y, 0).sub(start.x, start.y, 0);
-//     tmp2.set(start.x, start.y, 0).add(tmp.scl(u));
-//     d = tmp2.dst(point.x, point.y, 0);
-//     if (d < radius) {
-//       displacement.set(point).sub(tmp2.x, tmp2.y).nor();
-//       return d;
-//     } else
-//       return Float.POSITIVE_INFINITY;
-//   }
+// Checks whether the line segment and the circle intersect and returns by how much and in what direction the line has to move
+// away from the circle to not intersect.
+//
+// param start The line segment starting point
+// param end The line segment end point
+// param point The center of the circle
+// param radius The radius of the circle
+// param displacement The displacement vector set by the method having unit length
+// return The displacement or Float.POSITIVE_INFINITY if no intersection is present
+func IntersectSegmentCircleDisplace(start, end, point *Vector2, radius float32, displacement *Vector2) float32 {
+  float u = (point.x - start.x) * (end.x - start.x) + (point.y - start.y) * (end.y - start.y);
+  float d = start.dst(end);
+  u /= d * d;
+  if (u < 0 || u > 1) return Float.POSITIVE_INFINITY;
+  tmp.set(end.x, end.y, 0).sub(start.x, start.y, 0);
+  tmp2.set(start.x, start.y, 0).add(tmp.scl(u));
+  d = tmp2.dst(point.x, point.y, 0);
+  if (d < radius) {
+    displacement.set(point).sub(tmp2.x, tmp2.y).nor();
+    return d;
+  } else
+    return Float.POSITIVE_INFINITY;
+}
 
 //   // Intersect two 2D Rays and return the scalar parameter of the first ray at the intersection point.
 //    * You can get the intersection point by: Vector2 point(direction1).scl(scalar).add(start1);

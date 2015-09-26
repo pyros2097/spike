@@ -2,13 +2,15 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package graphics
+package spike
 
 import (
 	"math"
 
+	. "github.com/pyros2097/spike/math"
 	. "github.com/pyros2097/spike/math/collision"
 	. "github.com/pyros2097/spike/math/vector"
+	// "github.com/pyros2097/spike/utils/scaling"
 )
 
 // Base class for OrthographicCamera and PerspectiveCamera
@@ -40,7 +42,7 @@ type Camera struct {
 	ViewportHeight float32
 
 	// the frustum
-	// public final Frustum frustum = new Frustum();
+	frustum *Frustum
 
 	tmpVec *Vector3
 	Ray    *Ray
@@ -69,12 +71,6 @@ type Camera struct {
 //          according to the aspect ratio.
 //@param viewportWidth the viewport width
 //@param viewportHeight the viewport height
-func NewPerspectiveCamera(fieldOfViewY, viewportWidth, viewportHeight float32) *PerspectiveCamera {
-	self.fieldOfView = fieldOfViewY
-	self.viewportWidth = viewportWidth
-	self.viewportHeight = viewportHeight
-	self.Update()
-}
 func NewCamera(viewportWidth, viewportHeight float32) *Camera {
 	return &Camera{
 		Position:          NewVector3Empty(),
@@ -86,14 +82,22 @@ func NewCamera(viewportWidth, viewportHeight float32) *Camera {
 		InvProjectionView: NewMatrix4Empty(),
 		Near:              1, //Near = 0 if orthographic camera
 		Far:               100,
-		ViewportWidth:     0,
-		ViewportHeight:    0,
+		ViewportWidth:     viewportWidth,
+		ViewportHeight:    viewportHeight,
 		tmpVec:            NewVector3Empty(),
 		tmp:               NewVector3Empty(),
 		Ray:               NewRay(NewVector3Empty(), NewVector3Empty()),
 		Zoom:              1,
 		FieldOfView:       67,
+		frustum:           NewFrustumEmpty(),
 	}
+}
+
+func NewPerspectiveCamera(fieldOfViewY, viewportWidth, viewportHeight float32) *Camera {
+	self := NewCamera(viewportWidth, viewportHeight)
+	self.FieldOfView = fieldOfViewY
+	self.Update()
+	return self
 }
 
 // Recalculates the projection and view matrix of this camera and the {@link Frustum} planes. Use this after you've manipulated
@@ -106,31 +110,32 @@ func (self *Camera) Update() {
 // true. Use this after you've manipulated any of the attributes of the camera.
 func (self *Camera) UpdateFrumstum(updateFrustum bool) {}
 
-func (self *PerspectiveCamera) UpdateFrustumPerspective(updateFrustum bool) {
-	aspect = viewportWidth / viewportHeight
-	projection.setToProjection(Math.abs(near), Math.abs(far), fieldOfView, aspect)
-	view.setToLookAt(position, tmp.set(position).add(direction), up)
-	combined.set(projection)
-	Matrix4.mul(combined.val, view.val)
+func (self *Camera) UpdateFrustumPerspective(updateFrustum bool) {
+	aspect := self.ViewportWidth / self.ViewportHeight
+	self.Projection.SetToProjectionNear(float32(math.Abs(float64(self.Near))), float32(math.Abs(float64(self.Far))),
+		self.FieldOfView, aspect) // TODO: check this call overload
+	self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
+	self.Combined.SetM4(self.Projection)
+	// Matrix4.mul(combined.val, view.val)
 
 	if updateFrustum {
-		invProjectionView.set(combined)
-		Matrix4.inv(invProjectionView.val)
-		frustum.update(invProjectionView)
+		self.InvProjectionView.SetM4(self.Combined)
+		// Matrix4.inv(invProjectionView.val)
+		self.frustum.Update(self.InvProjectionView)
 	}
 }
 
-func (self *OrthographicCamera) UpdateFrustumOrtho(updateFrustum bool) {
-	projection.setToOrtho(zoom*-viewportWidth/2, zoom*(viewportWidth/2), zoom*-(viewportHeight/2),
-		zoom*viewportHeight/2, near, far)
-	view.SetToLookAt(position, tmp.set(position).add(direction), up)
-	combined.SetV(projection)
-	Matrix4.MulM4(combined.val, view.val)
+func (self *Camera) UpdateFrustumOrtho(updateFrustum bool) {
+	self.Projection.SetToOrtho2DNear(self.Zoom*-self.ViewportWidth/2, self.Zoom*(self.ViewportWidth/2), self.Zoom*-(self.ViewportHeight/2),
+		self.Zoom*self.ViewportHeight/2, self.Near, self.Far)
+	self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
+	self.Combined.SetM4(self.Projection)
+	// Matrix4.MulM4(combined.val, view.val)
 
 	if updateFrustum {
-		invProjectionView.set(combined)
-		Matrix4.inv(invProjectionView.val)
-		frustum.update(invProjectionView)
+		self.InvProjectionView.SetM4(self.Combined)
+		// Matrix4.inv(invProjectionView.val)
+		self.frustum.Update(self.InvProjectionView)
 	}
 }
 
@@ -139,17 +144,17 @@ func (self *OrthographicCamera) UpdateFrustumOrtho(updateFrustum bool) {
 // param y the x-coordinate of the point to look at
 // param z the x-coordinate of the point to look at
 func (self *Camera) LookAt(x, y, z float32) {
-	tmpVec.Set(x, y, z).SubV3(position).Nor()
-	if !tmpVec.IsZero() {
-		dot := tmpVec.DotV(up) // up and direction must ALWAYS be orthonormal vectors
-		if Math.abs(dot-1) < 0.000000001 {
+	self.tmpVec.Set(x, y, z).SubV(self.Position).Nor()
+	if !self.tmpVec.IsZero() {
+		dot := self.tmpVec.DotV(self.Up) // up and direction must ALWAYS be orthonormal vectors
+		if math.Abs(float64(dot-1)) < 0.000000001 {
 			// Collinear
-			up.set(self.Direction).SclScalar(-1)
-		} else if Math.abs(dot+1) < 0.000000001 {
+			self.Up.SetV(self.Direction).SclScalar(-1)
+		} else if math.Abs(float64(dot+1)) < 0.000000001 {
 			// Collinear opposite
-			up.setV(self.Direction)
+			self.Up.SetV(self.Direction)
 		}
-		direction.set(tmpVec)
+		self.Direction.SetV(self.tmpVec)
 		self.NormalizeUp()
 	}
 }
@@ -163,8 +168,8 @@ func (self *Camera) LookAtV3(target *Vector3) {
 // Normalizes the up vector by first calculating the right vector via a cross product between direction and up, and then
 // recalculating the up vector via a cross product between right and direction.
 func (self *Camera) NormalizeUp() {
-	tmpVec.SetV3(self.Direction).CrsV(self.Up).Nor()
-	self.Up.SetV3(tmpVec).CrsV(self.Direction).Nor()
+	self.tmpVec.SetV(self.Direction).CrsV(self.Up).Nor()
+	self.Up.SetV(self.tmpVec).CrsV(self.Direction).Nor()
 }
 
 // Rotates the direction and up vector of this camera by the given angle around the given axis. The direction and up vector
@@ -183,8 +188,8 @@ func (self *Camera) Rotate(angle, axisX, axisY, axisZ float32) {
 // param axis the axis to rotate around
 // param angle the angle
 func (self *Camera) RotateV3(axis *Vector3, angle float32) {
-	self.Direction.Rotate(axis, angle)
-	self.Up.Rotate(axis, angle)
+	self.Direction.RotateV(axis, angle)
+	self.Up.RotateV(axis, angle)
 }
 
 // Rotates the direction and up vector of this camera by the given rotation matrix. The direction and up vector will not be
@@ -199,8 +204,8 @@ func (self *Camera) RotateM4(transform *Matrix4) {
 // orthogonalized.
 // param quat The quaternion
 func (self *Camera) RotateQ(quat *Quaternion) {
-	quat.Transform(direction)
-	quat.Transform(up)
+	quat.Transform(self.Direction)
+	quat.Transform(self.Up)
 }
 
 // Rotates the direction and up vector of this camera by the given angle around the given axis, with the axis attached to given
@@ -209,19 +214,19 @@ func (self *Camera) RotateQ(quat *Quaternion) {
 // param axis the axis to rotate around
 // param angle the angle
 func (self *Camera) RotateAround(point, axis *Vector3, angle float32) {
-	tmpVec.Set(point)
-	tmpVec.Sub(position)
-	self.Translate(tmpVec)
-	self.Rotate(axis, angle)
-	tmpVec.Rotate(axis, angle)
-	self.Translate(-tmpVec.x, -tmpVec.y, -tmpVec.z)
+	self.tmpVec.SetV(point)
+	self.tmpVec.SubV(self.Position)
+	self.TranslateV3(self.tmpVec)
+	self.RotateV3(axis, angle)
+	self.tmpVec.RotateV(axis, angle)
+	self.Translate(-self.tmpVec.X, -self.tmpVec.Y, -self.tmpVec.Z)
 }
 
 // Transform the position, direction and up vector by the given matrix
 // param transform The transform matrix
 func (self *Camera) Transform(transform *Matrix4) {
 	self.Position.Mul(transform)
-	self.Rotate(transform)
+	self.RotateM4(transform)
 }
 
 // Moves the camera by the given amount on each axis.
@@ -235,7 +240,7 @@ func (self *Camera) Translate(x, y, z float32) {
 // Moves the camera by the given vector.
 // param vec the displacement vector
 func (self *Camera) TranslateV3(vec *Vector3) {
-	self.Position.Add(vec)
+	self.Position.AddV(vec)
 }
 
 // Orthographic
@@ -244,8 +249,10 @@ func (self *Camera) TranslateV3(vec *Vector3) {
 // Sets this camera to an orthographic projection using a viewport fitting the screen resolution, centered at
 // (Gdx.graphics.getWidth()/2, Gdx.graphics.getHeight()/2), with the y-axis pointing up or down.
 // param yDown whether y should be pointing down
-func (self *OrthographicCamera) SetToOrtho(yDown bool) {
-	self.SetToOrthoVW(yDown, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+func (self *Camera) SetToOrtho(yDown bool) {
+	// Gdx.graphics.getWidth() TODO:
+	// Gdx.graphics.getHeight()
+	self.SetToOrthoVW(yDown, 0, 0)
 }
 
 // Sets this camera to an orthographic projection, centered at (viewportWidth/2, viewportHeight/2), with the y-axis pointing up
@@ -253,22 +260,22 @@ func (self *OrthographicCamera) SetToOrtho(yDown bool) {
 // param yDown whether y should be pointing down.
 // param viewportWidth
 // param viewportHeight
-func (self *OrthographicCamera) SetToOrthoVW(yDown bool, viewportWidth, viewportHeight float32) {
+func (self *Camera) SetToOrthoVW(yDown bool, viewportWidth, viewportHeight float32) {
 	if yDown {
-		up.set(0, -1, 0)
-		direction.set(0, 0, 1)
+		self.Up.Set(0, -1, 0)
+		self.Direction.Set(0, 0, 1)
 	} else {
-		up.set(0, 1, 0)
-		direction.set(0, 0, -1)
+		self.Up.Set(0, 1, 0)
+		self.Direction.Set(0, 0, -1)
 	}
-	position.Set(zoom*viewportWidth/2.0, zoom*viewportHeight/2.0, 0)
-	this.viewportWidth = viewportWidth
-	this.viewportHeight = viewportHeight
-	update()
+	self.Position.Set(self.Zoom*viewportWidth/2.0, self.Zoom*viewportHeight/2.0, 0)
+	self.ViewportWidth = viewportWidth
+	self.ViewportHeight = viewportHeight
+	self.Update()
 }
 
 func (self *Camera) RotateAngle(angle float32) {
-	self.Rotate(self.Direction, angle)
+	self.RotateV3(self.Direction, angle)
 }
 
 // Moves the camera by the given amount on each axis.
@@ -299,12 +306,12 @@ func (self *Camera) Unproject(screenCoords *Vector3, viewportX, viewportY, viewp
 	x := screenCoords.X
 	y := screenCoords.Y
 	x = x - viewportX
-	y = Gdx.graphics.getHeight() - y - 1
+	y = 0 //Gdx.graphics.getHeight() - y - 1 TODO:
 	y = y - viewportY
 	screenCoords.X = (2*x)/viewportWidth - 1
 	screenCoords.Y = (2*y)/viewportHeight - 1
 	screenCoords.Z = 2*screenCoords.Z - 1
-	screenCoords.Prj(invProjectionView)
+	screenCoords.Prj(self.InvProjectionView)
 	return screenCoords
 }
 
@@ -315,7 +322,7 @@ func (self *Camera) Unproject(screenCoords *Vector3, viewportX, viewportY, viewp
 // will return a point on the near plane, a z-coordinate of 1 will return a point on the far plane.
 // param screenCoords the point in screen coordinates
 func (self *Camera) UnprojectV3(screenCoords *Vector3) *Vector3 {
-	self.Unproject(screenCoords, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+	// self.Unproject(screenCoords, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()) TODO:
 	return screenCoords
 }
 
@@ -324,7 +331,7 @@ func (self *Camera) UnprojectV3(screenCoords *Vector3) *Vector3 {
 // <b>bottom</b> left, with the y-axis pointing <b>upwards</b> and the x-axis pointing to the right. This makes it easily
 // useable in conjunction with {@link Batch} and similar classes.
 func (self *Camera) ProjectV3(worldCoords *Vector3) *Vector3 {
-	self.Project(worldCoords, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+	// self.Project(worldCoords, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight()) TODO:
 	return worldCoords
 }
 
@@ -339,7 +346,7 @@ func (self *Camera) ProjectV3(worldCoords *Vector3) *Vector3 {
 // param viewportWidth the width of the viewport in pixels
 // param viewportHeight the height of the viewport in pixels
 func (self *Camera) Project(worldCoords *Vector3, viewportX, viewportY, viewportWidth, viewportHeight float32) *Vector3 {
-	worldCoords.Prj(combined)
+	worldCoords.Prj(self.Combined)
 	worldCoords.X = viewportWidth*(worldCoords.X+1)/2 + viewportX
 	worldCoords.Y = viewportHeight*(worldCoords.Y+1)/2 + viewportY
 	worldCoords.Z = (worldCoords.Z + 1) / 2
@@ -355,16 +362,444 @@ func (self *Camera) Project(worldCoords *Vector3, viewportX, viewportY, viewport
 // param viewportHeight the height of the viewport in pixels
 // return the picking Ray.
 func (self *Camera) GetPickRay(screenX, screenY, viewportX, viewportY, viewportWidth, viewportHeight float32) *Ray {
-	self.Unproject(ray.origin.Set(screenX, screenY, 0), viewportX, viewportY, viewportWidth, viewportHeight)
-	self.Unproject(ray.direction.Set(screenX, screenY, 1), viewportX, viewportY, viewportWidth, viewportHeight)
-	ray.direction.SubV(ray.origin).Nor()
-	return ray
+	self.Unproject(self.Ray.Origin.Set(screenX, screenY, 0), viewportX, viewportY, viewportWidth, viewportHeight)
+	self.Unproject(self.Ray.Direction.Set(screenX, screenY, 1), viewportX, viewportY, viewportWidth, viewportHeight)
+	self.Ray.Direction.SubV(self.Ray.Origin).Nor()
+	return self.Ray
 }
 
 // Creates a picking {@link Ray} from the coordinates given in screen coordinates. It is assumed that the viewport spans the
 // whole screen. The screen coordinates origin is assumed to be in the top left corner, its y-axis pointing down, the x-axis
 // pointing to the right. The returned instance is not a new instance but an internal member only accessible via this function.
 // return the picking Ray.
-func (self *Camera) GetPickRay(screenX, screenY float32) *Ray {
-	return self.GetPickRay(screenX, screenY, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+func (self *Camera) GetPickRayXY(screenX, screenY float32) *Ray {
+	//Gdx.graphics.getWidth(), Gdx.graphics.getHeight()
+	return self.GetPickRay(screenX, screenY, 0, 0, 0, 0) // TODO
 }
+
+// A ScalingViewport that uses {@link Scaling#fit} so it keeps the aspect ratio by scaling the world up to fit the screen, adding
+// black bars (letterboxing) for the remaining space.
+// public class FitViewport extends ScalingViewport {
+// 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
+// 	public FitViewport (float worldWidth, float worldHeight) {
+// 		super(Scaling.fit, worldWidth, worldHeight);
+// 	}
+
+// 	public FitViewport (float worldWidth, float worldHeight, Camera camera) {
+// 		super(Scaling.fit, worldWidth, worldHeight, camera);
+// 	}
+// }
+
+// A viewport where the world size is based on the size of the screen. By default 1 world unit == 1 screen pixel, but this ratio
+// can be {@link #setUnitsPerPixel(float) changed}.
+// public class ScreenViewport extends Viewport {
+// 	private float unitsPerPixel = 1;
+
+// 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
+// 	public ScreenViewport () {
+// 		this(new OrthographicCamera());
+// 	}
+
+// 	public ScreenViewport (Camera camera) {
+// 		setCamera(camera);
+// 	}
+
+// 	@Override
+// 	public void update (int screenWidth, int screenHeight, boolean centerCamera) {
+// 		setScreenBounds(0, 0, screenWidth, screenHeight);
+// 		setWorldSize(screenWidth * unitsPerPixel, screenHeight * unitsPerPixel);
+// 		apply(centerCamera);
+// 	}
+
+// 	public float getUnitsPerPixel () {
+// 		return unitsPerPixel;
+// 	}
+
+// 	/** Sets the number of pixels for each world unit. Eg, a scale of 2.5 means there are 2.5 world units for every 1 screen pixel.
+// 	 * Default is 1. */
+// 	public void setUnitsPerPixel (float unitsPerPixel) {
+// 		this.unitsPerPixel = unitsPerPixel;
+// 	}
+// }
+
+// A ScalingViewport that uses {@link Scaling#stretch} so it does not keep the aspect ratio, the world is scaled to take the whole
+// screen.
+// public class StretchViewport extends ScalingViewport {
+// 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
+// 	public StretchViewport (float worldWidth, float worldHeight) {
+// 		super(Scaling.stretch, worldWidth, worldHeight);
+// 	}
+
+// 	public StretchViewport (float worldWidth, float worldHeight, Camera camera) {
+// 		super(Scaling.stretch, worldWidth, worldHeight, camera);
+// 	}
+// }
+
+// A viewport that scales the world using {@link Scaling}.
+// {@link Scaling#fit} keeps the aspect ratio by scaling the world up to fit the screen, adding black bars (letterboxing) for the
+// remaining space.
+// {@link Scaling#fill} keeps the aspect ratio by scaling the world up to take the whole screen (some of the world may be off
+// screen).
+// {@link Scaling#stretch} does not keep the aspect ratio, the world is scaled to take the whole screen.
+// {@link Scaling#none} keeps the aspect ratio by using a fixed size world (the world may not fill the screen or some of the world
+//may be off screen).
+// public class ScalingViewport extends Viewport {
+// 	private Scaling scaling;
+
+// 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
+// 	public ScalingViewport (Scaling scaling, float worldWidth, float worldHeight) {
+// 		this(scaling, worldWidth, worldHeight, new OrthographicCamera());
+// 	}
+
+// 	public ScalingViewport (Scaling scaling, float worldWidth, float worldHeight, Camera camera) {
+// 		this.scaling = scaling;
+// 		setWorldSize(worldWidth, worldHeight);
+// 		setCamera(camera);
+// 	}
+
+// 	@Override
+// 	public void update (int screenWidth, int screenHeight, boolean centerCamera) {
+// 		Vector2 scaled = scaling.apply(getWorldWidth(), getWorldHeight(), screenWidth, screenHeight);
+// 		int viewportWidth = Math.round(scaled.x);
+// 		int viewportHeight = Math.round(scaled.y);
+
+// 		// Center.
+// 		setScreenBounds((screenWidth - viewportWidth) / 2, (screenHeight - viewportHeight) / 2, viewportWidth, viewportHeight);
+
+// 		apply(centerCamera);
+// 	}
+
+// 	public Scaling getScaling () {
+// 		return scaling;
+// 	}
+
+// 	public void setScaling (Scaling scaling) {
+// 		this.scaling = scaling;
+// 	}
+// }
+
+// A ScalingViewport that uses {@link Scaling#fill} so it keeps the aspect ratio by scaling the world up to take the whole screen
+// (some of the world may be off screen).
+// public class FillViewport extends ScalingViewport {
+// 	/** Creates a new viewport using a new {@link OrthographicCamera}. */
+// 	public FillViewport (float worldWidth, float worldHeight) {
+// 		super(Scaling.fill, worldWidth, worldHeight);
+// 	}
+
+// 	public FillViewport (float worldWidth, float worldHeight, Camera camera) {
+// 		super(Scaling.fill, worldWidth, worldHeight, camera);
+// 	}
+// }
+
+// A viewport that keeps the world aspect ratio by extending the world in one direction. The world is first scaled to fit within
+// the viewport, then the shorter dimension is lengthened to fill the viewport. A maximum size can be specified to limit how much
+// the world is extended and black bars (letterboxing) are used for any remaining space.
+// public class ExtendViewport extends Viewport {
+// 	private float minWorldWidth, minWorldHeight;
+// 	private float maxWorldWidth, maxWorldHeight;
+
+// 	/** Creates a new viewport using a new {@link OrthographicCamera} with no maximum world size. */
+// 	public ExtendViewport (float minWorldWidth, float minWorldHeight) {
+// 		this(minWorldWidth, minWorldHeight, 0, 0, new OrthographicCamera());
+// 	}
+
+// 	/** Creates a new viewport with no maximum world size. */
+// 	public ExtendViewport (float minWorldWidth, float minWorldHeight, Camera camera) {
+// 		this(minWorldWidth, minWorldHeight, 0, 0, camera);
+// 	}
+
+// 	/** Creates a new viewport using a new {@link OrthographicCamera} and a maximum world size.
+// 	 * @see ExtendViewport#ExtendViewport(float, float, float, float, Camera) */
+// 	public ExtendViewport (float minWorldWidth, float minWorldHeight, float maxWorldWidth, float maxWorldHeight) {
+// 		this(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, new OrthographicCamera());
+// 	}
+
+// 	/** Creates a new viewport with a maximum world size.
+// 	 * @param maxWorldWidth User 0 for no maximum width.
+// 	 * @param maxWorldHeight User 0 for no maximum height. */
+// 	public ExtendViewport (float minWorldWidth, float minWorldHeight, float maxWorldWidth, float maxWorldHeight, Camera camera) {
+// 		this.minWorldWidth = minWorldWidth;
+// 		this.minWorldHeight = minWorldHeight;
+// 		this.maxWorldWidth = maxWorldWidth;
+// 		this.maxWorldHeight = maxWorldHeight;
+// 		setCamera(camera);
+// 	}
+
+// 	@Override
+// 	public void update (int screenWidth, int screenHeight, boolean centerCamera) {
+// 		// Fit min size to the screen.
+// 		float worldWidth = minWorldWidth;
+// 		float worldHeight = minWorldHeight;
+// 		Vector2 scaled = Scaling.fit.apply(worldWidth, worldHeight, screenWidth, screenHeight);
+
+// 		// Extend in the short direction.
+// 		int viewportWidth = Math.round(scaled.x);
+// 		int viewportHeight = Math.round(scaled.y);
+// 		if (viewportWidth < screenWidth) {
+// 			float toViewportSpace = viewportHeight / worldHeight;
+// 			float toWorldSpace = worldHeight / viewportHeight;
+// 			float lengthen = (screenWidth - viewportWidth) * toWorldSpace;
+// 			if (maxWorldWidth > 0) lengthen = Math.min(lengthen, maxWorldWidth - minWorldWidth);
+// 			worldWidth += lengthen;
+// 			viewportWidth += Math.round(lengthen * toViewportSpace);
+// 		} else if (viewportHeight < screenHeight) {
+// 			float toViewportSpace = viewportWidth / worldWidth;
+// 			float toWorldSpace = worldWidth / viewportWidth;
+// 			float lengthen = (screenHeight - viewportHeight) * toWorldSpace;
+// 			if (maxWorldHeight > 0) lengthen = Math.min(lengthen, maxWorldHeight - minWorldHeight);
+// 			worldHeight += lengthen;
+// 			viewportHeight += Math.round(lengthen * toViewportSpace);
+// 		}
+
+// 		setWorldSize(worldWidth, worldHeight);
+
+// 		// Center.
+// 		setScreenBounds((screenWidth - viewportWidth) / 2, (screenHeight - viewportHeight) / 2, viewportWidth, viewportHeight);
+
+// 		apply(centerCamera);
+// 	}
+
+// 	public float getMinWorldWidth () {
+// 		return minWorldWidth;
+// 	}
+
+// 	public void setMinWorldWidth (float minWorldWidth) {
+// 		this.minWorldWidth = minWorldWidth;
+// 	}
+
+// 	public float getMinWorldHeight () {
+// 		return minWorldHeight;
+// 	}
+
+// 	public void setMinWorldHeight (float minWorldHeight) {
+// 		this.minWorldHeight = minWorldHeight;
+// 	}
+
+// 	public float getMaxWorldWidth () {
+// 		return maxWorldWidth;
+// 	}
+
+// 	public void setMaxWorldWidth (float maxWorldWidth) {
+// 		this.maxWorldWidth = maxWorldWidth;
+// 	}
+
+// 	public float getMaxWorldHeight () {
+// 		return maxWorldHeight;
+// 	}
+
+// 	public void setMaxWorldHeight (float maxWorldHeight) {
+// 		this.maxWorldHeight = maxWorldHeight;
+// 	}
+// }
+
+// Manages a {@link Camera} and determines how world coordinates are mapped to and from the screen.
+// public abstract class Viewport {
+// 	private Camera camera;
+// 	private float worldWidth, worldHeight;
+// 	private int screenX, screenY, screenWidth, screenHeight;
+
+// 	private final Vector3 tmp = new Vector3();
+
+// 	/** Calls {@link #apply(boolean)} with false. */
+// 	public void apply () {
+// 		apply(false);
+// 	}
+
+// 	/** Applies the viewport to the camera and sets the glViewport.
+// 	 * @param centerCamera If true, the camera position is set to the center of the world. */
+// 	public void apply (boolean centerCamera) {
+// 		Gdx.gl.glViewport(screenX, screenY, screenWidth, screenHeight);
+// 		camera.viewportWidth = worldWidth;
+// 		camera.viewportHeight = worldHeight;
+// 		if (centerCamera) camera.position.set(worldWidth / 2, worldHeight / 2, 0);
+// 		camera.update();
+// 	}
+
+// 	/** Calls {@link #update(int, int, boolean)} with false. */
+// 	public final void update (int screenWidth, int screenHeight) {
+// 		update(screenWidth, screenHeight, false);
+// 	}
+
+// 	/** Configures this viewport's screen bounds using the specified screen size and calls {@link #apply(boolean)}. Typically called
+// 	 * from {@link ApplicationListener#resize(int, int)} or {@link Screen#resize(int, int)}.
+// 	 * <p>
+// 	 * The default implementation only calls {@link #apply(boolean)}. */
+// 	public void update (int screenWidth, int screenHeight, boolean centerCamera) {
+// 		apply(centerCamera);
+// 	}
+
+// 	/** Transforms the specified screen coordinate to world coordinates.
+// 	 * @return The vector that was passed in, transformed to world coordinates.
+// 	 * @see Camera#unproject(Vector3) */
+// 	public Vector2 unproject (Vector2 screenCoords) {
+// 		tmp.set(screenCoords.x, screenCoords.y, 1);
+// 		camera.unproject(tmp, screenX, screenY, screenWidth, screenHeight);
+// 		screenCoords.set(tmp.x, tmp.y);
+// 		return screenCoords;
+// 	}
+
+// 	/** Transforms the specified world coordinate to screen coordinates.
+// 	 * @return The vector that was passed in, transformed to screen coordinates.
+// 	 * @see Camera#project(Vector3) */
+// 	public Vector2 project (Vector2 worldCoords) {
+// 		tmp.set(worldCoords.x, worldCoords.y, 1);
+// 		camera.project(tmp, screenX, screenY, screenWidth, screenHeight);
+// 		worldCoords.set(tmp.x, tmp.y);
+// 		return worldCoords;
+// 	}
+
+// 	/** Transforms the specified screen coordinate to world coordinates.
+// 	 * @return The vector that was passed in, transformed to world coordinates.
+// 	 * @see Camera#unproject(Vector3) */
+// 	public Vector3 unproject (Vector3 screenCoords) {
+// 		camera.unproject(screenCoords, screenX, screenY, screenWidth, screenHeight);
+// 		return screenCoords;
+// 	}
+
+// 	/** Transforms the specified world coordinate to screen coordinates.
+// 	 * @return The vector that was passed in, transformed to screen coordinates.
+// 	 * @see Camera#project(Vector3) */
+// 	public Vector3 project (Vector3 worldCoords) {
+// 		camera.project(worldCoords, screenX, screenY, screenWidth, screenHeight);
+// 		return worldCoords;
+// 	}
+
+// 	/** @see Camera#getPickRay(float, float, float, float, float, float) */
+// 	public Ray getPickRay (float screenX, float screenY) {
+// 		return camera.getPickRay(screenX, screenY, this.screenX, this.screenY, screenWidth, screenHeight);
+// 	}
+
+// 	/** @see ScissorStack#calculateScissors(Camera, float, float, float, float, Matrix4, Rectangle, Rectangle) */
+// 	public void calculateScissors (Matrix4 batchTransform, Rectangle area, Rectangle scissor) {
+// 		ScissorStack.calculateScissors(camera, screenX, screenY, screenWidth, screenHeight, batchTransform, area, scissor);
+// 	}
+
+// 	/** Transforms a point to real screen coordinates (as opposed to OpenGL ES window coordinates), where the origin is in the top
+// 	 * left and the the y-axis is pointing downwards. */
+// 	public Vector2 toScreenCoordinates (Vector2 worldCoords, Matrix4 transformMatrix) {
+// 		tmp.set(worldCoords.x, worldCoords.y, 0);
+// 		tmp.mul(transformMatrix);
+// 		camera.project(tmp);
+// 		tmp.y = Gdx.graphics.getHeight() - tmp.y;
+// 		worldCoords.x = tmp.x;
+// 		worldCoords.y = tmp.y;
+// 		return worldCoords;
+// 	}
+
+// 	public Camera getCamera () {
+// 		return camera;
+// 	}
+
+// 	public void setCamera (Camera camera) {
+// 		this.camera = camera;
+// 	}
+
+// 	public float getWorldWidth () {
+// 		return worldWidth;
+// 	}
+
+// 	/** The virtual width of this viewport in world coordinates. This width is scaled to the viewport's screen width. */
+// 	public void setWorldWidth (float worldWidth) {
+// 		this.worldWidth = worldWidth;
+// 	}
+
+// 	public float getWorldHeight () {
+// 		return worldHeight;
+// 	}
+
+// 	/** The virtual height of this viewport in world coordinates. This height is scaled to the viewport's screen height. */
+// 	public void setWorldHeight (float worldHeight) {
+// 		this.worldHeight = worldHeight;
+// 	}
+
+// 	public void setWorldSize (float worldWidth, float worldHeight) {
+// 		this.worldWidth = worldWidth;
+// 		this.worldHeight = worldHeight;
+// 	}
+
+// 	public int getScreenX () {
+// 		return screenX;
+// 	}
+
+// 	/** Sets the viewport's offset from the left edge of the screen. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenX (int screenX) {
+// 		this.screenX = screenX;
+// 	}
+
+// 	public int getScreenY () {
+// 		return screenY;
+// 	}
+
+// 	/** Sets the viewport's offset from the bottom edge of the screen. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenY (int screenY) {
+// 		this.screenY = screenY;
+// 	}
+
+// 	public int getScreenWidth () {
+// 		return screenWidth;
+// 	}
+
+// 	/** Sets the viewport's width in screen coordinates. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenWidth (int screenWidth) {
+// 		this.screenWidth = screenWidth;
+// 	}
+
+// 	public int getScreenHeight () {
+// 		return screenHeight;
+// 	}
+
+// 	/** Sets the viewport's height in screen coordinates. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenHeight (int screenHeight) {
+// 		this.screenHeight = screenHeight;
+// 	}
+
+// 	/** Sets the viewport's position in screen coordinates. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenPosition (int screenX, int screenY) {
+// 		this.screenX = screenX;
+// 		this.screenY = screenY;
+// 	}
+
+// 	/** Sets the viewport's size in screen coordinates. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenSize (int screenWidth, int screenHeight) {
+// 		this.screenWidth = screenWidth;
+// 		this.screenHeight = screenHeight;
+// 	}
+
+// 	/** Sets the viewport's bounds in screen coordinates. This is typically set by {@link #update(int, int, boolean)}. */
+// 	public void setScreenBounds (int screenX, int screenY, int screenWidth, int screenHeight) {
+// 		this.screenX = screenX;
+// 		this.screenY = screenY;
+// 		this.screenWidth = screenWidth;
+// 		this.screenHeight = screenHeight;
+// 	}
+
+// 	/** Returns the left gutter (black bar) width in screen coordinates. */
+// 	public int getLeftGutterWidth () {
+// 		return screenX;
+// 	}
+
+// 	/** Returns the right gutter (black bar) x in screen coordinates. */
+// 	public int getRightGutterX () {
+// 		return screenX + screenWidth;
+// 	}
+
+// 	/** Returns the right gutter (black bar) width in screen coordinates. */
+// 	public int getRightGutterWidth () {
+// 		return Gdx.graphics.getWidth() - (screenX + screenWidth);
+// 	}
+
+// 	/** Returns the bottom gutter (black bar) height in screen coordinates. */
+// 	public int getBottomGutterHeight () {
+// 		return screenY;
+// 	}
+
+// 	/** Returns the top gutter (black bar) y in screen coordinates. */
+// 	public int getTopGutterY () {
+// 		return screenY + screenHeight;
+// 	}
+
+// 	/** Returns the top gutter (black bar) height in screen coordinates. */
+// 	public int getTopGutterHeight () {
+// 		return Gdx.graphics.getHeight() - (screenY + screenHeight);
+// 	}
+// }

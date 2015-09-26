@@ -23,7 +23,7 @@
 package main
 
 import (
-	"github.com/pyros2097/gdx"
+	"github.com/pyros2097/spike"
 	"github.com/pyros2097/spike/scene2d"
 )
 
@@ -32,8 +32,8 @@ var (
 )
 
 func main() {
-	menu := &gdx.Scene{Name: "menu"}
-	gdx.Init("example", 800, 480)
-	gdx.AddScene(menu)
-	gdx.Run()
+	menu := &spike.Scene{Name: "menu"}
+	spike.Init("example", 800, 480)
+	spike.AddScene(menu)
+	spike.Run()
 }

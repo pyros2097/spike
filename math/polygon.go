@@ -4,6 +4,12 @@
 
 package math
 
+import (
+	"github.com/pyros2097/spike/math/geom"
+	. "github.com/pyros2097/spike/math/shape"
+	"github.com/pyros2097/spike/math/utils"
+)
+
 // Encapsulates a 2D polygon defined by it's vertices relative to an origin point (default of 0, 0).
 type Polygon struct {
 	localVertices    []float32
@@ -46,13 +52,14 @@ func (self *Polygon) GetTransformedVertices() []float32 {
 		return self.worldVertices
 	}
 	self.dirty = false
-
-	localVertices := copy(self.localVertices)
-	if worldVertices == nil || len(worldVertices) != len(localVertices) {
-		worldVertices = make([]float32, len(localVertices))
+	var localVertices []float32
+	copy(localVertices, self.localVertices)
+	if self.worldVertices == nil || len(self.worldVertices) != len(localVertices) {
+		self.worldVertices = make([]float32, len(localVertices))
 	}
 
-	worldVertices = copy(self.worldVertices)
+	var worldVertices []float32
+	copy(worldVertices, self.worldVertices)
 	positionX := self.x
 	positionY := self.y
 	originX := self.originX
@@ -61,10 +68,10 @@ func (self *Polygon) GetTransformedVertices() []float32 {
 	scaleY := self.scaleY
 	scale := scaleX != 1 || scaleY != 1
 	rotation := self.rotation
-	cos := MathUtils.cosDeg(rotation)
-	sin := MathUtils.sinDeg(rotation)
-	i := 0
-	for n := len(localVertices); i < n; i += 2 {
+	cos := utils.CosDeg(rotation)
+	sin := utils.SinDeg(rotation)
+	n := len(localVertices)
+	for i := 0; i < n; i += 2 {
 		x := localVertices[i] - originX
 		y := localVertices[i+1] - originY
 
@@ -155,7 +162,7 @@ func (self *Polygon) Dirty() {
 // Returns the area contained within the polygon.
 func (self *Polygon) Area() float32 {
 	vertices := self.GetTransformedVertices()
-	return PolygonArea(vertices, 0, len(vertices))
+	return geom.PolygonArea(vertices, 0, len(vertices))
 }
 
 // Returns an axis-aligned bounding box of this polygon.
@@ -169,7 +176,7 @@ func (self *Polygon) GetBoundingRectangle() *Rectangle {
 	maxX := vertices[0]
 	maxY := vertices[1]
 
-	numFloats = len(vertices.length)
+	numFloats := len(vertices)
 	for i := 2; i < numFloats; i += 2 {
 		switch {
 		case minX > vertices[i]:
@@ -183,21 +190,21 @@ func (self *Polygon) GetBoundingRectangle() *Rectangle {
 		}
 	}
 
-	if bounds == nil {
-		bounds = NewRectangleEmpty()
+	if self.bounds == nil {
+		self.bounds = NewRectangleEmpty()
 	}
-	bounds.x = minX
-	bounds.y = minY
-	bounds.width = maxX - minX
-	bounds.height = maxY - minY
+	self.bounds.X = minX
+	self.bounds.Y = minY
+	self.bounds.W = maxX - minX
+	self.bounds.H = maxY - minY
 
-	return bounds
+	return self.bounds
 }
 
 // Returns whether an x, y pair is contained within the polygon.
 func (self *Polygon) Contains(x, y float32) bool {
 	vertices := self.GetTransformedVertices()
-	numFloats := len(vertices.length)
+	numFloats := len(vertices)
 	intersects := 0
 
 	for i := 0; i < numFloats; i += 2 {

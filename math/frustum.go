@@ -5,8 +5,6 @@
 package math
 
 import (
-	"math"
-
 	. "github.com/pyros2097/spike/math/collision"
 	. "github.com/pyros2097/spike/math/vector"
 )
@@ -15,8 +13,10 @@ var (
 	clipSpacePlanePoints = []*Vector3{NewVector3(-1, -1, -1), NewVector3(1, -1, -1),
 		NewVector3(1, 1, -1), NewVector3(-1, 1, -1), // near clip
 		NewVector3(-1, -1, 1), NewVector3(1, -1, 1), NewVector3(1, 1, 1), NewVector3(-1, 1, 1)} // far clip
+
 	clipSpacePlanePointsArray [8 * 3]float32
-	tmpV                      = NewVector3Empty()
+
+	tmpV = NewVector3Empty()
 )
 
 func init() {
@@ -34,13 +34,13 @@ func init() {
 // A truncated rectangular pyramid. Used to define the viewable region and its projection onto the screen.
 type Frustum struct {
 	// the six clipping planes, near, far, left, right, top, bottom *
-	Planes [6]Plane
+	Planes [6]*Plane
 	// eight points making up the near and far clipping "rectangles". order is counter clockwise, starting at bottom left *
 	PlanePoints      []*Vector3
 	PlanePointsArray [8 * 3]float32
 }
 
-func NewFrustum() *Frustum {
+func NewFrustumEmpty() *Frustum {
 	self := &Frustum{}
 	self.PlanePoints = []*Vector3{
 		NewVector3Empty(), NewVector3Empty(), NewVector3Empty(), NewVector3Empty(),
@@ -60,19 +60,19 @@ func (self *Frustum) Update(inverseProjectionView *Matrix4) {
 	// Matrix4.prj(inverseProjectionView.val, planePointsArray, 0, 8, 3);
 	j := 0
 	for i := 0; i < 8; i++ {
-		self.PlanePoints[i].x = planePointsArray[j]
+		self.PlanePoints[i].X = self.PlanePointsArray[j]
 		j++
-		self.PlanePoints[i].y = planePointsArray[j]
+		self.PlanePoints[i].Y = self.PlanePointsArray[j]
 		j++
-		self.PlanePoints[i].z = planePointsArray[j]
+		self.PlanePoints[i].Z = self.PlanePointsArray[j]
 		j++
 	}
-	planes[0].Set(planePoints[1], planePoints[0], planePoints[2])
-	planes[1].Set(planePoints[4], planePoints[5], planePoints[7])
-	planes[2].Set(planePoints[0], planePoints[4], planePoints[3])
-	planes[3].Set(planePoints[5], planePoints[1], planePoints[6])
-	planes[4].Set(planePoints[2], planePoints[3], planePoints[6])
-	planes[5].Set(planePoints[4], planePoints[0], planePoints[1])
+	self.Planes[0].SetP3(self.PlanePoints[1], self.PlanePoints[0], self.PlanePoints[2])
+	self.Planes[1].SetP3(self.PlanePoints[4], self.PlanePoints[5], self.PlanePoints[7])
+	self.Planes[2].SetP3(self.PlanePoints[0], self.PlanePoints[4], self.PlanePoints[3])
+	self.Planes[3].SetP3(self.PlanePoints[5], self.PlanePoints[1], self.PlanePoints[6])
+	self.Planes[4].SetP3(self.PlanePoints[2], self.PlanePoints[3], self.PlanePoints[6])
+	self.Planes[5].SetP3(self.PlanePoints[4], self.PlanePoints[0], self.PlanePoints[1])
 }
 
 // Returns whether the point is in the frustum.
@@ -80,8 +80,8 @@ func (self *Frustum) Update(inverseProjectionView *Matrix4) {
 // return Whether the point is in the frustum.
 func (self *Frustum) PointInFrustumV3(point *Vector3) bool {
 	for i := 0; i < len(self.Planes); i++ {
-		result := planes[i].TestPoint(point)
-		if result == PlaneSide.Back {
+		result := self.Planes[i].TestPointV3(point)
+		if result == PlaneBack {
 			return false
 		}
 	}
@@ -95,8 +95,8 @@ func (self *Frustum) PointInFrustumV3(point *Vector3) bool {
 // return Whether the point is in the frustum.
 func (self *Frustum) PointInFrustum(x, y, z float32) bool {
 	for i := 0; i < len(self.Planes); i++ {
-		result := planes[i].TestPoint(x, y, z)
-		if result == PlaneSideBack {
+		result := self.Planes[i].TestPoint(x, y, z)
+		if result == PlaneBack {
 			return false
 		}
 	}
@@ -109,7 +109,8 @@ func (self *Frustum) PointInFrustum(x, y, z float32) bool {
 // return Whether the sphere is in the frustum
 func (self *Frustum) sphereInFrustumV3(center *Vector3, radius float32) bool {
 	for i := 2; i < 6; i++ {
-		if (planes[i].normal.x*center.x + planes[i].normal.y*center.y + planes[i].normal.z*center.z) < (-radius - planes[i].d) {
+		if (self.Planes[i].normal.X*center.X + self.Planes[i].normal.Y*center.Y +
+			self.Planes[i].normal.Z*center.Z) < (-radius - self.Planes[i].d) {
 			return false
 		}
 	}
@@ -124,7 +125,8 @@ func (self *Frustum) sphereInFrustumV3(center *Vector3, radius float32) bool {
 // return Whether the sphere is in the frustum
 func (self *Frustum) SphereInFrustum(x, y, z, radius float32) bool {
 	for i := 2; i < 6; i++ {
-		if (planes[i].normal.x*x + planes[i].normal.y*y + planes[i].normal.z*z) < (-radius - planes[i].d) {
+		if (self.Planes[i].normal.X*x + self.Planes[i].normal.Y*y +
+			self.Planes[i].normal.Z*z) < (-radius - self.Planes[i].d) {
 			return false
 		}
 	}
@@ -137,7 +139,8 @@ func (self *Frustum) SphereInFrustum(x, y, z, radius float32) bool {
 // return Whether the sphere is in the frustum
 func (self *Frustum) SphereInFrustumWithoutNearFarV3(center *Vector3, radius float32) bool {
 	for i := 2; i < 6; i++ {
-		if (planes[i].normal.x*center.x + planes[i].normal.y*center.y + planes[i].normal.z*center.z) < (-radius - planes[i].d) {
+		if (self.Planes[i].normal.X*center.X + self.Planes[i].normal.Y*center.Y +
+			self.Planes[i].normal.Z*center.Z) < (-radius - self.Planes[i].d) {
 			return false
 		}
 	}
@@ -152,7 +155,8 @@ func (self *Frustum) SphereInFrustumWithoutNearFarV3(center *Vector3, radius flo
 // return Whether the sphere is in the frustum
 func (self *Frustum) SphereInFrustumWithoutNearFar(x, y, z, radius float32) bool {
 	for i := 2; i < 6; i++ {
-		if (planes[i].normal.x*x + planes[i].normal.y*y + planes[i].normal.z*z) < (-radius - planes[i].d) {
+		if (self.Planes[i].normal.X*x + self.Planes[i].normal.Y*y +
+			self.Planes[i].normal.Z*z) < (-radius - self.Planes[i].d) {
 			return false
 		}
 	}
@@ -164,28 +168,28 @@ func (self *Frustum) SphereInFrustumWithoutNearFar(x, y, z, radius float32) bool
 // return Whether the bounding box is in the frustum
 func (self *Frustum) BoundsInFrustumBox(bounds *BoundingBox) bool {
 	for i := 0; i < len(self.Planes); i++ {
-		if planes[i].TestPoint(bounds.GetCorner000(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner000(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner001(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner001(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner010(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner010(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner011(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner011(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner100(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner100(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner101(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner101(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner110(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner110(tmpV)) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(bounds.GetCorner111(tmpV)) != PlaneSide.Back {
+		if self.Planes[i].TestPointV3(bounds.GetCorner111(tmpV)) != PlaneBack {
 			continue
 		}
 		return false
@@ -204,28 +208,28 @@ func (self *Frustum) BoundsInFrustumV3(center, dimensions *Vector3) bool {
 // return Whether the bounding box is in the frustum
 func (self *Frustum) BoundsInFrustum(x, y, z, halfWidth, halfHeight, halfDepth float32) bool {
 	for i := 0; i < len(self.Planes); i++ {
-		if planes[i].TestPoint(x+halfWidth, y+halfHeight, z+halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x+halfWidth, y+halfHeight, z+halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x+halfWidth, y+halfHeight, z-halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x+halfWidth, y+halfHeight, z-halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x+halfWidth, y-halfHeight, z+halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x+halfWidth, y-halfHeight, z+halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x+halfWidth, y-halfHeight, z-halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x+halfWidth, y-halfHeight, z-halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x-halfWidth, y+halfHeight, z+halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x-halfWidth, y+halfHeight, z+halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x-halfWidth, y+halfHeight, z-halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x-halfWidth, y+halfHeight, z-halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x-halfWidth, y-halfHeight, z+halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x-halfWidth, y-halfHeight, z+halfDepth) != PlaneBack {
 			continue
 		}
-		if planes[i].TestPoint(x-halfWidth, y-halfHeight, z-halfDepth) != PlaneSide.Back {
+		if self.Planes[i].TestPoint(x-halfWidth, y-halfHeight, z-halfDepth) != PlaneBack {
 			continue
 		}
 		return false

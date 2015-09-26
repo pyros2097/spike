@@ -2,10 +2,10 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package gdx
+package spike
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"log"
 )
 
 /** <p>
@@ -102,7 +102,7 @@ var (
 )
 
 func initConfig(configName string) {
-	log.Info("Initializing Config")
+	log.Println("Initializing Config")
 	// prefs = Gdx.app.getPreferences(Scene.configJson.getString("title"))
 	// HasMusic = prefs.GetBoolean(MUSIC, true)
 	// HasSound = prefs.GetBoolean(SOUND, true)

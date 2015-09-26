@@ -28,4 +28,4 @@
 // assets/particles/ --- all your Particle files .part go here
 //
 // assets/maps/ --- all your TMX map files .tmx go here
-package gdx
+package spike

@@ -25,7 +25,7 @@ func NewGridPoint3Copy(point *GridPoint3) *GridPoint3 {
 }
 
 // Sets the coordinates of this 3D grid point to that of another.
-func (self *GridPoint3) SetG(point *GridPoint3) {
+func (self *GridPoint3) SetG(point *GridPoint3) *GridPoint3 {
 	self.x = point.x
 	self.y = point.y
 	self.z = point.z
@@ -33,7 +33,7 @@ func (self *GridPoint3) SetG(point *GridPoint3) {
 }
 
 // Sets the coordinates of this GridPoint3D.
-func (self *GridPoint3) Set(x, y, z int) {
+func (self *GridPoint3) Set(x, y, z int) *GridPoint3 {
 	self.x = x
 	self.y = y
 	self.z = z
@@ -57,5 +57,6 @@ func (self *GridPoint3) HashCode() int {
 }
 
 func (self *GridPoint3) String() string {
-	return "(" + self.x + ", " + self.y + ", " + self.z + ")"
+	return ""
+	// return "(" + self.x + ", " + self.y + ", " + self.z + ")"
 }

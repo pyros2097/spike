@@ -31,11 +31,13 @@ type FloatCounter struct {
 
 // Construct a new FloatCounter
 // windowSize The size of the mean window or 1 or below to not use a windowed mean
-func NewFloatCounter(windowSize int) {
+func NewFloatCounter(windowSize int) *FloatCounter {
+	self := &FloatCounter{}
 	if windowSize > 1 {
 		self.mean = NewWindowedMean(windowSize)
 	}
 	self.Reset()
+	return self
 }
 
 // Add a value and update all fields.
@@ -44,7 +46,7 @@ func (self *FloatCounter) Put(value float32) {
 	self.latest = value
 	self.total += value
 	self.count++
-	self.average = self.total / self.count
+	self.average = self.total / float32(self.count)
 
 	if self.mean != nil {
 		self.mean.AddValue(value)
@@ -54,11 +56,11 @@ func (self *FloatCounter) Put(value float32) {
 	}
 
 	if self.mean == nil || self.mean.HasEnoughData() {
-		if self.value < min {
-			min = self.value
+		if self.value < self.min {
+			self.min = self.value
 		}
-		if self.value > max {
-			max = self.value
+		if self.value > self.max {
+			self.max = self.value
 		}
 	}
 }

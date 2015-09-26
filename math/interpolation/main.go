@@ -63,7 +63,7 @@ type Interpolation func(a float32) float32
 
 // type InterpolationStartEnd func(start, end, a float32, interp Interpolation)
 // An Interpolation func which has a start and end limit
-func InterpolationStartEnd(start, end, a float32, interp Interpolation) float32 {
+func StartEnd(start, end, a float32, interp Interpolation) float32 {
 	return start + (end-start)*interp(a)
 }
 

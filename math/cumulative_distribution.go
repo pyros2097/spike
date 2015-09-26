@@ -24,17 +24,17 @@ func NewCumulativeDistribution() *CumulativeDistribution {
 
 // Adds a value with a given interval size to the distribution
 func (self *CumulativeDistribution) Add(value interface{}, intervalSize float32) {
-	append(self.values, &CumulativeValue(value, 0, intervalSize))
+	// append(self.values, &CumulativeValue(value, 0, intervalSize))
 }
 
 // Adds a value with interval size equal to zero to the distributio
 func (self *CumulativeDistribution) AddValue(value interface{}) {
-	append(self.values, &CumulativeValue(value, 0, 0))
+	// append(self.values, &CumulativeValue(value, 0, 0))
 }
 
 // Generate the cumulative distribution
 func (self *CumulativeDistribution) Generate() {
-	sum := 0
+	var sum float32
 	for i := 0; i < len(self.values); i++ {
 		sum += self.values[i].interval
 		self.values[i].frequency = sum
@@ -43,11 +43,10 @@ func (self *CumulativeDistribution) Generate() {
 
 // Generate the cumulative distribution in [0,1] where each interval will get a frequency between [0,1]
 func (self *CumulativeDistribution) GenerateNormalized() {
-	sum := 0
+	var sum, intervalSum float32
 	for i := 0; i < len(self.values); i++ {
 		sum += self.values[i].interval
 	}
-	intervalSum := 0
 	for i := 0; i < len(self.values); i++ {
 		intervalSum += self.values[i].interval / sum
 		self.values[i].frequency = intervalSum
@@ -59,8 +58,8 @@ func (self *CumulativeDistribution) GenerateUniform() {
 	freq := 1 / len(self.values)
 	for i := 0; i < len(self.values); i++ {
 		//reset the interval to the normalized frequency
-		self.values[i].interval = freq
-		self.values[i].frequency = (i + 1) * freq
+		self.values[i].interval = float32(freq)
+		self.values[i].frequency = float32((i + 1) * freq)
 	}
 }
 
@@ -70,7 +69,7 @@ func (self *CumulativeDistribution) GenerateUniform() {
 // return the value whose interval contains the probability
 func (self *CumulativeDistribution) ValueP(probability float32) interface{} {
 	value := &CumulativeValue{}
-	imax := len(values) - 1
+	imax := len(self.values) - 1
 	imin := 0
 	var imid int
 	for imin <= imax {
@@ -89,12 +88,13 @@ func (self *CumulativeDistribution) ValueP(probability float32) interface{} {
 
 // return the value whose interval contains a random probability in [0,1]
 func (self *CumulativeDistribution) Value() interface{} {
-	return self.Value(random())
+	return "" // TODO:
+	// return self.Value(random())
 }
 
 // return the amount of values
 func (self *CumulativeDistribution) Size() int {
-	return len(values)
+	return len(self.values)
 }
 
 // return the interval size for the value at the given position
@@ -119,7 +119,7 @@ func (self *CumulativeDistribution) SetInterval(obj interface{}, intervalSize fl
 }
 
 // Sets the interval size for the value at the given index
-func (self *CumulativeDistribution) SetInterval(index int, intervalSize float32) {
+func (self *CumulativeDistribution) SetIntervalIndex(index int, intervalSize float32) {
 	self.values[index].interval = intervalSize
 }
 

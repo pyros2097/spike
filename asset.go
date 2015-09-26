@@ -2,10 +2,10 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package gdx
+package spike
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"log"
 )
 
 type (
@@ -31,7 +31,7 @@ func InitAssets(config *AssetConfig) {
 }
 
 func SoundPlay(name string) {
-	log.Info("Playing Sound: " + name)
+	log.Printf("Playing Sound: " + name)
 }
 
 func SoundPause() {
@@ -43,7 +43,7 @@ func SoundResume() {
 }
 
 func SoundStop(name string) {
-	log.Infof("Stopping Sound: " + name)
+	log.Print("Stopping Sound: " + name)
 }
 
 func SoundDispose() {

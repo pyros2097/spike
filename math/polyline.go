@@ -4,6 +4,12 @@
 
 package math
 
+import (
+	"math"
+
+	"github.com/pyros2097/spike/math/utils"
+)
+
 type Polyline struct {
 	localVertices         []float32
 	worldVertices         []float32
@@ -19,14 +25,14 @@ type Polyline struct {
 }
 
 func NewPolygonLineEmpty() *Polyline {
-	return &Polyline{scaleX: 1, scaleY: 1, dirty: true, calculatedLength: true, calculateScaledLength: true, localVertices: make([]float32, 0)}
+	return &Polyline{scaleX: 1, scaleY: 1, dirty: true, calculateLength: true, calculateScaledLength: true, localVertices: make([]float32, 0)}
 }
 
 func NewPolygonLine(vertices []float32) *Polyline {
 	if len(vertices) < 4 {
 		panic("polylines must contain at least 2 points.")
 	}
-	return &Polyline{scaleX: 1, scaleY: 1, dirty: true, calculatedLength: true, calculateScaledLength: true, localVertices: vertices}
+	return &Polyline{scaleX: 1, scaleY: 1, dirty: true, calculateLength: true, calculateScaledLength: true, localVertices: vertices}
 }
 
 // Returns vertices without scaling or rotation and without being offset by the polyline position.
@@ -40,13 +46,14 @@ func (self *Polyline) GetTransformedVertices() []float32 {
 		return self.worldVertices
 	}
 	self.dirty = false
-
-	localVertices := copy(self.localVertices)
-	if worldVertices == nil || len(worldVertices) != len(localVertices) {
-		worldVertices = make([]float32, len(localVertices))
+	var localVertices []float32
+	copy(localVertices, self.localVertices)
+	if self.worldVertices == nil || len(self.worldVertices) != len(self.localVertices) {
+		self.worldVertices = make([]float32, len(self.localVertices))
 	}
 
-	worldVertices = copy(self.worldVertices)
+	var worldVertices []float32
+	copy(worldVertices, self.worldVertices)
 	positionX := self.x
 	positionY := self.y
 	originX := self.originX
@@ -55,8 +62,8 @@ func (self *Polyline) GetTransformedVertices() []float32 {
 	scaleY := self.scaleY
 	scale := scaleX != 1 || scaleY != 1
 	rotation := self.rotation
-	cos := MathUtils.cosDeg(rotation)
-	sin := MathUtils.sinDeg(rotation)
+	cos := utils.CosDeg(rotation)
+	sin := utils.SinDeg(rotation)
 	i := 0
 	for n := len(localVertices); i < n; i += 2 {
 		x := localVertices[i] - originX
@@ -86,13 +93,14 @@ func (self *Polyline) GetLength() float32 {
 	if !self.calculateLength {
 		return self.length
 	}
-	calculateLength = false
+	self.calculateLength = false
 
-	length = 0
-	i := 0
-	for n := len(localVertices) - 2; i < n; i += 2 {
-		x := localVertices[i+2] - localVertices[i]
-		y := localVertices[i+1] - localVertices[i+3]
+	var length float32
+	n := len(self.localVertices) - 2
+
+	for i := 0; i < n; i += 2 {
+		x := self.localVertices[i+2] - self.localVertices[i]
+		y := self.localVertices[i+1] - self.localVertices[i+3]
 		length += float32(math.Sqrt(float64(x*x + y*y)))
 	}
 	return length
@@ -101,15 +109,15 @@ func (self *Polyline) GetLength() float32 {
 // Returns the euclidean length of the polyline
 func (self *Polyline) GetScaledLength() float32 {
 	if !self.calculateScaledLength {
-		return scaledLength
+		return self.scaledLength
 	}
 	self.calculateScaledLength = false
 
-	scaledLength = 0
-	i := 0
-	for n := localVertices.length - 2; i < n; i += 2 {
-		x := localVertices[i+2]*scaleX - localVertices[i]*scaleX
-		y := localVertices[i+1]*scaleY - localVertices[i+3]*scaleY
+	var scaledLength float32
+	n := len(self.localVertices) - 2
+	for i := 0; i < n; i += 2 {
+		x := self.localVertices[i+2]*self.scaleX - self.localVertices[i]*self.scaleX
+		y := self.localVertices[i+1]*self.scaleY - self.localVertices[i+3]*self.scaleY
 		scaledLength += float32(math.Sqrt(float64(x*x + y*y)))
 	}
 
