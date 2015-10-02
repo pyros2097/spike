@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pyros2097/spike/graphics"
-	"github.com/pyros2097/spike/input/gesture"
 	"github.com/pyros2097/spike/scene2d"
 )
 
@@ -16,9 +15,6 @@ var (
 	allScenes    map[string]*Scene
 	currentScene *Scene
 )
-
-type InputEvent struct {
-}
 
 // TODO: ADD proptype Validation for Name, BGColor etc
 
@@ -28,94 +24,18 @@ type InputEvent struct {
 // {@link InputMultiplexer} to chain input processors.
 type Scene struct {
 	scene2d.Actor
-	Name     string
-	BGColor  *graphics.Color
-	OnPause  func()
-	OnResume func()
-	OnClick  func(x, y float32)
+	Name    string
+	BGColor *graphics.Color
 
-	// Called when the screen was touched or a mouse button was pressed. The button parameter will be {@link Buttons#LEFT} on iOS.
-	// param screenX The x coordinate, origin is in the upper left corner
-	// param screenY The y coordinate, origin is in the upper left corner
-	// param pointer the pointer for the event.
-	// param button the button
-	// return whether the input was processed
-	/** Called when a mouse button or a finger touch goes down on the actor. If true is returned, this listener will receive all
-	 * touchDragged and touchUp events, even those not over this actor, until touchUp is received. Also when true is returned, the
-	 * event is {@link Event#handle() handled}.
-	 * @see InputEvent */
-	OnTouchDown func(x, y float32, pointer, button int)
+	Children []*scene2d.Actor
 
-	// Called when a finger was lifted or a mouse button was released. The button parameter will be {@link Buttons#LEFT} on iOS.
-	// param pointer the pointer for the event.
-	// param button the button
-	// return whether the input was processed
+	OnPause  func(self *Scene)
+	OnResume func(self *Scene)
 
-	/** Called when a mouse button or a finger touch goes up anywhere, but only if touchDown previously returned true for the mouse
-	 * button or touch. The touchUp event is always {@link Event#handle() handled}.
-	 * @see InputEvent */
-	OnTouchUp func(x, y float32, pointer, button int)
-
-	// Called when a finger or the mouse was dragged.
-	// param pointer the pointer for the event.
-	// @return whether the input was processed
-	/** Called when a mouse button or a finger touch is moved anywhere, but only if touchDown previously returned true for the mouse
-	 * button or touch. The touchDragged event is always {@link Event#handle() handled}.
-	 * @see InputEvent */
-	OnTouchDragged func(x, y float32, pointer int)
-
-	// Called when a swipe gesture occurs
-	OnGesture func(gtype gesture.Type)
-
-	// Called when a key was typed
-	// param character The character
-	// return whether the input was processed
-	OnKeyTyped func(key uint8)
-
-	// Called when a key was released
-	// param keycode one of the constants in {@link Input.Keys}
-	// return whether the input was processed
-	// When true is returned, the event is {@link Event#handle() handled
-	OnKeyUp func(keycode uint8)
-
-	// Called when a key was pressed
-	// param keycode one of the constants in {@link Input.Keys}
-	// return whether the input was processed
-	OnKeyDown func(event *InputEvent, keycode uint8)
-
-	// Called when the mouse was moved without any buttons being pressed. Will not be called on iOS.
-	// @return whether the input was processed
-	// This event only occurs on the desktop
-	// public boolean mouseMoved (int screenX, int screenY);
-
-	// Called when the mouse wheel was scrolled. Will not be called on iOS.
-	// param amount the scroll amount, -1 or 1 depending on the direction the wheel was scrolled.
-	// @return whether the input was processed.
-	// public boolean scrolled (int amount);
-
-	/** Called any time the mouse cursor or a finger touch is moved over an actor. On the desktop, this event occurs even when no
-	 * mouse buttons are pressed (pointer will be -1).
-	 * @param fromActor May be null.
-	 * @see InputEvent */
-	// public void enter (InputEvent event, float x, float y, int pointer, Actor fromActor) {
-	// }
-
-	/** Called any time the mouse cursor or a finger touch is moved out of an actor. On the desktop, this event occurs even when no
-	 * mouse buttons are pressed (pointer will be -1).
-	 * @param toActor May be null.
-	 * @see InputEvent */
-	// public void exit (InputEvent event, float x, float y, int pointer, Actor toActor) {
-	// }
-
-	/** Called when the mouse wheel has been scrolled. When true is returned, the event is {@link Event#handle() handled}. */
-	// public boolean scrolled (InputEvent event, float x, float y, int amount) {
-	// 	return false;
-	// }
-
-	BeforeShow    func()
-	BeforeHide    func()
-	AfterShow     func()
-	AfterHide     func()
+	BeforeShow    func(self *Scene)
+	BeforeHide    func(self *Scene)
+	AfterShow     func(self *Scene)
+	AfterHide     func(self *Scene)
 	TransitionIn  func(scene *Scene)
 	TransitionOut func(scene *Scene)
 }
@@ -214,13 +134,46 @@ func RemoveScene(name string) {
 	delete(allScenes, name)
 }
 
-// Set the current scene to be displayed
+// Sets the current scene to be displayed
 func SetScene(name string) {
 	println("Setting Scene: " + name)
-	var ok bool
-	if currentScene, ok = allScenes[name]; ok {
-		// currentScene.Transition()
+	if currentScene != nil {
+		if currentScene.BeforeHide != nil {
+			currentScene.BeforeHide(currentScene)
+		}
+		if currentScene.AfterHide != nil {
+			currentScene.AfterHide(currentScene)
+		}
 	}
+	currentScene = allScenes[name]
+	if currentScene.BeforeShow != nil {
+		currentScene.BeforeShow(currentScene)
+	}
+	if currentScene.AfterShow != nil {
+		currentScene.AfterShow(currentScene)
+	}
+	// setTouchable(Touchable.childrenOnly);
+	// Camera.reset();
+	// stage2d.clear();
+	// stage3d.clear();
+	// setSize(targetWidth, targetHeight);
+	// setBounds(0,0, targetWidth, targetHeight);
+	// setColor(1f, 1f, 1f, 1f);
+	// setVisible(true);
+	// stage2d.getRoot().setPosition(0, 0);
+	// stage2d.getRoot().setVisible(true);
+	// stage3d.getRoot().setPosition(0, 0, 0);
+	// stage3d.getRoot().setVisible(true);
+	// cullingEnabled = true;
+
+	// stage2d.getRoot().setName("Root");
+	// stage2d.getRoot().setTouchable(Touchable.childrenOnly);
+	// stage2d.setCamera(new Camera());
+	// stage3d = new Stage3d();
+	// //camController = new CameraInputController(stage3d.getCamera());
+	// Gdx.input.setCatchBackKey(true);
+	// Gdx.input.setCatchMenuKey(true);
+	// Gdx.input.setInputProcessor(inputMux);
 }
 
 // Set the current scene to be displayed with an amount of delay
@@ -239,70 +192,35 @@ func GetScene(name string) *Scene {
 	return allScenes[name]
 }
 
-// public void addActor(Actor actor, float x, float y){
-// 	if(actor != null){
-// 		actor.setPosition(x, y);
-// 		addActor(actor);
-// 	}
-// }
+func (self *Scene) AddActor(actor *scene2d.Actor) {
+	self.Children = append(self.Children, actor)
+}
 
-// public void addActorWithDelay(final Actor actor, float delay){
-// 	Timer.schedule(new Task(){
-// 		@Override
-// 		public void run() {
-// 			addActor(actor);
-// 		}
-// 	}, delay);
-// }
+func (self *Scene) AddActorWithDelay(actor *scene2d.Actor, duration time.Duration) {
+	time.AfterFunc(duration, func() {
+		self.AddActor(actor)
+	})
+}
 
-// public boolean removeActor(String actorName){
-// 	return removeActor(findActor(actorName));
-// }
+func (self *Scene) RemoveActor(actor *scene2d.Actor) {
+	i := actor.Z
+	self.Children, self.Children[len(self.Children)-1] = append(self.Children[:i], self.Children[i+1:]...), nil
+}
 
-// public void removeActorWithDelay(Actor actor, float delay){
-// 	addAction(Actions.sequence(Actions.delay(delay), Actions.removeActor(actor)));
+func (self *Scene) RemoveActorWithDelay(actor *scene2d.Actor, duration time.Duration) {
+	// addAction(Actions.sequence(Actions.delay(delay), Actions.removeActor(actor)));
+}
+
+func (self *Scene) RemoveActorWithName(name string) {
+	// return removeActor(findActor(actorName));
+}
+
+// func (self *Scene) Hit(x, y float32) *scene2d.Actor {
 // }
 
 // public Actor hit(float x, float y){
 // 	return hit(x, y, true);
 // }
 
-/***********************************************************************************************************
-* 					3d Related Functions												   	       		   *
-************************************************************************************************************/
-
-// public static void addActor3d(Actor3d actor3d) {
-// 	stage3d.addActor3d(actor3d);
-// }
-
-// public static void removeActor3d(Actor3d actor3d){
-// 	stage3d.getRoot().removeActor3d(actor3d);
-// }
-
-// public static void removeActor3d(String actor3dName){
-// 	getRoot3d().removeActor3d(stage3d.getRoot().findActor(actor3dName));
-// }
-
-// public static Group3d getRoot3d(){
-// 	return stage3d.getRoot();
-// }
-
-// public static void getChildren3d(){
-// 	stage3d.getActors3d();
-// }
-
-// public static void resetCamera3d(){
-// 	stage3d.getCamera().position.set(10f, 10f, 10f);
-// 	stage3d.getCamera().lookAt(0,0,0);
-// 	stage3d.getCamera().near = 0.1f;
-// 	stage3d.getCamera().far = 300f;
-// }
-
-// public static PerspectiveCamera getCamera3d(){
-// 	return stage3d.getCamera();
-// }
-
-// public static void log(String log) {
-// 	if(Scene.configJson.getBoolean("loggingEnabled"))
-// 		Gdx.app.log("Stage ", log);
+// func AddActor3d() {
 // }

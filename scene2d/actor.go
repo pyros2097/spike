@@ -5,8 +5,11 @@
 package scene2d
 
 import (
+	"github.com/pyros2097/spike/g2d"
 	"github.com/pyros2097/spike/graphics"
+	"github.com/pyros2097/spike/input/gesture"
 	"github.com/pyros2097/spike/input/touchable"
+	"github.com/pyros2097/spike/math/vector"
 	"github.com/pyros2097/spike/utils"
 )
 
@@ -27,7 +30,7 @@ import (
 // {@link ActorGestureListener}) can listen for and combine primitive events and recognize complex interactions like multi-touch
 // or pinch.
 type IActor interface {
-	Draw(batch Batch, parentAlpha float32)
+	Draw(batch *g2d.Batch, parentAlpha float32)
 	Act(delta float32)
 	RemoveActor()
 	AddAction(action Action)
@@ -37,10 +40,14 @@ type IActor interface {
 	ClearActions()
 }
 
+type InputEvent struct {
+}
+
 type Actor struct {
-	name             string
-	x, y             float32
-	w, h             float32
+	Name             string
+	X, Y             float32
+	W, H             float32
+	Z                uint32
 	originX, originY float32
 	scaleX, scaleY   float32
 	rotation         float32
@@ -49,28 +56,136 @@ type Actor struct {
 	parent           *Actor
 	touchable        touchable.Touchable
 	userObject       interface{}
-	color            *graphics.Color // make this 1 1 1 1
+	Color            *graphics.Color // make this 1 1 1 1
 	//   private final DelayedRemovalArray<EventListener> listeners = new DelayedRemovalArray(0);
 	//   private final DelayedRemovalArray<EventListener> captureListeners = new DelayedRemovalArray(0);
+	OnAct func(self *Actor, delta float32)
 
-}
+	// Draws the actor. The batch is configured to draw in the parent's coordinate system.
+	// {@link Batch#draw(com.badlogic.gdx.graphics.g2d.TextureRegion, float, float, float, float, float, float, float, float, float)
+	// This draw method} is convenient to draw a rotated and scaled TextureRegion. {@link Batch#begin()} has already been called on
+	// the batch. If {@link Batch#end()} is called to draw without the batch then {@link Batch#begin()} must be called before the
+	// method returns.
+	// <p>
+	// The default implementation does nothing.
+	// param parentAlpha Should be multiplied with the actor's alpha, allowing a parent's alpha to affect all children.
+	OnDraw func(self *Actor, batch g2d.Batch, parentAlpha float32)
 
-// Todo add OnAct OnDraw OnClick OnTouchUp OnFollow OnScroll OnGesture
-// Use composition over inheritance
-type Batch interface {
-	Begin()
-	End()
-}
+	OnClick func(self *Actor, x, y float32)
 
-// Draws the actor. The batch is configured to draw in the parent's coordinate system.
-// {@link Batch#draw(com.badlogic.gdx.graphics.g2d.TextureRegion, float, float, float, float, float, float, float, float, float)
-// This draw method} is convenient to draw a rotated and scaled TextureRegion. {@link Batch#begin()} has already been called on
-// the batch. If {@link Batch#end()} is called to draw without the batch then {@link Batch#begin()} must be called before the
-// method returns.
-// <p>
-// The default implementation does nothing.
-// param parentAlpha Should be multiplied with the actor's alpha, allowing a parent's alpha to affect all children.
-func (self *Actor) Draw(batch Batch, parentAlpha float32) {
+	// Called when the screen was touched or a mouse button was pressed. The button parameter will be {@link Buttons#LEFT} on iOS.
+	// param screenX The x coordinate, origin is in the upper left corner
+	// param screenY The y coordinate, origin is in the upper left corner
+	// param pointer the pointer for the event.
+	// param button the button
+	// return whether the input was processed
+	// Called when a mouse button or a finger touch goes down on the actor. If true is returned, this listener will receive all
+	// touchDragged and touchUp events, even those not over this actor, until touchUp is received. Also when true is returned, the
+	// event is {@link Event#handle() handled}.
+	OnTouchDown func(self *Actor, x, y float32, pointer, button int)
+
+	// Called when a finger was lifted or a mouse button was released. The button parameter will be {@link Buttons#LEFT} on iOS.
+	// param pointer the pointer for the event.
+	// param button the button
+	// return whether the input was processed
+	// Called when a mouse button or a finger touch goes up anywhere, but only if touchDown previously returned true for the mouse
+	// button or touch. The touchUp event is always {@link Event#handle() handled}.
+	OnTouchUp func(self *Actor, x, y float32, pointer, button int)
+
+	// Called when a finger or the mouse was dragged.
+	// param pointer the pointer for the event.
+	// @return whether the input was processed
+	// Called when a mouse button or a finger touch is moved anywhere, but only if touchDown previously returned true for the mouse
+	// button or touch. The touchDragged event is always {@link Event#handle() handled}.
+	OnTouchDragged func(self *Actor, x, y float32, pointer int)
+
+	OnLongPress func(self *Actor, x, y float32)
+	// Called when the user dragged a finger over the screen and lifted it. Reports the last known velocity of the finger in
+	// pixels per second.
+	// param velocityX velocity on x in seconds
+	// param velocityY velocity on y in seconds
+	OnFling func(self *Actor, velocityX, velocityY float32, button int)
+
+	// Called when a tap occured. A tap happens if a touch went down on the screen and was lifted again without moving outside
+	// of the tap square. The tap square is a rectangular area around the initial touch position as specified on construction
+	// time of the {@link GestureDetector}.
+	// @param count the number of taps.
+	OnTap func(self *Actor, x, y float32, count, button int)
+
+	// Called when the user drags a finger over the screen.
+	// param deltaX the difference in pixels to the last drag event on x.
+	// param deltaY the difference in pixels to the last drag event on y.
+	OnPan func(self *Actor, x, y, deltaX, deltaY float32)
+
+	// Called when no longer panning.
+	OnPanStop func(x, y float32, pointer, button int)
+
+	// Called when the user performs a pinch zoom gesture. The original distance is the distance in pixels when the gesture
+	// started.
+	// param initialDistance distance between fingers when the gesture started.
+	// param distance current distance between fingers.
+	OnZoom func(initialDistance, distance float32)
+
+	// Called when a user performs a pinch zoom gesture. Reports the initial positions of the two involved fingers and their
+	// current positions.
+	// param initialPointer1
+	// param initialPointer2
+	// param pointer1
+	// param pointer2
+	OnPinch func(initialPointer1, initialPointer2, pointer1, pointer2 *vector.Vector2)
+	// Register an instance of this class with a {@link GestureDetector} to receive gestures such as taps, long presses, flings,
+	// panning or pinch zooming. Each method returns a boolean indicating if the event should be handed to the next listener (false
+	// to hand it to the next listener, true otherwise).
+	// @author mzechner
+	// 	public static interface GestureListener {
+
+	// Called when a swipe gesture occurs
+	OnGesture func(self *Actor, gtype gesture.Type)
+
+	// Called when a key was typed
+	// param character The character
+	// return whether the input was processed
+	OnKeyTyped func(self *Actor, key uint8)
+
+	// Called when a key was released
+	// param keycode one of the constants in {@link Input.Keys}
+	// return whether the input was processed
+	// When true is returned, the event is {@link Event#handle() handled
+	OnKeyUp func(self *Actor, keycode uint8)
+
+	// Called when a key was pressed
+	// param keycode one of the constants in {@link Input.Keys}
+	// return whether the input was processed
+	OnKeyDown func(self *Actor, event *InputEvent, keycode uint8)
+
+	// Called when the mouse was moved without any buttons being pressed. Will not be called on iOS.
+	// @return whether the input was processed
+	// This event only occurs on the desktop
+	// public boolean mouseMoved (int screenX, int screenY);
+
+	// Called when the mouse wheel was scrolled. Will not be called on iOS.
+	// param amount the scroll amount, -1 or 1 depending on the direction the wheel was scrolled.
+	// @return whether the input was processed.
+	// public boolean scrolled (int amount);
+
+	/** Called any time the mouse cursor or a finger touch is moved over an actor. On the desktop, this event occurs even when no
+	 * mouse buttons are pressed (pointer will be -1).
+	 * @param fromActor May be null.
+	 * @see InputEvent */
+	// public void enter (InputEvent event, float x, float y, int pointer, Actor fromActor) {
+	// }
+
+	/** Called any time the mouse cursor or a finger touch is moved out of an actor. On the desktop, this event occurs even when no
+	 * mouse buttons are pressed (pointer will be -1).
+	 * @param toActor May be null.
+	 * @see InputEvent */
+	// public void exit (InputEvent event, float x, float y, int pointer, Actor toActor) {
+	// }
+
+	/** Called when the mouse wheel has been scrolled. When true is returned, the event is {@link Event#handle() handled}. */
+	// public boolean scrolled (InputEvent event, float x, float y, int amount) {
+	// 	return false;
+	// }
 }
 
 // Updates the actor based on time. Typically this is called each frame by {@link Stage#act(float)}.
@@ -196,80 +311,80 @@ func (self *Actor) SetUserObject(userObject interface{}) {
 }
 
 func (self *Actor) SetColor(color *graphics.Color) {
-	self.color.SetColor(color)
+	self.Color.SetColor(color)
 }
 
 func (self *Actor) SetColorRGBA(r, g, b, a float32) {
-	self.color.Set(r, g, b, a)
+	self.Color.Set(r, g, b, a)
 }
 
 // Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color.
 func (self *Actor) GetColor() *graphics.Color {
-	return self.color
+	return self.Color
 }
 
 // Sets a name for easier identification of the actor in application code.
 // @see Group#findActor(String)
 func (self *Actor) SetName(name string) {
-	self.name = name
+	self.Name = name
 }
 
 // Retrieve custom actor name set with {@link Actor#setName(String)}, used for easier identification
 func (self *Actor) GetName() string {
-	return self.name
+	return self.Name
 }
 
 // Returns the X position of the actor's left edge.
 func (self *Actor) GetX() float32 {
-	return self.x
+	return self.X
 }
 
 // Returns the X position of the specified {@link Align alignment}
 func (self *Actor) GetXAlign(alignment utils.Alignment) float32 {
-	x := self.x
+	x := self.X
 	if (alignment & utils.AlignmentRight) != 0 {
-		x += self.w
+		x += self.W
 	} else if (alignment & utils.AlignmentLeft) == 0 {
-		x += self.w / 2
+		x += self.W / 2
 	}
 	return x
 }
 
 func (self *Actor) SetX(x float32) {
-	if self.x != x {
-		self.x = x
+	if self.X != x {
+		self.X = x
 		self.positionChanged()
 	}
 }
 
 // Returns the Y position of the actor's bottom edge.
 func (self *Actor) GetY() float32 {
-	return self.y
+	return self.Y
 }
 
 // Returns the Y position of the specified {@link Align alignment}
 func (self *Actor) GetYAlign(alignment utils.Alignment) float32 {
-	y := self.y
+	y := self.Y
 	if (alignment & utils.AlignmentTop) != 0 {
-		y += self.h
+		y += self.H
 	} else if (alignment & utils.AlignmentBottom) == 0 {
-		y += self.h / 2
+		y += self.H / 2
 	}
 	return y
 }
 
 func (self *Actor) SetY(y float32) {
-	if self.y != y {
-		self.y = y
+	if self.Y != y {
+		self.Y = y
 		self.positionChanged()
 	}
 }
 
 // Sets the position of the actor's bottom left corner.
 func (self *Actor) SetPosition(x, y float32) {
-	if self.x != x || self.y != y {
-		self.x = x
-		self.y = y
+	if self.X != x || self.Y != y {
+		self.X = x
+		self.Y = y
 		self.positionChanged()
 	}
 }
@@ -278,18 +393,18 @@ func (self *Actor) SetPosition(x, y float32) {
 // Note this may set the position to non-integer coordinates.
 func (self *Actor) SetPositionAlign(x, y float32, alignment utils.Alignment) {
 	if (alignment & utils.AlignmentRight) != 0 {
-		self.x -= self.w
+		self.X -= self.W
 	} else if (alignment & utils.AlignmentLeft) == 0 {
-		self.x -= self.w / 2
+		self.X -= self.W / 2
 	}
 	if (alignment & utils.AlignmentTop) != 0 {
-		self.y -= self.h
+		self.Y -= self.H
 	} else if (alignment & utils.AlignmentBottom) == 0 {
-		self.y -= self.h / 2
+		self.Y -= self.H / 2
 	}
-	if self.x != x || self.y != y {
-		self.x = x
-		self.y = y
+	if self.X != x || self.Y != y {
+		self.X = x
+		self.Y = y
 		self.positionChanged()
 	}
 }
@@ -297,31 +412,31 @@ func (self *Actor) SetPositionAlign(x, y float32, alignment utils.Alignment) {
 // Add x and y to current position.
 func (self *Actor) MoveBy(x, y float32) {
 	if x != 0 || y != 0 {
-		self.x += x
-		self.y += y
+		self.X += x
+		self.Y += y
 		self.positionChanged()
 	}
 }
 
 func (self *Actor) GetWidth() float32 {
-	return self.w
+	return self.W
 }
 
 func (self *Actor) SetWidth(width float32) {
-	oldWidth := self.w
-	self.w = width
+	oldWidth := self.W
+	self.W = width
 	if width != oldWidth {
 		self.sizeChanged()
 	}
 }
 
 func (self *Actor) GetHeight() float32 {
-	return self.w
+	return self.W
 }
 
 func (self *Actor) SetHeight(height float32) {
-	oldHeight := self.h
-	self.h = height
+	oldHeight := self.H
+	self.H = height
 	if height != oldHeight {
 		self.sizeChanged()
 	}
@@ -329,12 +444,12 @@ func (self *Actor) SetHeight(height float32) {
 
 // Returns y plus height.
 func (self *Actor) GetTop() float32 {
-	return self.y + self.h
+	return self.Y + self.H
 }
 
 //  Returns x plus width.
 func (self *Actor) GetRight() float32 {
-	return self.x + self.w
+	return self.X + self.W
 }
 
 // Called when the actor's position has been changed.
@@ -347,10 +462,10 @@ func (self *Actor) sizeChanged() {
 
 // Sets the width and height.
 func (self *Actor) setSize(w, h float32) {
-	oldWidth := self.w
-	oldHeight := self.h
-	self.w = w
-	self.h = h
+	oldWidth := self.W
+	oldHeight := self.H
+	self.W = w
+	self.H = h
 	if w != oldWidth || h != oldHeight {
 		self.sizeChanged()
 	}
@@ -358,21 +473,21 @@ func (self *Actor) setSize(w, h float32) {
 
 // Adds the specified size to the current size.
 func (self *Actor) SizeBy(w, h float32) {
-	self.w += w
-	self.h += h
+	self.W += w
+	self.H += h
 	self.sizeChanged()
 }
 
 // Set bounds the x, y, width, and height.
 func (self *Actor) SetBounds(x, y, w, h float32) {
-	if self.x != x || self.y != y {
-		self.x = x
-		self.y = y
+	if self.X != x || self.Y != y {
+		self.X = x
+		self.Y = y
 		self.positionChanged()
 	}
-	if self.w != w || self.h != h {
-		self.w = h
-		self.h = h
+	if self.W != w || self.H != h {
+		self.W = h
+		self.H = h
 		self.sizeChanged()
 	}
 }
@@ -404,17 +519,17 @@ func (self *Actor) SetOriginAlign(alignment utils.Alignment) {
 	if (alignment & utils.AlignmentLeft) != 0 {
 		self.originX = 0
 	} else if (alignment & utils.AlignmentRight) != 0 {
-		self.originX = self.w
+		self.originX = self.W
 	} else {
-		self.originX = self.w / 2
+		self.originX = self.W / 2
 	}
 
 	if (alignment & utils.AlignmentBottom) != 0 {
 		self.originY = 0
 	} else if (alignment & utils.AlignmentTop) != 0 {
-		self.originY = self.h
+		self.originY = self.H
 	} else {
-		self.originY = self.h / 2
+		self.originY = self.H / 2
 	}
 }
 
@@ -805,5 +920,5 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //   }
 
 func (self *Actor) String() string {
-	return self.name
+	return self.Name
 }

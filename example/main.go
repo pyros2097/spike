@@ -33,7 +33,27 @@ var (
 )
 
 func main() {
-	menu := &spike.Scene{Name: "menu", BGColor: &graphics.Color{0, 0, 1, 1}}
+
+	menu := &spike.Scene{
+		Name:    "menu",
+		BGColor: &graphics.Color{0, 0, 1, 1},
+		Children: []*scene2d.Actor{
+			&scene2d.Actor{
+				X: 43,
+				OnTouchDown: func(self *scene2d.Actor, x, y float32, p, b int) {
+					println(x)
+					println(y)
+				},
+				OnTap: func(self *scene2d.Actor, x, y float32, p, b int) {
+					println("MEFAE ERAPPP")
+				},
+				OnAct: func(self *scene2d.Actor, delta float32) {
+					// print(self.X)
+					self.X = 111
+				},
+			},
+		},
+	}
 	options := &spike.Scene{Name: "options", BGColor: &graphics.Color{0, 0, 0, 1}}
 	spike.Init("example", 800, 480)
 	spike.AddScene(menu)
@@ -41,3 +61,23 @@ func main() {
 	spike.PlaySound("boing")
 	spike.Run()
 }
+
+// type Actor struct {
+// 	x, y int
+// }
+
+// var children []*Actor
+
+// func main() {
+// 	child := &Actor{4, 5}
+// 	children = append(children, child)
+// 	for _, c := range children {
+// 		println(c.x)
+// 		c.x = 444
+// 	}
+// 	for _, c := range children {
+// 		println(c.x)
+// 		c.x = 12
+// 	}
+// 	println(child.x)
+// }

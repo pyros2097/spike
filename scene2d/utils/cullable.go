@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/pyros2097/spike/math"
+	"github.com/pyros2097/spike/math/shape"
 )
 
 // Allows a parent to set the area that is visible on a child actor to allow the child to cull when drawing itself. This must only
@@ -10,5 +10,5 @@ import (
 // {@link #setCullingArea(Rectangle)} on its children.
 type Cullable interface {
 	// param cullingArea The culling area in the child actor's coordinates.
-	SetCullingArea(cullingArea *math.Rectangle)
+	SetCullingArea(cullingArea *shape.Rectangle)
 }

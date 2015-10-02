@@ -2,7 +2,7 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-// The type of Gestures that can occurr
+// The type of Gestures that can occur
 package gesture
 
 type Type uint8
