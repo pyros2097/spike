@@ -6,7 +6,6 @@ package spike
 
 import (
 	"encoding/binary"
-	"log"
 	"time"
 
 	"golang.org/x/mobile/app"
@@ -44,9 +43,12 @@ const (
 )
 
 var (
-	targetWidth, targetHeight float32
-	pauseState                bool
-	// camera2d                  *graphics.Camera
+	targetWidth  float32
+	targetHeight float32
+	pauseState   bool
+
+	Camera2d *Camera
+	Camera3d *Camera
 
 	running   bool
 	fpsTicker *time.Ticker
@@ -82,7 +84,7 @@ var (
  *  and on others screen sizes it is just zoomed/scaled but works fine thats all
  */
 func Init(title string, width, height float32) {
-	log.Println("Initializing Gdx")
+	println("Initializing Gdx")
 	targetWidth = width
 	targetHeight = height
 	// camera2d = &graphics.Camera{}
@@ -114,7 +116,6 @@ func Run() {
 					switch e.Crosses(lifecycle.StageVisible) {
 					case lifecycle.CrossOn:
 						onStart()
-						Start()
 					case lifecycle.CrossOff:
 						onStop()
 						Exit()
@@ -127,8 +128,21 @@ func Run() {
 					onPaint(sz)
 					a.EndPaint(e)
 				case touch.Event:
+					switch e.Type {
+					case touch.TypeBegin: // touch down
+						println("Begin")
+					case touch.TypeEnd: // touch up
+						println("End")
+					case touch.TypeMove:
+						println("Moving")
+						println(e.Sequence)
+						// log.Printf("%d", e.Sequence)
+					}
 					touchX = e.X
 					touchY = e.Y
+					// if touchX > 50 {
+					// SetScene("options")
+					// }
 				}
 			}
 		}
@@ -136,9 +150,10 @@ func Run() {
 }
 
 func onStart() {
+	println("Starting")
 	program, err = glutil.CreateProgram(vertexShader, fragmentShader)
 	if err != nil {
-		log.Printf("error creating GL program: %v", err)
+		panic("error creating GL program: " + err.Error())
 		return
 	}
 
@@ -150,8 +165,56 @@ func onStart() {
 	color = gl.GetUniformLocation(program, "color")
 	offset = gl.GetUniformLocation(program, "offset")
 
+	// Config.setup();
+	// Serializer.setup();
+	// stage2d = new com.badlogic.gdx.scenes.scene2d.Stage(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(),
+	// 		Scene.configJson.getBoolean("keepAspectRatio"));
+
+	// setTouchable(Touchable.childrenOnly);
+	// Camera.reset();
+	// stage2d.clear();
+	// stage3d.clear();
+	// stage2d.addListener(touchInput);
+	// setSize(targetWidth, targetHeight);
+	// setBounds(0,0, targetWidth, targetHeight);
+	// setColor(1f, 1f, 1f, 1f);
+	// setVisible(true);
+	// stage2d.getRoot().setPosition(0, 0);
+	// stage2d.getRoot().setVisible(true);
+	// stage3d.getRoot().setPosition(0, 0, 0);
+	// stage3d.getRoot().setVisible(true);
+	// sceneName = this.getClass().getName();
+	// setName(sceneName);
+	// Scene.log("Current Scene: "+sceneName);
+	// currentScene = this;
+	// load(sceneName);
+	// cullingEnabled = true;
+
+	// stage2d.getRoot().setName("Root");
+	// stage2d.getRoot().setTouchable(Touchable.childrenOnly);
+	// stage2d.setCamera(new Camera());
+	// inputMux = new InputMultiplexer();
+	// inputMux.addProcessor(stage2d);
+	// stage3d = new Stage3d();
+	// //camController = new CameraInputController(stage3d.getCamera());
+	// //inputMux.addProcessor(stage3d);
+	// //inputMux.addProcessor(camController);
+	// shapeRenderer = new ShapeRenderer();
+	// selectionBox.setTouchable(Touchable.disabled);
+	// selectionBox.setName("Shape");
+	// JsonValue sv = Scene.jsonReader.parse(Gdx.files.internal(Asset.basePath+"scene"));
+	// for(JsonValue jv: sv.iterator())
+	// 	scenesMap.put(jv.name, jv.asString());
+	// setScene(scenesMap.firstKey());
+	// Gdx.input.setCatchBackKey(true);
+	// Gdx.input.setCatchMenuKey(true);
+	// Gdx.input.setInputProcessor(inputMux);
+	// xlines = (int)Gdx.graphics.getWidth()/dots;
+	// 	ylines = (int)Gdx.graphics.getHeight()/dots;
+
 	// TODO(crawshaw): the debug package needs to put GL state init here
 	// Can this be an app.RegisterFilter call now??
+	SetScene(currentScene.Name)
 }
 
 func onStop() {
@@ -159,9 +222,21 @@ func onStop() {
 	gl.DeleteBuffer(buf)
 }
 
+// This is the main rendering call that updates the time, updates the stage,
+// loads assets asynchronously, updates the camera and FPS text.
 func onPaint(sz size.Event) {
-	gl.ClearColor(1, 0, 0, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
+	// asset.Load() Async
+	gl.ClearColor(currentScene.BGColor.R, currentScene.BGColor.G, currentScene.BGColor.B, currentScene.BGColor.A)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	// for _, child := range children {
+	//   if child.OnTouchUp != nil {}
+	//   if child.OnTouchDown != nil {}
+	// }
+	//stage3d.act();
+	// stage3d.draw();
+	//camController.update();
+	// Scene.stage2d.act();//Gdx.graphics.getDeltaTime();
+	// Scene.stage2d.draw();
 
 	gl.UseProgram(program)
 
@@ -182,11 +257,6 @@ func onPaint(sz size.Event) {
 	debug.DrawFPS(sz)
 }
 
-func Start() {
-	log.Println("Starting")
-	SetScene(currentScene.Name)
-}
-
 func Load(sceneName string) {
 
 }
@@ -196,21 +266,22 @@ func Save() {
 }
 
 func Pause() {
-	log.Println("Pausing")
+	println("Pausing")
 	pauseState = true
-	// musicPause()
-	// soundPause()
+	musicPlayer.Pause()
+	soundsPlayer.Pause()
 	// unloadAll()
 	if currentScene.OnPause != nil {
 		currentScene.OnPause()
+
 	}
 }
 
 func Resume() {
-	log.Println("Resuming")
+	println("Resuming")
 	pauseState = false
-	// musicResume()
-	// soundResume()
+	musicPlayer.Pause()
+	soundsPlayer.Play()
 	if currentScene.OnResume != nil {
 		currentScene.OnResume()
 	}
@@ -222,10 +293,11 @@ func Resume() {
 // it will not immediately finish your application.
 // On iOS this should be avoided in production as it breaks Apples guidelines
 func Exit() {
-	log.Println("Exiting")
+	println("Exiting")
 	running = false
 	if currentScene.OnPause != nil {
 		currentScene.OnPause()
+		soundsPlayer.Close()
 	}
 }
 

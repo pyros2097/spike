@@ -2,6 +2,7 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
+// Touchable state of Actors
 package touchable
 
 // Determines how touch input events are distributed to an actor and any children.

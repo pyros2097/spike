@@ -5,7 +5,8 @@
 package spike
 
 import (
-	"log"
+	"golang.org/x/mobile/asset"
+	"golang.org/x/mobile/exp/audio"
 )
 
 type (
@@ -25,40 +26,47 @@ var (
 	musicsMap     map[string]int
 	fontsMap      map[string]int
 	animationsMap map[string]int
+	musicPlayer   *audio.Player
+	soundsPlayer  *audio.Player
 )
 
 func InitAssets(config *AssetConfig) {
 }
 
-func SoundPlay(name string) {
-	log.Printf("Playing Sound: " + name)
+func PlaySound(name string) {
+	println("Playing Sound: " + name)
+	rc, err := asset.Open("sound/" + name + ".wav")
+	if err != nil {
+		panic(err)
+	}
+	soundsPlayer, err = audio.NewPlayer(rc, 0, 0)
+	if err != nil {
+		panic(err)
+	}
+	soundsPlayer.Seek(0)
+	soundsPlayer.Play()
+	// player.Close()
 }
 
-func SoundPause() {
-
+func StopSound(name string) {
+	soundsPlayer.Stop()
+	println("Stopping Sound: " + name)
 }
 
-func SoundResume() {
-
+func PlayMusic() {
 }
 
-func SoundStop(name string) {
-	log.Print("Stopping Sound: " + name)
-}
-
-func SoundDispose() {
-
+func StopMusic() {
 }
 
 func Font() {
-
 }
 
 func Tex() {
 
 }
 
-func loadTmx() {
+func LoadTmx() {
 
 }
 

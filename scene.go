@@ -5,9 +5,9 @@
 package spike
 
 import (
-	"log"
 	"time"
 
+	"github.com/pyros2097/spike/graphics"
 	"github.com/pyros2097/spike/input/gesture"
 	"github.com/pyros2097/spike/scene2d"
 )
@@ -20,6 +20,8 @@ var (
 type InputEvent struct {
 }
 
+// TODO: ADD proptype Validation for Name, BGColor etc
+
 // An InputProcessor is used to receive input events from the keyboard and the touch screen (mouse on the desktop). For this it
 // has to be registered with the {@link Input#setInputProcessor(InputProcessor)} method. It will be called each frame before the
 // call to {@link ApplicationListener#render()}. Each method returns a boolean in case you want to use this with the
@@ -27,6 +29,7 @@ type InputEvent struct {
 type Scene struct {
 	scene2d.Actor
 	Name     string
+	BGColor  *graphics.Color
 	OnPause  func()
 	OnResume func()
 	OnClick  func(x, y float32)
@@ -200,7 +203,7 @@ func init() {
 }
 
 func AddScene(scene *Scene) {
-	log.Println("Adding Scene: " + scene.Name)
+	println("Adding Scene: " + scene.Name)
 	allScenes[scene.Name] = scene
 	if currentScene == nil {
 		currentScene = scene
@@ -213,7 +216,7 @@ func RemoveScene(name string) {
 
 // Set the current scene to be displayed
 func SetScene(name string) {
-	log.Println("Setting Scene: " + name)
+	println("Setting Scene: " + name)
 	var ok bool
 	if currentScene, ok = allScenes[name]; ok {
 		// currentScene.Transition()
@@ -235,3 +238,71 @@ func GetCurrentScene() *Scene {
 func GetScene(name string) *Scene {
 	return allScenes[name]
 }
+
+// public void addActor(Actor actor, float x, float y){
+// 	if(actor != null){
+// 		actor.setPosition(x, y);
+// 		addActor(actor);
+// 	}
+// }
+
+// public void addActorWithDelay(final Actor actor, float delay){
+// 	Timer.schedule(new Task(){
+// 		@Override
+// 		public void run() {
+// 			addActor(actor);
+// 		}
+// 	}, delay);
+// }
+
+// public boolean removeActor(String actorName){
+// 	return removeActor(findActor(actorName));
+// }
+
+// public void removeActorWithDelay(Actor actor, float delay){
+// 	addAction(Actions.sequence(Actions.delay(delay), Actions.removeActor(actor)));
+// }
+
+// public Actor hit(float x, float y){
+// 	return hit(x, y, true);
+// }
+
+/***********************************************************************************************************
+* 					3d Related Functions												   	       		   *
+************************************************************************************************************/
+
+// public static void addActor3d(Actor3d actor3d) {
+// 	stage3d.addActor3d(actor3d);
+// }
+
+// public static void removeActor3d(Actor3d actor3d){
+// 	stage3d.getRoot().removeActor3d(actor3d);
+// }
+
+// public static void removeActor3d(String actor3dName){
+// 	getRoot3d().removeActor3d(stage3d.getRoot().findActor(actor3dName));
+// }
+
+// public static Group3d getRoot3d(){
+// 	return stage3d.getRoot();
+// }
+
+// public static void getChildren3d(){
+// 	stage3d.getActors3d();
+// }
+
+// public static void resetCamera3d(){
+// 	stage3d.getCamera().position.set(10f, 10f, 10f);
+// 	stage3d.getCamera().lookAt(0,0,0);
+// 	stage3d.getCamera().near = 0.1f;
+// 	stage3d.getCamera().far = 300f;
+// }
+
+// public static PerspectiveCamera getCamera3d(){
+// 	return stage3d.getCamera();
+// }
+
+// public static void log(String log) {
+// 	if(Scene.configJson.getBoolean("loggingEnabled"))
+// 		Gdx.app.log("Stage ", log);
+// }

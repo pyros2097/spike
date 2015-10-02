@@ -4,10 +4,6 @@
 
 package spike
 
-import (
-	"log"
-)
-
 /** <p>
  * A Preference instance is a hash map holding different values. It is stored alongside your application (SharedPreferences on
  * Android, LocalStorage on GWT, on the desktop a Java Preferences file in a ".prefs" directory will be created, and on iOS an
@@ -102,7 +98,7 @@ var (
 )
 
 func initConfig(configName string) {
-	log.Println("Initializing Config")
+	println("Initializing Config")
 	// prefs = Gdx.app.getPreferences(Scene.configJson.getString("title"))
 	// HasMusic = prefs.GetBoolean(MUSIC, true)
 	// HasSound = prefs.GetBoolean(SOUND, true)
