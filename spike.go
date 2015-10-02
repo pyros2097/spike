@@ -6,7 +6,6 @@ package spike
 
 import (
 	"encoding/binary"
-	"math"
 	"time"
 
 	"golang.org/x/mobile/app"
@@ -19,7 +18,7 @@ import (
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/gl"
 
-	"github.com/pyros2097/spike/math/vector"
+	"github.com/pyros2097/spike/input/gesture"
 )
 
 const (
@@ -74,6 +73,7 @@ var (
 		0.0, 0.0, 0.0, // bottom left
 		0.4, 0.0, 0.0, // bottom right
 	)
+	lastTouchEvent touch.Type
 )
 
 type SBatch struct {
@@ -83,197 +83,6 @@ func (b SBatch) Begin() {}
 func (b SBatch) End()   {}
 
 var tempBatch *SBatch
-
-// 	/** Creates a new GestureDetector with default values: halfTapSquareSize=20, tapCountInterval=0.4f, longPressDuration=1.1f,
-// 	 * maxFlingDelay=0.15f. */
-//final VelocityTracker tracker = new VelocityTracker();
-//final Task longPressTask = new Task() {
-// 		@Override
-// 		public void run () {
-// 			if (!longPressFired) longPressFired = listener.longPress(pointer1.x, pointer1.y);
-// 		}
-// 	};
-
-/** {@link InputProcessor} implementation that detects gestures (tap, long press, fling, pan, zoom, pinch) and hands them to a
-// public class GestureDetector extends InputAdapter {
-// 	/** @param halfTapSquareSize half width in pixels of the square around an initial touch event, see
-// 	 *           {@link GestureListener#tap(float, float, int, int)}.
-// 	 * @param tapCountInterval time in seconds that must pass for two touch down/up sequences to be detected as consecutive taps.
-// 	 * @param longPressDuration time in seconds that must pass for the detector to fire a
-// 	 *           {@link GestureListener#longPress(float, float)} event.
-// 	 * @param maxFlingDelay time in seconds the finger must have been dragged for a fling event to be fired, see
-// 	 *           {@link GestureListener#fling(float, float, int)}
-// 	 * @param listener May be null if the listener will be set later. */
-type GestureEvent uint8
-
-const (
-	None GestureEvent = iota
-	Tap
-	Fling
-	Pan
-	LongPress
-)
-
-var (
-	tapSquareSize                      float32 = 20
-	tapCountInterval                   int64   = 0 //0.4f
-	longPressSeconds                   float32 = 1.1
-	maxFlingDelay                      float64 = 0.15
-	inTapSquare                                = false
-	tapCount                           int     = 0
-	lastTapTime                        int64   = 0
-	lastTapX, lastTapY                 float32
-	lastTapButton, lastTapPointer      int
-	longPressFired, pinching, panning  bool
-	tapSquareCenterX, tapSquareCenterY float32
-	gestureStartTime                   int64
-	lastTouchEvent                     touch.Type
-
-	pointer1         = vector.NewVector2Empty()
-	pointer2         = vector.NewVector2Empty()
-	initialPointer1  = vector.NewVector2Empty()
-	initialPointer2  = vector.NewVector2Empty()
-	lastGestureEvent GestureEvent
-	gestureQueue     chan GestureEvent
-)
-
-func isWithinTapSquare(x, y, centerX, centerY float32) bool {
-	return float32(math.Abs(float64(x-centerX))) < tapSquareSize && float32(math.Abs(float64(y-centerY))) < tapSquareSize
-}
-
-func touchDown(x, y float32, pointer, button int) bool {
-	if pointer > 1 {
-		return false
-	}
-	if pointer == 0 {
-		pointer1.Set(x, y)
-		gestureStartTime = time.Now().UnixNano() //Gdx.input.getCurrentEventTime()
-		// 	tracker.start(x, y, gestureStartTime);
-		inTapSquare = true
-		pinching = false
-		longPressFired = false
-		tapSquareCenterX = x
-		tapSquareCenterY = y
-		// 		if (!longPressTask.isScheduled()) Timer.schedule(longPressTask, longPressSeconds);
-		// 	}
-	} else {
-		// 	// Start pinch.
-		// 	pointer2.set(x, y);
-		// 	inTapSquare = false;
-		// 	pinching = true;
-		// 	initialPointer1.set(pointer1);
-		// 	initialPointer2.set(pointer2);
-		// 	longPressTask.cancel();
-	}
-	return false
-}
-
-func touchDragged(x, y float32, pointer int) bool {
-	if pointer > 1 {
-		return false
-	}
-	if longPressFired {
-		return false
-	}
-
-	if pointer == 0 {
-		pointer1.Set(x, y)
-	} else {
-		pointer2.Set(x, y)
-	}
-
-	// // handle pinch zoom
-	// if (pinching) {
-	// 	if (listener != null) {
-	// 		boolean result = listener.pinch(initialPointer1, initialPointer2, pointer1, pointer2);
-	// 		return listener.zoom(initialPointer1.dst(initialPointer2), pointer1.dst(pointer2)) || result;
-	// 	}
-	// 	return false;
-	// }
-
-	// // update tracker
-	// tracker.update(x, y, Gdx.input.getCurrentEventTime());
-
-	// // check if we are still tapping.
-	if inTapSquare && !isWithinTapSquare(x, y, tapSquareCenterX, tapSquareCenterY) {
-		// 	longPressTask.cancel();
-		inTapSquare = false
-	}
-
-	// if we have left the tap square, we are panning
-	if !inTapSquare {
-		panning = true
-		// 	return listener.pan(x, y, tracker.deltaX, tracker.deltaY);
-	}
-
-	return false
-}
-
-func touchUp(x, y float32, pointer, button int) bool {
-	if pointer > 1 {
-		return false
-	}
-	// check if we are still tapping.
-	if inTapSquare && !isWithinTapSquare(x, y, tapSquareCenterX, tapSquareCenterY) {
-		inTapSquare = false
-	}
-
-	wasPanning := panning
-	panning = false
-
-	// 		longPressTask.cancel();
-	if longPressFired {
-		return false
-	}
-
-	if inTapSquare {
-		// handle taps
-		if lastTapButton != button || lastTapPointer != pointer || time.Now().UnixNano()-lastTapTime > tapCountInterval ||
-			!isWithinTapSquare(x, y, lastTapX, lastTapY) {
-			tapCount = 0
-		}
-		tapCount++
-		lastTapTime = time.Now().UnixNano()
-		lastTapX = x
-		lastTapY = y
-		lastTapButton = button
-		lastTapPointer = pointer
-		gestureStartTime = 0
-		gestureQueue <- Tap
-		return true
-		// return listener.tap(x, y, tapCount, button);
-	}
-
-	// 		if (pinching) {
-	// 			// handle pinch end
-	// 			pinching = false;
-	// 			panning = true;
-	// 			// we are in pan mode again, reset velocity tracker
-	// 			if (pointer == 0) {
-	// 				// first pointer has lifted off, set up panning to use the second pointer...
-	// 				tracker.start(pointer2.x, pointer2.y, Gdx.input.getCurrentEventTime());
-	// 			} else {
-	// 				// second pointer has lifted off, set up panning to use the first pointer...
-	// 				tracker.start(pointer1.x, pointer1.y, Gdx.input.getCurrentEventTime());
-	// 			}
-	// 			return false;
-	// 		}
-
-	// handle no longer panning
-	handled := false
-	if wasPanning && !panning {
-		handled = false //listener.panStop(x, y, pointer, button);
-	}
-
-	// handle fling
-	gestureStartTime = 0
-	// 		long time = Gdx.input.getCurrentEventTime();
-	// 		if (time - tracker.lastTime < maxFlingDelay) {
-	// 			tracker.update(x, y, time);
-	// 			handled = listener.fling(tracker.getVelocityX(), tracker.getVelocityY(), button) || handled;
-	// 		}
-	return handled
-}
 
 /*Important:
  *  The Target Width  and Target Height refer to the nominal width and height of the game for the
@@ -339,13 +148,13 @@ func Run() {
 					switch e.Type {
 					case touch.TypeBegin: // touch down
 						println("Begin")
-						touchDown(touchX, touchY, 0, 0)
+						gesture.TouchDown(touchX, touchY, 0, 0)
 					case touch.TypeEnd: // touch up
 						println("End")
-						touchUp(touchX, touchY, 0, 0)
+						gesture.TouchUp(touchX, touchY, 0, 0)
 					case touch.TypeMove: // touch drag
 						println("Moving")
-						touchDragged(touchX, touchY, 0)
+						gesture.TouchDragged(touchX, touchY, 0)
 						// println(e.Sequence)
 						// log.Printf("%d", e.Sequence)
 					}
@@ -380,15 +189,9 @@ func Start() {
 	offset = gl.GetUniformLocation(program, "offset")
 
 	lastTouchEvent = 111
-	gestureQueue = make(chan GestureEvent, 100)
 	// TODO(crawshaw): the debug package needs to put GL state init here
 	// Can this be an app.RegisterFilter call now??
 	SetScene(currentScene.Name)
-	go func() {
-		for {
-			lastGestureEvent = <-gestureQueue
-		}
-	}()
 }
 
 // This is the main rendering call that updates the time, updates the stage,
@@ -413,11 +216,13 @@ func onPaint(sz size.Event, delta float32) {
 		if lastTouchEvent == touch.TypeMove && child.OnTouchDragged != nil {
 			child.OnTouchDragged(child, touchX, touchY, 1)
 		}
-		if lastGestureEvent == Tap && child.OnTap != nil {
-			child.OnTap(child, touchX, touchY, tapCount, 0)
+		for event := gesture.GetEvent(); event != nil; {
+			if event.Type == gesture.Tap && child.OnTap != nil {
+				child.OnTap(child, touchX, touchY, 1, 0) //tapCount, 0)
+			}
+			event = nil
 		}
 	}
-	lastGestureEvent = None
 
 	gl.UseProgram(program)
 
@@ -475,137 +280,3 @@ func Exit() {
 	gl.DeleteProgram(program)
 	gl.DeleteBuffer(buf)
 }
-
-// 	/** No further gesture events will be triggered for the current touch, if any. */
-// 	public void cancel () {
-// 		longPressTask.cancel();
-// 		longPressFired = true;
-// 	}
-
-// 	/** @return whether the user touched the screen long enough to trigger a long press event. */
-// 	public boolean isLongPressed () {
-// 		return isLongPressed(longPressSeconds);
-// 	}
-
-// 	* @param duration
-// 	 * @return whether the user touched the screen for as much or more than the given duration.
-// 	public boolean isLongPressed (float duration) {
-// 		if (gestureStartTime == 0) return false;
-// 		return TimeUtils.nanoTime() - gestureStartTime > (long)(duration * 1000000000l);
-// 	}
-
-// 	public boolean isPanning () {
-// 		return panning;
-// 	}
-
-// 	public void reset () {
-// 		gestureStartTime = 0;
-// 		panning = false;
-// 		inTapSquare = false;
-// 	}
-
-// 	/** The tap square will not longer be used for the current touch. */
-// 	public void invalidateTapSquare () {
-// 		inTapSquare = false;
-// 	}
-
-// 	public void setTapSquareSize (float halfTapSquareSize) {
-// 		this.tapSquareSize = halfTapSquareSize;
-// 	}
-
-// 	/** @param tapCountInterval time in seconds that must pass for two touch down/up sequences to be detected as consecutive taps. */
-// 	public void setTapCountInterval (float tapCountInterval) {
-// 		this.tapCountInterval = (long)(tapCountInterval * 1000000000l);
-// 	}
-
-// 	public void setLongPressSeconds (float longPressSeconds) {
-// 		this.longPressSeconds = longPressSeconds;
-// 	}
-
-// 	public void setMaxFlingDelay (long maxFlingDelay) {
-// 		this.maxFlingDelay = maxFlingDelay;
-// 	}
-
-// 	static class VelocityTracker {
-// 		int sampleSize = 10;
-// 		float lastX, lastY;
-// 		float deltaX, deltaY;
-// 		long lastTime;
-// 		int numSamples;
-// 		float[] meanX = new float[sampleSize];
-// 		float[] meanY = new float[sampleSize];
-// 		long[] meanTime = new long[sampleSize];
-
-// 		public void start (float x, float y, long timeStamp) {
-// 			lastX = x;
-// 			lastY = y;
-// 			deltaX = 0;
-// 			deltaY = 0;
-// 			numSamples = 0;
-// 			for (int i = 0; i < sampleSize; i++) {
-// 				meanX[i] = 0;
-// 				meanY[i] = 0;
-// 				meanTime[i] = 0;
-// 			}
-// 			lastTime = timeStamp;
-// 		}
-
-// 		public void update (float x, float y, long timeStamp) {
-// 			long currTime = timeStamp;
-// 			deltaX = x - lastX;
-// 			deltaY = y - lastY;
-// 			lastX = x;
-// 			lastY = y;
-// 			long deltaTime = currTime - lastTime;
-// 			lastTime = currTime;
-// 			int index = numSamples % sampleSize;
-// 			meanX[index] = deltaX;
-// 			meanY[index] = deltaY;
-// 			meanTime[index] = deltaTime;
-// 			numSamples++;
-// 		}
-
-// 		public float getVelocityX () {
-// 			float meanX = getAverage(this.meanX, numSamples);
-// 			float meanTime = getAverage(this.meanTime, numSamples) / 1000000000.0f;
-// 			if (meanTime == 0) return 0;
-// 			return meanX / meanTime;
-// 		}
-
-// 		public float getVelocityY () {
-// 			float meanY = getAverage(this.meanY, numSamples);
-// 			float meanTime = getAverage(this.meanTime, numSamples) / 1000000000.0f;
-// 			if (meanTime == 0) return 0;
-// 			return meanY / meanTime;
-// 		}
-
-// 		private float getAverage (float[] values, int numSamples) {
-// 			numSamples = Math.min(sampleSize, numSamples);
-// 			float sum = 0;
-// 			for (int i = 0; i < numSamples; i++) {
-// 				sum += values[i];
-// 			}
-// 			return sum / numSamples;
-// 		}
-
-// 		private long getAverage (long[] values, int numSamples) {
-// 			numSamples = Math.min(sampleSize, numSamples);
-// 			long sum = 0;
-// 			for (int i = 0; i < numSamples; i++) {
-// 				sum += values[i];
-// 			}
-// 			if (numSamples == 0) return 0;
-// 			return sum / numSamples;
-// 		}
-
-// 		private float getSum (float[] values, int numSamples) {
-// 			numSamples = Math.min(sampleSize, numSamples);
-// 			float sum = 0;
-// 			for (int i = 0; i < numSamples; i++) {
-// 				sum += values[i];
-// 			}
-// 			if (numSamples == 0) return 0;
-// 			return sum;
-// 		}
-// 	}
-// }

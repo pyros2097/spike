@@ -140,7 +140,7 @@ type Actor struct {
 	// 	public static interface GestureListener {
 
 	// Called when a swipe gesture occurs
-	OnGesture func(self *Actor, gtype gesture.Type)
+	OnGesture func(self *Actor, gtype gesture.GestureType)
 
 	// Called when a key was typed
 	// param character The character
