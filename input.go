@@ -207,8 +207,8 @@ type InputEvent struct {
 
 func (self *InputEvent) reset() {
 	//    super.reset();
-	// self.RelatedActor = nil
-	self.Button = 255
+	// RelatedActor = nil
+	// self.Button = 255
 }
 
 func (input InputType) String() string {
@@ -278,12 +278,16 @@ var (
 	longPressFired, pinching, panning  bool
 	tapSquareCenterX, tapSquareCenterY float32
 	gestureStartTime                   int64
-	tracker                            = NewVelocityTracker()
 	longPressScheduled                 = false
 	longPressTask                      = time.AfterFunc(time.Duration(float32(time.Second)*LongPressSeconds), fireLongPress)
 	fireLongPress                      = func() {
 		if !longPressFired {
-			longPressFired = true //listener.longPress(pointer1.x, pointer1.y);
+			longPressFired = true
+			InputChannel <- InputEvent{
+				Type: LongPress,
+				X:    pointer1.X,
+				Y:    pointer1.Y,
+			}
 		}
 	}
 	pointer1        = vector.NewVector2Empty()
@@ -352,7 +356,7 @@ func doTouchDown(x, y float32, pointer, button int) bool {
 	if pointer == 0 {
 		pointer1.Set(x, y)
 		gestureStartTime = time.Now().UnixNano() //Gdx.input.getCurrentEventTime()
-		tracker.Start(x, y, gestureStartTime)
+		velocityStart(x, y, gestureStartTime)
 		inTapSquare = true
 		pinching = false
 		longPressFired = false
@@ -439,10 +443,10 @@ func doTouchUp(x, y float32, pointer, button int) bool {
 		// we are in pan mode again, reset velocity tracker
 		if pointer == 0 {
 			// first pointer has lifted off, set up panning to use the second pointer...
-			tracker.Start(pointer2.X, pointer2.Y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
+			velocityStart(pointer2.X, pointer2.Y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
 		} else {
 			// second pointer has lifted off, set up panning to use the first pointer...
-			tracker.Start(pointer1.X, pointer1.Y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
+			velocityStart(pointer1.X, pointer1.Y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
 		}
 		return false
 	}
@@ -450,21 +454,28 @@ func doTouchUp(x, y float32, pointer, button int) bool {
 	// handle no longer panning
 	handled := false
 	if wasPanning && !panning {
-		//listener.panStop(x, y, pointer, button);
+		InputChannel <- InputEvent{
+			Type:    PanStop,
+			X:       x,
+			Y:       y,
+			Pointer: 0,
+			Button:  0,
+		}
 		handled = false
 	}
 
 	// handle fling
 	gestureStartTime = 0
 	time := time.Now().UnixNano() //Gdx.input.getCurrentEventTime();
-	if time-tracker.LastTime < MaxFlingDelay {
-		tracker.Update(x, y, time)
-		// lastGestureEvent = Fling
-		// handled = listener.fling(tracker.getVelocityX(), tracker.getVelocityY(), button) || handled
+	if time-LastTime < MaxFlingDelay {
+		velocityUpdate(x, y, time)
+		InputChannel <- InputEvent{
+			Type:   Fling,
+			X:      getVelocityX(),
+			Y:      getVelocityY(),
+			Button: 0,
+		}
 	}
-	//    mouse.set(x, y);
-	//    mousePointer = pointer;
-	//    mouseButton = button;
 	// reset Gesture
 	difX = 0.0
 	difY = 0.0
@@ -512,7 +523,7 @@ func doTouchDragged(x, y float32, pointer int) bool {
 	}
 
 	// update tracker
-	tracker.Update(x, y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
+	velocityUpdate(x, y, time.Now().UnixNano()) //Gdx.input.getCurrentEventTime())
 
 	// // check if we are still tapping.
 	if inTapSquare && !isWithinTapSquare(x, y, tapSquareCenterX, tapSquareCenterY) {
@@ -524,12 +535,12 @@ func doTouchDragged(x, y float32, pointer int) bool {
 	// if we have left the tap square, we are panning
 	if !inTapSquare {
 		panning = true
-		//  return listener.pan(x, y, tracker.deltaX, tracker.deltaY);
+		InputChannel <- InputEvent{
+			Type: Pan,
+			X:    deltaX,
+			Y:    deltaY,
+		}
 	}
-
-	//    mouse.set(x, y);
-	//    mousePointer = pointer;
-	//    Scene.getCurrentScene().onDragged();
 	if gestureStarted == true {
 		touchCurrentX = x
 		touchCurrentY = y
@@ -588,67 +599,58 @@ func SetTapCountInterval(tapCountInterval float32) {
 	tapCountInterval = tapCountInterval * 1000000000
 }
 
-type VelocityTracker struct {
-	sampleSize     int
+var (
+	sampleSize     int = 10
 	lastX, lastY   float32
 	deltaX, deltaY float32
 	LastTime       int64
 	numSamples     int
-	meanX          []float32
-	meanY          []float32
-	meanTime       []int64
-}
+	meanX          = make([]float32, 10)
+	meanY          = make([]float32, 10)
+	meanTime       = make([]int64, 10)
+)
 
-func NewVelocityTracker() *VelocityTracker {
-	return &VelocityTracker{
-		sampleSize: 10,
-		meanX:      make([]float32, 10),
-		meanY:      make([]float32, 10),
-		meanTime:   make([]int64, 10),
+func velocityStart(x, y float32, timeStamp int64) {
+	lastX = x
+	lastY = y
+	deltaX = 0
+	deltaY = 0
+	numSamples = 0
+	for i := 0; i < sampleSize; i++ {
+		meanX[i] = 0
+		meanY[i] = 0
+		meanTime[i] = 0
 	}
+	LastTime = timeStamp
 }
 
-func (self *VelocityTracker) Start(x, y float32, timeStamp int64) {
-	self.lastX = x
-	self.lastY = y
-	self.deltaX = 0
-	self.deltaY = 0
-	self.numSamples = 0
-	for i := 0; i < self.sampleSize; i++ {
-		self.meanX[i] = 0
-		self.meanY[i] = 0
-		self.meanTime[i] = 0
-	}
-	self.LastTime = timeStamp
-}
-
-func (self *VelocityTracker) Update(x, y float32, timeStamp int64) {
+func velocityUpdate(x, y float32, timeStamp int64) {
 	currTime := timeStamp
-	self.deltaX = x - self.lastX
-	self.deltaY = y - self.lastY
-	self.lastX = x
-	self.lastY = y
-	deltaTime := currTime - self.LastTime
-	self.LastTime = currTime
-	index := self.numSamples % self.sampleSize
-	self.meanX[index] = self.deltaX
-	self.meanY[index] = self.deltaY
-	self.meanTime[index] = deltaTime
-	self.numSamples++
+	deltaX = x - lastX
+	deltaY = y - lastY
+	lastX = x
+	lastY = y
+	deltaTime := currTime - LastTime
+	LastTime = currTime
+	index := numSamples % sampleSize
+	meanX[index] = deltaX
+	meanY[index] = deltaY
+	meanTime[index] = deltaTime
+	numSamples++
 }
 
-func (self *VelocityTracker) GetVelocityX() float32 {
-	meanX := self.GetAverage(self.meanX, self.numSamples)
-	meanTime := self.GetAverageInt(self.meanTime, self.numSamples) / 1000000000.0
+func getVelocityX() float32 {
+	meanX := getAverage(meanX, numSamples)
+	meanTime := getAverageInt(meanTime, numSamples) / 1000000000.0
 	if meanTime == 0 {
 		return 0
 	}
 	return meanX / float32(meanTime)
 }
 
-func (self *VelocityTracker) GetVelocityY() float32 {
-	meanY := self.GetAverage(self.meanY, self.numSamples)
-	meanTime := self.GetAverageInt(self.meanTime, self.numSamples) / 1000000000.0
+func getVelocityY() float32 {
+	meanY := getAverage(meanY, numSamples)
+	meanTime := getAverageInt(meanTime, numSamples) / 1000000000.0
 	if meanTime == 0 {
 		return 0
 	}
@@ -662,8 +664,8 @@ func min(a, b int) int {
 	return a
 }
 
-func (self *VelocityTracker) GetAverage(values []float32, numSamples int) float32 {
-	numSamples = min(self.sampleSize, numSamples)
+func getAverage(values []float32, numSamples int) float32 {
+	numSamples = min(sampleSize, numSamples)
 	var sum float32
 	for i := 0; i < numSamples; i++ {
 		sum += values[i]
@@ -671,8 +673,8 @@ func (self *VelocityTracker) GetAverage(values []float32, numSamples int) float3
 	return sum / float32(numSamples)
 }
 
-func (self *VelocityTracker) GetAverageInt(values []int64, numSamples int) int64 {
-	numSamples = min(self.sampleSize, numSamples)
+func getAverageInt(values []int64, numSamples int) int64 {
+	numSamples = min(sampleSize, numSamples)
 	var sum int64
 	for i := 0; i < numSamples; i++ {
 		sum += values[i]
@@ -683,8 +685,8 @@ func (self *VelocityTracker) GetAverageInt(values []int64, numSamples int) int64
 	return sum / int64(numSamples)
 }
 
-func (self *VelocityTracker) GetSum(values []float32, numSamples int) float32 {
-	numSamples = min(self.sampleSize, numSamples)
+func getSum(values []float32, numSamples int) float32 {
+	numSamples = min(sampleSize, numSamples)
 	var sum float32
 	for i := 0; i < numSamples; i++ {
 		sum += values[i]

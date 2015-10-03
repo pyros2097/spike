@@ -19,14 +19,14 @@ type Affine2 struct {
 // constant: m21 = 0, m21 = 1, m22 = 1
 
 // Constructs an identity matrix.
-func NewAffine2() *Affine2 {
+func NewAffine2Empty() *Affine2 {
 	return &Affine2{1, 0, 0, 0, 1, 0}
 }
 
 // Constructs a matrix from the given affine matrix.
 // @param other The affine matrix to copy. This matrix will not be modified.
 func NewAffine2Copy(other *Affine2) *Affine2 {
-	return NewAffine2().Set(other)
+	return NewAffine2Empty().Set(other)
 }
 
 // Sets this matrix to the identity matrix

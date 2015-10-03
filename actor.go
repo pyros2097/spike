@@ -54,10 +54,10 @@ type IActor interface {
 }
 
 type Actor struct {
-	Name     string
+	Name     string  // Name of the Actor
 	X, Y     float32 // X, Y position of the actor's left edge.
-	W, H     float32
-	Z        uint32
+	W, H     float32 // Width and Height
+	Z        uint32  // zindex
 	OX, OY   float32 // origin
 	SX, SY   float32 // scale
 	Rotation float32
@@ -73,12 +73,15 @@ type Actor struct {
 	// param parent May be null if the actor has been removed from the parent.
 	Parent *Actor
 
+	// Parent, FirstChild, LastChild, PrevSibling, NextSibling *Actor
+
 	// Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}.
 	TouchState Touchable
 
 	// An application specific object for convenience.
 	UserObject interface{}
 
+	// The color the actor will be tinted when drawn.
 	Color *graphics.Color // make this 1 1 1 1
 
 	// Called on the update cycle
@@ -99,10 +102,9 @@ type Actor struct {
 }
 
 // Updates the actor based on time. Typically this is called each frame by {@link Stage#act(float)}.
-//
 // The default implementation calls {@link Action#act(float)} on each action and removes actions that are complete.
 // param delta Time in seconds since the last frame.
-func (self *Actor) Act(delta float32) {
+func (self *Actor) act(delta float32) {
 	if len(self.Actions) > 0 {
 		for i := 0; i < len(self.Actions); i++ {
 			action := self.Actions[i]
@@ -120,10 +122,18 @@ func (self *Actor) Act(delta float32) {
 			}
 		}
 	}
+	if self.OnAct != nil {
+		self.OnAct(self, delta)
+	}
+}
+
+func (self *Actor) draw(batch g2d.Batch, parentAlpha float32) {
+	if self.OnDraw != nil {
+		self.OnDraw(self, batch, parentAlpha)
+	}
 }
 
 // Removes self actor from its parent, if it has a parent.
-// @see Group#removeActor(Actor)
 func (self *Actor) RemoveActor() bool {
 	if self.Parent == nil {
 		// self.parent.removeActor(self)
@@ -142,10 +152,6 @@ func (self *Actor) RemoveAction(action Action) {
 	// if (actions.removeValue(action, true)) action.setActor(null)
 }
 
-func (self *Actor) GetActions() []*Action {
-	return self.Actions
-}
-
 // Returns true if the actor has one or more actions.
 func (self *Actor) HasActions() bool {
 	return len(self.Actions) > 0
@@ -159,18 +165,6 @@ func (self *Actor) ClearActions() {
 	// actions.clear()
 }
 
-// Removes all listeners on self actor.
-func (self *Actor) ClearListeners() {
-	// listeners.clear()
-	// captureListeners.clear()
-}
-
-// Removes all actions and listeners on self actor.
-func (self *Actor) Clear() {
-	self.ClearActions()
-	self.ClearListeners()
-}
-
 // Returns true if the actor's parent is not null.
 func (self *Actor) HasParent() bool {
 	return self.Parent != nil
@@ -179,30 +173,6 @@ func (self *Actor) HasParent() bool {
 // Returns true if input events are processed by self actor.
 func (self *Actor) IsTouchable() bool {
 	return self.TouchState == TouchableEnabled
-}
-
-func (self *Actor) SetColor(color *graphics.Color) {
-	self.Color.SetColor(color)
-}
-
-func (self *Actor) SetColorRGBA(r, g, b, a float32) {
-	self.Color.Set(r, g, b, a)
-}
-
-// Returns the color the actor will be tinted when drawn. The returned instance can be modified to change the color.
-func (self *Actor) GetColor() *graphics.Color {
-	return self.Color
-}
-
-// Sets a name for easier identification of the actor in application code.
-// @see Group#findActor(String)
-func (self *Actor) SetName(name string) {
-	self.Name = name
-}
-
-// Retrieve custom actor name set with {@link Actor#setName(String)}, used for easier identification
-func (self *Actor) GetName() string {
-	return self.Name
 }
 
 // Returns the X position of the specified {@link Align alignment}
@@ -723,21 +693,23 @@ func (self *Actor) GetZIndex() uint32 {
 //     shapes.rect(x, y, originX, originY, width, height, scaleX, scaleY, rotation);
 //   }
 
-//   // If true, {@link #drawDebug(ShapeRenderer)} will be called for self actor.
-//   public void setDebug (boolean enabled) {
-//     debug = enabled;
-//     if (enabled) Stage.debug = true;
-//   }
+func (self *Actor) GetBounds() *shape.Rectangle {
+	return NewRectangle(self.X, self.Y, self.W, self.H)
+}
 
-//   public boolean getDebug () {
-//     return debug;
-//   }
+// 	func (self *Actor) CollidesXY(x, y float32) bool {
+// 		if (Intersector.overlaps(self.GetBounds(), NewRectangle(x, y, 5, 5);)) {
+// 			return true
+// 		}
+// 		return false
+// 	}
 
-//   // Calls {@link #setDebug(boolean)} with {@code true}.
-//   public Actor debug () {
-//     setDebug(true);
-//     return self;
-//   }
+// 	func (self *Actor) Collides(other *Actor) bool {
+// 		if Intersector.overlaps(self.GetBounds(), other.GetBounds()) {
+// 			return true
+// 		}
+// 		return false
+// 	}
 
 func (self *Actor) String() string {
 	return self.Name

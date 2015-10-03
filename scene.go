@@ -28,6 +28,17 @@ var (
 // public InterpolationType sceneInterpolationType = InterpolationType.Linear;
 // public static float splashDuration = 0f;
 // public static boolean pauseState = false;
+
+// 	public EffectType effectType = EffectType.None;
+// 	public float effectValue = 0f;
+// 	public float effectDuration = 0f;
+// 	public InterpolationType interpolationType = InterpolationType.Linear;
+// 	public float addActorDelay = 0f;
+// 	public float addEffectDelay = 0f;
+
+// 	public EventType evtType = EventType.None;
+// 	public Scene.OnEventType onEvtType = Scene.OnEventType.DoEffect;
+// 	public String eventScene = "";
 type Scene struct {
 	Actor
 	Name    string
