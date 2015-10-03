@@ -11,7 +11,7 @@
 // It consists of Scenes and you can control which scenes are to displayed when.
 // Be sure to see the example source code as it can help you a lot in understanding the framework.
 //
-// -----------------------Requires--------------------------------------------------------------------------------
+// # Requires
 // 1.Go >= 1.5
 //
 // 2.OpenGL >= 2.0
@@ -20,7 +20,8 @@
 //
 // 4.Linux
 //
-// -----------------------Assets----------------------------------------------------------------------------------
+// # Assets
+//
 // Note: All asset files must be lowercase only.. otherwise it causes problems with android.
 // All Assets are to be stored in the assets directory.
 // For Automatic Asset Loading the directory Structure should be like this
@@ -39,7 +40,8 @@
 //
 // assets/maps/ --- all your TMX map files .tmx go here
 //
-// -----------------------Usage----------------------------------
+// # Usage
+//
 // menu := &spike.Scene{
 //   Name:    "Menu",
 //   BGColor: graphics.Color{0, 0, 1, 1},
