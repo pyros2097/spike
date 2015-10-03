@@ -27,10 +27,6 @@ import (
 	"github.com/pyros2097/spike/graphics"
 )
 
-var (
-	hello *spike.Actor
-)
-
 func main() {
 
 	menu := &spike.Scene{
@@ -39,8 +35,8 @@ func main() {
 		Children: []*spike.Actor{
 			&spike.Actor{
 				X: 43,
-				OnInput: func(self *spike.Actor, e spike.InputEvent) {
-					println(e.Type.String())
+				OnInput: func(self *spike.Actor, event spike.InputEvent) {
+					println(event.Type.String())
 				},
 				OnAct: func(self *spike.Actor, delta float32) {
 					self.X = 111
