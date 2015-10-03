@@ -12,6 +12,7 @@
 // Be sure to see the example source code as it can help you a lot in understanding the framework.
 //
 // # Requires
+//
 // 1.Go >= 1.5
 //
 // 2.OpenGL >= 2.0
@@ -26,19 +27,13 @@
 // All Assets are to be stored in the assets directory.
 // For Automatic Asset Loading the directory Structure should be like this
 //
-// assets/icons/icon.png - your game icon which is loaded by the framework
-//
-// assets/atlas/ --- all your Texture Atlas files .atlas and .png go here
-//
-// assets/fonts/ --- all your BitmapFont files .fnt and .png go here
-//
-// assets/musics/ --- all your Music files .mp3 go here
-//
-// assets/sounds/ --- all your Music files .mp3 go here
-//
-// assets/particles/ --- all your Particle files .part go here
-//
-// assets/maps/ --- all your TMX map files .tmx go here
+//   assets/icons/icon.png - your game icon which is loaded by the framework
+//   assets/atlas/ --- all your Texture Atlas files .atlas and .png go here
+//   assets/fonts/ --- all your BitmapFont files .fnt and .png go here
+//   assets/musics/ --- all your Music files .mp3 go here
+//   assets/sounds/ --- all your Music files .mp3 go here
+//   assets/particles/ --- all your Particle files .part go here
+//   assets/maps/ --- all your TMX map files .tmx go here
 //
 // # Usage
 //
