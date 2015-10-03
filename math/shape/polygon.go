@@ -6,7 +6,6 @@ package shape
 
 import (
 	"github.com/pyros2097/spike/math/geom"
-	. "github.com/pyros2097/spike/math/shape"
 	"github.com/pyros2097/spike/math/utils"
 )
 
