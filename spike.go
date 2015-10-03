@@ -17,8 +17,6 @@ import (
 	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/gl"
-
-	"github.com/pyros2097/spike/input/gesture"
 )
 
 const (
@@ -47,7 +45,7 @@ const (
 var (
 	targetWidth  float32
 	targetHeight float32
-	pauseState   bool
+	PauseState   bool
 
 	Camera2d *Camera
 	Camera3d *Camera
@@ -55,7 +53,7 @@ var (
 	running   bool
 	fpsTicker *time.Ticker
 	lastTime  time.Duration
-	delta     time.Duration
+	deltaTime time.Duration
 
 	program  gl.Program
 	position gl.Attrib
@@ -73,7 +71,6 @@ var (
 		0.0, 0.0, 0.0, // bottom left
 		0.4, 0.0, 0.0, // bottom right
 	)
-	lastTouchEvent touch.Type
 )
 
 type SBatch struct {
@@ -117,18 +114,17 @@ func Run() {
 			if !running {
 				break
 			}
-			delta = now.Sub(lastTime)
+			deltaTime = now.Sub(lastTime)
 			lastTime = now
 			var sz size.Event
-			// e := <-a.Events()
 			for e := range a.Events() {
 				switch e := app.Filter(e).(type) {
 				case lifecycle.Event:
 					switch e.Crosses(lifecycle.StageVisible) {
 					case lifecycle.CrossOn:
-						Start()
+						appStart()
 					case lifecycle.CrossOff:
-						Exit()
+						appExit()
 					}
 				case size.Event: // resize event
 					sz = e
@@ -137,24 +133,23 @@ func Run() {
 				case paint.Event:
 					// print("Painting")
 					// Do update here
-					onPaint(sz, float32(delta))
+					appPaint(sz, float32(deltaTime))
 					a.EndPaint(e)
 				case touch.Event:
 					// print("Touching")
 					// send input events here or before paint just store the last state
 					touchX = e.X
 					touchY = e.Y
-					lastTouchEvent = e.Type
 					switch e.Type {
-					case touch.TypeBegin: // touch down
-						println("Begin")
-						gesture.TouchDown(touchX, touchY, 0, 0)
-					case touch.TypeEnd: // touch up
-						println("End")
-						gesture.TouchUp(touchX, touchY, 0, 0)
-					case touch.TypeMove: // touch drag
-						println("Moving")
-						gesture.TouchDragged(touchX, touchY, 0)
+					case touch.TypeBegin:
+						// println("Begin")
+						doTouchDown(touchX, touchY, 0, 0)
+					case touch.TypeEnd:
+						// println("End")
+						doTouchUp(touchX, touchY, 0, 0)
+					case touch.TypeMove:
+						// println("Moving")
+						doTouchDragged(touchX, touchY, 0)
 						// println(e.Sequence)
 						// log.Printf("%d", e.Sequence)
 					}
@@ -172,7 +167,7 @@ func GetTouchY() float32 {
 	return touchY
 }
 
-func Start() {
+func appStart() {
 	println("Starting")
 	program, err = glutil.CreateProgram(vertexShader, fragmentShader)
 	if err != nil {
@@ -188,7 +183,6 @@ func Start() {
 	color = gl.GetUniformLocation(program, "color")
 	offset = gl.GetUniformLocation(program, "offset")
 
-	lastTouchEvent = 111
 	// TODO(crawshaw): the debug package needs to put GL state init here
 	// Can this be an app.RegisterFilter call now??
 	SetScene(currentScene.Name)
@@ -196,8 +190,7 @@ func Start() {
 
 // This is the main rendering call that updates the time, updates the stage,
 // loads assets asynchronously, updates the camera and FPS text.
-func onPaint(sz size.Event, delta float32) {
-	// asset.Load() Async
+func appPaint(sz size.Event, delta float32) {
 	gl.ClearColor(currentScene.BGColor.R, currentScene.BGColor.G, currentScene.BGColor.B, currentScene.BGColor.A)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	for _, child := range currentScene.Children {
@@ -207,20 +200,15 @@ func onPaint(sz size.Event, delta float32) {
 		if child.OnDraw != nil {
 			child.OnDraw(child, tempBatch, 1.0)
 		}
-		if lastTouchEvent == touch.TypeBegin && child.OnTouchDown != nil {
-			child.OnTouchDown(child, touchX, touchY, 1, 1)
-		}
-		if lastTouchEvent == touch.TypeEnd && child.OnTouchUp != nil {
-			child.OnTouchUp(child, touchX, touchY, 1, 1)
-		}
-		if lastTouchEvent == touch.TypeMove && child.OnTouchDragged != nil {
-			child.OnTouchDragged(child, touchX, touchY, 1)
-		}
-		for event := gesture.GetEvent(); event != nil; {
-			if event.Type == gesture.Tap && child.OnTap != nil {
-				child.OnTap(child, touchX, touchY, 1, 0) //tapCount, 0)
+		if len(InputChannel) > 0 {
+			for e := range InputChannel {
+				if child.OnInput != nil {
+					child.OnInput(child, e)
+				}
+				if len(InputChannel) == 0 {
+					break
+				}
 			}
-			event = nil
 		}
 	}
 
@@ -243,9 +231,9 @@ func onPaint(sz size.Event, delta float32) {
 	debug.DrawFPS(sz)
 }
 
-func Pause() {
+func appPause() {
 	println("Pausing")
-	pauseState = true
+	PauseState = true
 	musicPlayer.Pause()
 	soundsPlayer.Pause()
 	// unloadAll()
@@ -255,11 +243,12 @@ func Pause() {
 	}
 }
 
-func Resume() {
+func appResume() {
 	println("Resuming")
-	pauseState = false
+	PauseState = false
 	musicPlayer.Pause()
 	soundsPlayer.Play()
+	// reloadAll()
 	if currentScene.OnResume != nil {
 		currentScene.OnResume(currentScene)
 	}
@@ -270,7 +259,7 @@ func Resume() {
 // Schedule an exit from the application. On android, this will cause a call to pause() and dispose() some time in the future,
 // it will not immediately finish your application.
 // On iOS this should be avoided in production as it breaks Apples guidelines
-func Exit() {
+func appExit() {
 	println("Exiting")
 	running = false
 	if currentScene.OnPause != nil {
@@ -280,3 +269,111 @@ func Exit() {
 	gl.DeleteProgram(program)
 	gl.DeleteBuffer(buf)
 }
+
+// /***********************************************************************************************************
+// * 					Utilities Related Functions												   	       		   *
+// ************************************************************************************************************/
+// 	/*
+// 	 * The the angle in degrees of the inclination of a line
+// 	 * @param cx, cy The center point x, y
+// 	 * @param tx, ty The target point x, y
+// 	 */
+// 	public static float getAngle(float cx, float cy, float tx, float ty) {
+// 		float angle = (float) Math.toDegrees(MathUtils.atan2(tx - cx, ty - cy));
+// 		//if(angle < 0){
+// 		//    angle += 360;
+// 		//}
+// 		return angle;
+// 	}
+
+// 	private static Vector2 distVector = new Vector2();
+// 	public static final float getDistance(Actor a, Actor b){
+// 		distVector.set(a.getX(), a.getY());
+// 		return distVector.dst(b.getX(), b.getY());
+// 	}
+
+// 	public static final float getDistance(float x1, float y1, float x2, float y2){
+// 		distVector.set(x1, y1);
+// 		return distVector.dst(x2, y2);
+// 	}
+
+// 	/*
+// 	 * Capitalizes the First Letter of a String
+// 	 */
+// 	public static String capitalize(String text){
+// 		if(text != null && text != "")
+// 			return (text.substring(0, 1)).toUpperCase() + text.substring(1);
+// 		else
+// 			return "";
+// 	}
+
+// 	/*
+// 	 * UnCapitalizes the First Letter of a String
+// 	 */
+// 	public static String uncapitalize(String text){
+// 		return text.substring(0, 1).toLowerCase()+text.substring(1);
+// 	}
+
+// 	public static Rectangle getBounds(Actor actor) {
+// 		float posX = actor.getX();
+// 		float posY = actor.getY();
+// 		float width = actor.getWidth();
+// 		float height = actor.getHeight();
+// 		return new Rectangle(posX, posY, width, height);
+// 	}
+
+// 	public static boolean collides(Actor actor, float x, float y) {
+// 		Rectangle rectA1 = getBounds(actor);
+// 		Rectangle rectA2 = new Rectangle(x, y, 5, 5);
+// 		// Check if rectangles collides
+// 		if (Intersector.overlaps(rectA1, rectA2)) {
+// 			return true;
+// 		} else {
+// 			return false;
+// 		}
+// 	}
+
+// 	public static boolean collides(Actor actor1, Actor actor2) {
+// 		Rectangle rectA1 = getBounds(actor1);
+// 		Rectangle rectA2 = getBounds(actor2);
+// 		// Check if rectangles collides
+// 		if (Intersector.overlaps(rectA1, rectA2)) {
+// 			return true;
+// 		} else {
+// 			return false;
+// 		}
+// 	}
+
+// 	/**
+// 	 * Get screen time from start in format of HH:MM:SS. It is calculated from
+// 	 * "secondsTime" parameter.
+// 	 * */
+// 	public static String toScreenTime(float secondstime) {
+// 		int seconds = (int)(secondstime % 60);
+// 		int minutes = (int)((secondstime / 60) % 60);
+// 		int hours =  (int)((secondstime / 3600) % 24);
+// 		return new String(addZero(hours) + ":" + addZero(minutes) + ":" + addZero(seconds));
+// 	}
+
+// 	private static String addZero(int value){
+// 		String str = "";
+// 		if(value < 10)
+// 			 str = "0" + value;
+// 		else
+// 			str = "" + value;
+// 		return str;
+// 	}
+
+// 	private static ShapeRenderer shapeRenderer;
+// 	private final static Actor selectionBox = new Actor(){
+// 		@Override
+// 		public void draw(Batch batch, float alpha){
+// 			batch.end();
+// 			shapeRenderer.begin(ShapeType.Line);
+// 			shapeRenderer.setColor(Color.GREEN);
+// 			shapeRenderer.rect(getX(), getY(),
+// 						getWidth(),getHeight());
+// 			shapeRenderer.end();
+// 			batch.begin();
+// 		}
+// 	};

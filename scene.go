@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/pyros2097/spike/graphics"
-	"github.com/pyros2097/spike/scene2d"
 )
 
 var (
@@ -21,12 +20,20 @@ var (
 // has to be registered with the {@link Input#setInputProcessor(InputProcessor)} method. It will be called each frame before the
 // call to {@link ApplicationListener#render()}. Each method returns a boolean in case you want to use this with the
 // {@link InputMultiplexer} to chain input processors.
+// private String sceneName = "";
+// public String sceneBackground = "None";
+// public String sceneMusic = "None";
+// public String sceneTransition = "None";
+// public float sceneDuration = 0;
+// public InterpolationType sceneInterpolationType = InterpolationType.Linear;
+// public static float splashDuration = 0f;
+// public static boolean pauseState = false;
 type Scene struct {
-	scene2d.Actor
+	Actor
 	Name    string
-	BGColor *graphics.Color
+	BGColor graphics.Color
 
-	Children []*scene2d.Actor
+	Children []*Actor
 
 	OnPause  func(self *Scene)
 	OnResume func(self *Scene)
@@ -38,62 +45,6 @@ type Scene struct {
 	TransitionIn  func(scene *Scene)
 	TransitionOut func(scene *Scene)
 }
-
-/** EventListener for low-level input events. Unpacks {@link InputEvent}s and calls the appropriate method. By default the methods
- * here do nothing with the event. Users are expected to override the methods they are interested in, like this:
- *
- * <pre>
- * actor.addListener(new InputListener() {
- * 	public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
- * 		Gdx.app.log(&quot;Example&quot;, &quot;touch started at (&quot; + x + &quot;, &quot; + y + &quot;)&quot;);
- * 		return false;
- * 	}
- *
- * 	public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
- * 		Gdx.app.log(&quot;Example&quot;, &quot;touch done at (&quot; + x + &quot;, &quot; + y + &quot;)&quot;);
- * 	}
- * });
- * </pre> */
-// public class InputListener implements EventListener {
-// 	static private final Vector2 tmpCoords = new Vector2();
-
-// 	public boolean handle (Event e) {
-// 		if (!(e instanceof InputEvent)) return false;
-// 		InputEvent event = (InputEvent)e;
-
-// 		switch (event.getType()) {
-// 		case keyDown:
-// 			return keyDown(event, event.getKeyCode());
-// 		case keyUp:
-// 			return keyUp(event, event.getKeyCode());
-// 		case keyTyped:
-// 			return keyTyped(event, event.getCharacter());
-// 		}
-
-// 		event.toCoordinates(event.getListenerActor(), tmpCoords);
-
-// 		switch (event.getType()) {
-// 		case touchDown:
-// 			return touchDown(event, tmpCoords.x, tmpCoords.y, event.getPointer(), event.getButton());
-// 		case touchUp:
-// 			touchUp(event, tmpCoords.x, tmpCoords.y, event.getPointer(), event.getButton());
-// 			return true;
-// 		case touchDragged:
-// 			touchDragged(event, tmpCoords.x, tmpCoords.y, event.getPointer());
-// 			return true;
-// 		case mouseMoved:
-// 			return mouseMoved(event, tmpCoords.x, tmpCoords.y);
-// 		case scrolled:
-// 			return scrolled(event, tmpCoords.x, tmpCoords.y, event.getScrollAmount());
-// 		case enter:
-// 			enter(event, tmpCoords.x, tmpCoords.y, event.getPointer(), event.getRelatedActor());
-// 			return false;
-// 		case exit:
-// 			exit(event, tmpCoords.x, tmpCoords.y, event.getPointer(), event.getRelatedActor());
-// 			return false;
-// 		}
-// 		return false;
-// 	}
 
 func (self *Scene) SetBackground(texName string) {
 	// 		if(Asset.tex(texName) != null){
@@ -191,22 +142,22 @@ func GetScene(name string) *Scene {
 	return allScenes[name]
 }
 
-func (self *Scene) AddActor(actor *scene2d.Actor) {
+func (self *Scene) AddActor(actor *Actor) {
 	self.Children = append(self.Children, actor)
 }
 
-func (self *Scene) AddActorWithDelay(actor *scene2d.Actor, duration time.Duration) {
+func (self *Scene) AddActorWithDelay(actor *Actor, duration time.Duration) {
 	time.AfterFunc(duration, func() {
 		self.AddActor(actor)
 	})
 }
 
-func (self *Scene) RemoveActor(actor *scene2d.Actor) {
+func (self *Scene) RemoveActor(actor *Actor) {
 	i := actor.Z
 	self.Children, self.Children[len(self.Children)-1] = append(self.Children[:i], self.Children[i+1:]...), nil
 }
 
-func (self *Scene) RemoveActorWithDelay(actor *scene2d.Actor, duration time.Duration) {
+func (self *Scene) RemoveActorWithDelay(actor *Actor, duration time.Duration) {
 	// addAction(Actions.sequence(Actions.delay(delay), Actions.removeActor(actor)));
 }
 
@@ -214,7 +165,7 @@ func (self *Scene) RemoveActorWithName(name string) {
 	// return removeActor(findActor(actorName));
 }
 
-// func (self *Scene) Hit(x, y float32) *scene2d.Actor {
+// func (self *Scene) Hit(x, y float32) *Actor {
 // }
 
 // public Actor hit(float x, float y){
@@ -223,3 +174,38 @@ func (self *Scene) RemoveActorWithName(name string) {
 
 // func AddActor3d() {
 // }
+
+// 	public void showToast(String message, float duration){
+// 		Table table = new Table(Asset.skin);
+// 		table.add("   "+message+"   ");
+// 		table.setBackground(Asset.skin.getDrawable("dialogDim"));
+// 		table.pack();
+// 		table.setPosition(Scene.targetWidth/2 - table.getWidth(), Scene.targetHeight/2 - table.getHeight());
+// 		addActor(table);
+// 		table.addAction(Actions.sequence(Actions.delay(duration), Actions.removeActor(table)));
+// 	}
+
+// 	public void showMessageDialog(String title, String message){
+// 		Dialog dialog = new Dialog(title, Asset.skin);
+// 		dialog.getContentTable().add(message);
+// 		dialog.button("OK", "OK");
+// 		dialog.pack();
+// 		dialog.show(getStage());
+// 	}
+
+// 	public boolean showConfirmDialog(String title, String message){
+// 		Dialog dialog = new Dialog(title, Asset.skin);
+// 		dialog.button("Yes", "Yes");
+// 		dialog.button("No", "No");
+// 		dialog.pack();
+// 		dialog.show(getStage());
+// 		//if(dialog.result().equals("Yes")) FIXME update Gdx
+// 		//	return true;
+// 		return false;
+// 	}
+
+// 	public void outline(Actor actor){
+// 		selectionBox.setPosition(actor.getX(), actor.getY());
+// 		selectionBox.setSize(actor.getWidth(), actor.getHeight());
+// 		stage2d.addActor(selectionBox);
+// 	}

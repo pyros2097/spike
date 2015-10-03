@@ -25,59 +25,33 @@ package main
 import (
 	"github.com/pyros2097/spike"
 	"github.com/pyros2097/spike/graphics"
-	"github.com/pyros2097/spike/scene2d"
 )
 
 var (
-	hello *scene2d.Actor
+	hello *spike.Actor
 )
 
 func main() {
 
 	menu := &spike.Scene{
-		Name:    "menu",
-		BGColor: &graphics.Color{0, 0, 1, 1},
-		Children: []*scene2d.Actor{
-			&scene2d.Actor{
+		Name:    "Menu",
+		BGColor: graphics.Color{0, 0, 1, 1},
+		Children: []*spike.Actor{
+			&spike.Actor{
 				X: 43,
-				OnTouchDown: func(self *scene2d.Actor, x, y float32, p, b int) {
-					println(x)
-					println(y)
+				OnInput: func(self *spike.Actor, e spike.InputEvent) {
+					println(e.Type.String())
 				},
-				OnTap: func(self *scene2d.Actor, x, y float32, p, b int) {
-					println("MEFAE ERAPPP")
-				},
-				OnAct: func(self *scene2d.Actor, delta float32) {
-					// print(self.X)
+				OnAct: func(self *spike.Actor, delta float32) {
 					self.X = 111
 				},
 			},
 		},
 	}
-	options := &spike.Scene{Name: "options", BGColor: &graphics.Color{0, 0, 0, 1}}
+	options := &spike.Scene{Name: "Options", BGColor: graphics.Color{0, 0, 0, 1}}
 	spike.Init("example", 800, 480)
 	spike.AddScene(menu)
 	spike.AddScene(options)
 	spike.PlaySound("boing")
 	spike.Run()
 }
-
-// type Actor struct {
-// 	x, y int
-// }
-
-// var children []*Actor
-
-// func main() {
-// 	child := &Actor{4, 5}
-// 	children = append(children, child)
-// 	for _, c := range children {
-// 		println(c.x)
-// 		c.x = 444
-// 	}
-// 	for _, c := range children {
-// 		println(c.x)
-// 		c.x = 12
-// 	}
-// 	println(child.x)
-// }

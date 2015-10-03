@@ -2,15 +2,28 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package scene2d
+package spike
 
 import (
 	"github.com/pyros2097/spike/g2d"
 	"github.com/pyros2097/spike/graphics"
-	"github.com/pyros2097/spike/input/gesture"
-	"github.com/pyros2097/spike/input/touchable"
-	"github.com/pyros2097/spike/math/vector"
 	"github.com/pyros2097/spike/utils"
+)
+
+// Touchable state of Actors
+// Determines how touch input events are distributed to an actor and any children.
+type Touchable int
+
+const (
+	// All touch input events will be received by the actor and any children.
+	TouchableEnabled Touchable = iota
+
+	// No touch input events will be received by the actor or any children.
+	TouchableDisabled
+
+	// No touch input events will be received by the actor, but children will still receive events. Note that events on the
+	// children will still bubble to the parent.
+	TouchableChildrenOnly
 )
 
 // 2D scene graph node. An actor has a position, rectangular size, origin, scale, rotation, Z index, and color. The position
@@ -40,25 +53,35 @@ type IActor interface {
 	ClearActions()
 }
 
-type InputEvent struct {
-}
-
 type Actor struct {
-	Name             string
-	X, Y             float32
-	W, H             float32
-	Z                uint32
-	originX, originY float32
-	scaleX, scaleY   float32
-	rotation         float32
-	visible, debug   bool
-	actions          []*Action
-	parent           *Actor
-	touchable        touchable.Touchable
-	userObject       interface{}
-	Color            *graphics.Color // make this 1 1 1 1
-	//   private final DelayedRemovalArray<EventListener> listeners = new DelayedRemovalArray(0);
-	//   private final DelayedRemovalArray<EventListener> captureListeners = new DelayedRemovalArray(0);
+	Name     string
+	X, Y     float32 // X, Y position of the actor's left edge.
+	W, H     float32
+	Z        uint32
+	OX, OY   float32 // origin
+	SX, SY   float32 // scale
+	Rotation float32
+
+	// If false, the actor will not be drawn and will not receive touch events. Default is true.
+	Visible bool
+
+	Debug bool
+
+	Actions []*Action
+
+	// Called by the framework when an actor is added to or removed from a group.
+	// param parent May be null if the actor has been removed from the parent.
+	Parent *Actor
+
+	// Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}.
+	TouchState Touchable
+
+	// An application specific object for convenience.
+	UserObject interface{}
+
+	Color *graphics.Color // make this 1 1 1 1
+
+	// Called on the update cycle
 	OnAct func(self *Actor, delta float32)
 
 	// Draws the actor. The batch is configured to draw in the parent's coordinate system.
@@ -71,121 +94,8 @@ type Actor struct {
 	// param parentAlpha Should be multiplied with the actor's alpha, allowing a parent's alpha to affect all children.
 	OnDraw func(self *Actor, batch g2d.Batch, parentAlpha float32)
 
-	OnClick func(self *Actor, x, y float32)
-
-	// Called when the screen was touched or a mouse button was pressed. The button parameter will be {@link Buttons#LEFT} on iOS.
-	// param screenX The x coordinate, origin is in the upper left corner
-	// param screenY The y coordinate, origin is in the upper left corner
-	// param pointer the pointer for the event.
-	// param button the button
-	// return whether the input was processed
-	// Called when a mouse button or a finger touch goes down on the actor. If true is returned, this listener will receive all
-	// touchDragged and touchUp events, even those not over this actor, until touchUp is received. Also when true is returned, the
-	// event is {@link Event#handle() handled}.
-	OnTouchDown func(self *Actor, x, y float32, pointer, button int)
-
-	// Called when a finger was lifted or a mouse button was released. The button parameter will be {@link Buttons#LEFT} on iOS.
-	// param pointer the pointer for the event.
-	// param button the button
-	// return whether the input was processed
-	// Called when a mouse button or a finger touch goes up anywhere, but only if touchDown previously returned true for the mouse
-	// button or touch. The touchUp event is always {@link Event#handle() handled}.
-	OnTouchUp func(self *Actor, x, y float32, pointer, button int)
-
-	// Called when a finger or the mouse was dragged.
-	// param pointer the pointer for the event.
-	// @return whether the input was processed
-	// Called when a mouse button or a finger touch is moved anywhere, but only if touchDown previously returned true for the mouse
-	// button or touch. The touchDragged event is always {@link Event#handle() handled}.
-	OnTouchDragged func(self *Actor, x, y float32, pointer int)
-
-	OnLongPress func(self *Actor, x, y float32)
-	// Called when the user dragged a finger over the screen and lifted it. Reports the last known velocity of the finger in
-	// pixels per second.
-	// param velocityX velocity on x in seconds
-	// param velocityY velocity on y in seconds
-	OnFling func(self *Actor, velocityX, velocityY float32, button int)
-
-	// Called when a tap occured. A tap happens if a touch went down on the screen and was lifted again without moving outside
-	// of the tap square. The tap square is a rectangular area around the initial touch position as specified on construction
-	// time of the {@link GestureDetector}.
-	// @param count the number of taps.
-	OnTap func(self *Actor, x, y float32, count, button int)
-
-	// Called when the user drags a finger over the screen.
-	// param deltaX the difference in pixels to the last drag event on x.
-	// param deltaY the difference in pixels to the last drag event on y.
-	OnPan func(self *Actor, x, y, deltaX, deltaY float32)
-
-	// Called when no longer panning.
-	OnPanStop func(x, y float32, pointer, button int)
-
-	// Called when the user performs a pinch zoom gesture. The original distance is the distance in pixels when the gesture
-	// started.
-	// param initialDistance distance between fingers when the gesture started.
-	// param distance current distance between fingers.
-	OnZoom func(initialDistance, distance float32)
-
-	// Called when a user performs a pinch zoom gesture. Reports the initial positions of the two involved fingers and their
-	// current positions.
-	// param initialPointer1
-	// param initialPointer2
-	// param pointer1
-	// param pointer2
-	OnPinch func(initialPointer1, initialPointer2, pointer1, pointer2 *vector.Vector2)
-	// Register an instance of this class with a {@link GestureDetector} to receive gestures such as taps, long presses, flings,
-	// panning or pinch zooming. Each method returns a boolean indicating if the event should be handed to the next listener (false
-	// to hand it to the next listener, true otherwise).
-	// @author mzechner
-	// 	public static interface GestureListener {
-
-	// Called when a swipe gesture occurs
-	OnGesture func(self *Actor, gtype gesture.GestureType)
-
-	// Called when a key was typed
-	// param character The character
-	// return whether the input was processed
-	OnKeyTyped func(self *Actor, key uint8)
-
-	// Called when a key was released
-	// param keycode one of the constants in {@link Input.Keys}
-	// return whether the input was processed
-	// When true is returned, the event is {@link Event#handle() handled
-	OnKeyUp func(self *Actor, keycode uint8)
-
-	// Called when a key was pressed
-	// param keycode one of the constants in {@link Input.Keys}
-	// return whether the input was processed
-	OnKeyDown func(self *Actor, event *InputEvent, keycode uint8)
-
-	// Called when the mouse was moved without any buttons being pressed. Will not be called on iOS.
-	// @return whether the input was processed
-	// This event only occurs on the desktop
-	// public boolean mouseMoved (int screenX, int screenY);
-
-	// Called when the mouse wheel was scrolled. Will not be called on iOS.
-	// param amount the scroll amount, -1 or 1 depending on the direction the wheel was scrolled.
-	// @return whether the input was processed.
-	// public boolean scrolled (int amount);
-
-	/** Called any time the mouse cursor or a finger touch is moved over an actor. On the desktop, this event occurs even when no
-	 * mouse buttons are pressed (pointer will be -1).
-	 * @param fromActor May be null.
-	 * @see InputEvent */
-	// public void enter (InputEvent event, float x, float y, int pointer, Actor fromActor) {
-	// }
-
-	/** Called any time the mouse cursor or a finger touch is moved out of an actor. On the desktop, this event occurs even when no
-	 * mouse buttons are pressed (pointer will be -1).
-	 * @param toActor May be null.
-	 * @see InputEvent */
-	// public void exit (InputEvent event, float x, float y, int pointer, Actor toActor) {
-	// }
-
-	/** Called when the mouse wheel has been scrolled. When true is returned, the event is {@link Event#handle() handled}. */
-	// public boolean scrolled (InputEvent event, float x, float y, int amount) {
-	// 	return false;
-	// }
+	// Called when an input event occurrs
+	OnInput func(self *Actor, event InputEvent)
 }
 
 // Updates the actor based on time. Typically this is called each frame by {@link Stage#act(float)}.
@@ -193,11 +103,11 @@ type Actor struct {
 // The default implementation calls {@link Action#act(float)} on each action and removes actions that are complete.
 // param delta Time in seconds since the last frame.
 func (self *Actor) Act(delta float32) {
-	if len(self.actions) > 0 {
-		for i := 0; i < len(self.actions); i++ {
-			action := self.actions[i]
-			if action.Act(delta) && i < len(self.actions) {
-				current := self.actions[i] // implement fast Array
+	if len(self.Actions) > 0 {
+		for i := 0; i < len(self.Actions); i++ {
+			action := self.Actions[i]
+			if action.Act(delta) && i < len(self.Actions) {
+				current := self.Actions[i] // implement fast Array
 				actionIndex := i
 				if current != action {
 					// actionIndex = actions.indexOf(action, true)
@@ -215,7 +125,7 @@ func (self *Actor) Act(delta float32) {
 // Removes self actor from its parent, if it has a parent.
 // @see Group#removeActor(Actor)
 func (self *Actor) RemoveActor() bool {
-	if self.parent == nil {
+	if self.Parent == nil {
 		// self.parent.removeActor(self)
 		return false
 	}
@@ -233,17 +143,17 @@ func (self *Actor) RemoveAction(action Action) {
 }
 
 func (self *Actor) GetActions() []*Action {
-	return self.actions
+	return self.Actions
 }
 
 // Returns true if the actor has one or more actions.
 func (self *Actor) HasActions() bool {
-	return len(self.actions) > 0
+	return len(self.Actions) > 0
 }
 
 // Removes all actions on self actor.
 func (self *Actor) ClearActions() {
-	for i := 0; i < len(self.actions); i++ {
+	for i := 0; i < len(self.Actions); i++ {
 		// actions.get(i).setActor(null);
 	}
 	// actions.clear()
@@ -261,53 +171,14 @@ func (self *Actor) Clear() {
 	self.ClearListeners()
 }
 
-func (self *Actor) IsVisible() bool {
-	return self.visible
-}
-
-// If false, the actor will not be drawn and will not receive touch events. Default is true.
-func (self *Actor) SetVisible(visible bool) {
-	self.visible = visible
-}
-
 // Returns true if the actor's parent is not null.
 func (self *Actor) HasParent() bool {
-	return self.parent != nil
-}
-
-// Returns the parent actor, or null if not in a group.
-func (self *Actor) GetParent() *Actor {
-	return self.parent
-}
-
-// Called by the framework when an actor is added to or removed from a group.
-// param parent May be null if the actor has been removed from the parent.
-func (self *Actor) SetParent(parent *Actor) {
-	self.parent = parent
+	return self.Parent != nil
 }
 
 // Returns true if input events are processed by self actor.
 func (self *Actor) IsTouchable() bool {
-	return self.touchable == touchable.Enabled
-}
-
-func (self *Actor) GetTouchable() touchable.Touchable {
-	return self.touchable
-}
-
-//  Determines how touch events are distributed to self actor. Default is {@link Touchable#enabled}.
-func (self *Actor) SetTouchable(touchable touchable.Touchable) {
-	self.touchable = touchable
-}
-
-// Returns an application specific object for convenience, or null.
-func (self *Actor) GetUserObject() interface{} {
-	return self.userObject
-}
-
-// Sets an application specific object for convenience.
-func (self *Actor) SetUserObject(userObject interface{}) {
-	self.userObject = userObject
+	return self.TouchState == TouchableEnabled
 }
 
 func (self *Actor) SetColor(color *graphics.Color) {
@@ -334,11 +205,6 @@ func (self *Actor) GetName() string {
 	return self.Name
 }
 
-// Returns the X position of the actor's left edge.
-func (self *Actor) GetX() float32 {
-	return self.X
-}
-
 // Returns the X position of the specified {@link Align alignment}
 func (self *Actor) GetXAlign(alignment utils.Alignment) float32 {
 	x := self.X
@@ -355,11 +221,6 @@ func (self *Actor) SetX(x float32) {
 		self.X = x
 		self.positionChanged()
 	}
-}
-
-// Returns the Y position of the actor's bottom edge.
-func (self *Actor) GetY() float32 {
-	return self.Y
 }
 
 // Returns the Y position of the specified {@link Align alignment}
@@ -418,20 +279,12 @@ func (self *Actor) MoveBy(x, y float32) {
 	}
 }
 
-func (self *Actor) GetWidth() float32 {
-	return self.W
-}
-
 func (self *Actor) SetWidth(width float32) {
 	oldWidth := self.W
 	self.W = width
 	if width != oldWidth {
 		self.sizeChanged()
 	}
-}
-
-func (self *Actor) GetHeight() float32 {
-	return self.W
 }
 
 func (self *Actor) SetHeight(height float32) {
@@ -492,86 +345,87 @@ func (self *Actor) SetBounds(x, y, w, h float32) {
 	}
 }
 
-func (self *Actor) GetOriginX() float32 {
-	return self.originX
-}
-
-func (self *Actor) SetOriginX(originX float32) {
-	self.originX = originX
-}
-
-func (self *Actor) GetOriginY() float32 {
-	return self.originY
-}
-
-func (self *Actor) SetOriginY(originY float32) {
-	self.originY = originY
-}
-
 //Sets the origin position which is relative to the actor's bottom left corner.
 func (self *Actor) setOrigin(originX, originY float32) {
-	self.originX = originX
-	self.originY = originY
+	self.OX = originX
+	self.OY = originY
 }
 
 // Sets the origin position to the specified {@link Align alignment}.
 func (self *Actor) SetOriginAlign(alignment utils.Alignment) {
 	if (alignment & utils.AlignmentLeft) != 0 {
-		self.originX = 0
+		self.OX = 0
 	} else if (alignment & utils.AlignmentRight) != 0 {
-		self.originX = self.W
+		self.OX = self.W
 	} else {
-		self.originX = self.W / 2
+		self.OX = self.W / 2
 	}
 
 	if (alignment & utils.AlignmentBottom) != 0 {
-		self.originY = 0
+		self.OY = 0
 	} else if (alignment & utils.AlignmentTop) != 0 {
-		self.originY = self.H
+		self.OY = self.H
 	} else {
-		self.originY = self.H / 2
+		self.OY = self.H / 2
 	}
-}
-
-func (self *Actor) GetScaleX() float32 {
-	return self.scaleX
-}
-
-func (self *Actor) SetScaleX(scaleX float32) {
-	self.scaleX = scaleX
-}
-
-func (self *Actor) GetScaleY() float32 {
-	return self.scaleY
-}
-
-func (self *Actor) SetScaleY(scaleY float32) {
-	self.scaleY = scaleY
 }
 
 // Sets the scale X and scale Y.
 func (self *Actor) SetScale(scaleX, scaleY float32) {
-	self.scaleX = scaleX
-	self.scaleY = scaleY
+	self.SX = scaleX
+	self.SY = scaleY
 }
 
 // Adds the specified scale to the current scale.
 func (self *Actor) ScaleBy(scaleX, scaleY float32) {
-	self.scaleX += scaleX
-	self.scaleY += scaleY
+	self.SX += scaleX
+	self.SY += scaleY
 }
 
 func (self *Actor) GetRotation() float32 {
-	return self.rotation
+	return self.Rotation
 }
 
 func (self *Actor) SetRotation(degrees float32) {
-	self.rotation = degrees
+	self.Rotation = degrees
 }
 
 // Adds the specified rotation to the current rotation.
 func (self *Actor) RotateBy(amountInDegrees float32) {
-	self.rotation += amountInDegrees
+	self.Rotation += amountInDegrees
+}
+
+// Changes the z-order for self actor so it is in front of all siblings.
+func (self *Actor) ToFront() {
+	// setZIndex(Integer.MAX_VALUE)
+}
+
+// Changes the z-order for self actor so it is in back of all siblings.
+func (self *Actor) ToBack() {
+	// setZIndex(0)
+}
+
+// Sets the z-index of self actor. The z-index is the index into the parent's {@link Group#getChildren() children}, where a
+// lower index is below a higher index. Setting a z-index higher than the number of children will move the child to the front.
+// Setting a z-index less than zero is invalid.
+func (self *Actor) SetZIndex(index uint32) {
+	// Group parent = self.parent;
+	// if (parent == null) return;
+	// Array<Actor> children = parent.children;
+	// if (children.size == 1) return;
+	// if (!children.removeValue(self, true)) return;
+	// if (index >= children.size)
+	//   children.add(self);
+	// else
+	//   children.insert(index, self);
+}
+
+// Returns the z-index of self actor.
+func (self *Actor) GetZIndex() uint32 {
+	return 0
+	// Group parent = self.parent;
+	// if (parent == null) return -1;
+	// return parent.children.indexOf(self, true);
 }
 
 //   // Sets self actor as the event {@link Event#setTarget(Actor) target} and propagates the event to self actor and ancestor
@@ -733,40 +587,6 @@ func (self *Actor) RotateBy(amountInDegrees float32) {
 //       if (actor == self) return true;
 //       actor = actor.parent;
 //     }
-//   }
-
-//   // Changes the z-order for self actor so it is in front of all siblings.
-//   public void toFront () {
-//     setZIndex(Integer.MAX_VALUE);
-//   }
-
-//   // Changes the z-order for self actor so it is in back of all siblings.
-//   public void toBack () {
-//     setZIndex(0);
-//   }
-
-//   // Sets the z-index of self actor. The z-index is the index into the parent's {@link Group#getChildren() children}, where a
-//    * lower index is below a higher index. Setting a z-index higher than the number of children will move the child to the front.
-//    * Setting a z-index less than zero is invalid.
-//   public void setZIndex (int index) {
-//     if (index < 0) throw new IllegalArgumentException("ZIndex cannot be < 0.");
-//     Group parent = self.parent;
-//     if (parent == null) return;
-//     Array<Actor> children = parent.children;
-//     if (children.size == 1) return;
-//     if (!children.removeValue(self, true)) return;
-//     if (index >= children.size)
-//       children.add(self);
-//     else
-//       children.insert(index, self);
-//   }
-
-//   // Returns the z-index of self actor.
-//    * @see #setZIndex(int)
-//   public int getZIndex () {
-//     Group parent = self.parent;
-//     if (parent == null) return -1;
-//     return parent.children.indexOf(self, true);
 //   }
 
 //   // Calls {@link #clipBegin(float, float, float, float)} to clip self actor's bounds.

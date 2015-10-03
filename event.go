@@ -2,22 +2,18 @@
 // Use of this source code is governed by the MIT
 // license that can be found in the LICENSE file.
 
-package scene2d
+package spike
 
-/** The base class for all events.
- * <p>
- * By default an event will "bubble" up through an actor's parent's handlers (see {@link #setBubbles(boolean)}).
- * <p>
- * An actor's capture listeners can {@link #stop()} an event to prevent child actors from seeing it.
- * <p>
- * An Event may be marked as "handled" which will end its propagation outside of the Stage (see {@link #handle()}). The default
- * {@link Actor#fire(Event)} will mark events handled if an {@link EventListener} returns true.
- * <p>
- * A cancelled event will be stopped and handled. Additionally, many actors will undo the side-effects of a canceled event. (See
- * {@link #cancel()}.)
- *
- * @see InputEvent
- * @see Actor#fire(Event) */
+// The base class for all events.
+// By default an event will "bubble" up through an actor's parent's handlers (see {@link #setBubbles(boolean)}).
+// An actor's capture listeners can {@link #stop()} an event to prevent child actors from seeing it.
+// An Event may be marked as "handled" which will end its propagation outside of the Stage (see {@link #handle()}). The default
+// {@link Actor#fire(Event)} will mark events handled if an {@link EventListener} returns true.
+// A cancelled event will be stopped and handled. Additionally, many actors will undo the side-effects of a canceled event. (See
+// {@link #cancel()}.)
+// @see InputEvent
+// @see Actor#fire(Event)
+// TODO: implement Pool interface
 type Event struct {
 	targetActor   *Actor
 	listenerActor *Actor
@@ -131,4 +127,13 @@ func (self *Event) setCapture(capture bool) {
  * @see Actor#fire(Event) */
 func (self *Event) isCapture() bool {
 	return self.capture
+}
+
+// Low level interface for receiving events. Typically there is a listener class for each specific event class.
+// @see InputListener
+// @see InputEvent
+type EventListener interface {
+	// Try to handle the given event, if it is applicable.
+	// @return true if the event should be considered {@link Event#handle() handled} by scene2d.
+	Handle(event *Event) bool
 }
