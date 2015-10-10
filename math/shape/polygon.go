@@ -13,17 +13,17 @@ import (
 type Polygon struct {
 	localVertices    []float32
 	worldVertices    []float32
-	x, y             float32
-	originX, originY float32
-	rotation         float32
-	scaleX, scaleY   float32
+	X, Y             float32
+	OriginX, OriginY float32
+	Rotation         float32
+	ScaleX, ScaleY   float32
 	dirty            bool
 	bounds           *Rectangle
 }
 
 // Constructs a new polygon with no vertices
 func NewPolygonEmpty() *Polygon {
-	return &Polygon{scaleX: 1, scaleY: 1, dirty: true, localVertices: make([]float32, 0)}
+	return &Polygon{ScaleX: 1, ScaleY: 1, dirty: true, localVertices: make([]float32, 0)}
 }
 
 // Constructs a new polygon from a float array of parts of vertex points.
@@ -34,7 +34,7 @@ func NewPolygon(vertices []float32) *Polygon {
 	if len(vertices) < 6 {
 		panic("polygons must contain at least 3 points.")
 	}
-	return &Polygon{scaleX: 1, scaleY: 1, dirty: true, localVertices: vertices}
+	return &Polygon{ScaleX: 1, ScaleY: 1, dirty: true, localVertices: vertices}
 }
 
 // Returns the polygon's local vertices without scaling or rotation and without being offset by the polygon position.
@@ -59,14 +59,14 @@ func (self *Polygon) GetTransformedVertices() []float32 {
 
 	var worldVertices []float32
 	copy(worldVertices, self.worldVertices)
-	positionX := self.x
-	positionY := self.y
-	originX := self.originX
-	originY := self.originY
-	scaleX := self.scaleX
-	scaleY := self.scaleY
+	positionX := self.X
+	positionY := self.Y
+	originX := self.OriginX
+	originY := self.OriginY
+	scaleX := self.ScaleX
+	scaleY := self.ScaleY
 	scale := scaleX != 1 || scaleY != 1
-	rotation := self.rotation
+	rotation := self.Rotation
 	cos := utils.CosDeg(rotation)
 	sin := utils.SinDeg(rotation)
 	n := len(localVertices)
@@ -95,15 +95,15 @@ func (self *Polygon) GetTransformedVertices() []float32 {
 
 // Sets the origin point to which all of the polygon's local vertices are relative to.
 func (self *Polygon) setOrigin(originX, originY float32) {
-	self.originX = originX
-	self.originY = originY
+	self.OriginX = originX
+	self.OriginY = originY
 	self.dirty = true
 }
 
 // Sets the polygon's position within the world.
 func (self *Polygon) SetPosition(x, y float32) {
-	self.x = x
-	self.y = y
+	self.X = x
+	self.Y = y
 	self.dirty = true
 }
 
@@ -122,34 +122,34 @@ func (self *Polygon) SetVertices(vertices []float32) {
 
 // Translates the polygon's position by the specified horizontal and vertical amounts.
 func (self *Polygon) Translate(x, y float32) {
-	self.x += x
-	self.y += y
+	self.X += x
+	self.Y += y
 	self.dirty = true
 }
 
 // Sets the polygon to be rotated by the supplied degrees.
 func (self *Polygon) SetRotation(degrees float32) {
-	self.rotation = degrees
+	self.Rotation = degrees
 	self.dirty = true
 }
 
 // Applies additional rotation to the polygon by the supplied degrees.
 func (self *Polygon) Rotate(degrees float32) {
-	self.rotation += degrees
+	self.Rotation += degrees
 	self.dirty = true
 }
 
 // Sets the amount of scaling to be applied to the polygon.
 func (self *Polygon) SetScale(scaleX, scaleY float32) {
-	self.scaleX = scaleX
-	self.scaleY = scaleY
+	self.ScaleX = scaleX
+	self.ScaleY = scaleY
 	self.dirty = true
 }
 
 // Applies additional scaling to the polygon by the supplied amount.
 func (self *Polygon) Scale(amount float32) {
-	self.scaleX += amount
-	self.scaleY += amount
+	self.ScaleX += amount
+	self.ScaleY += amount
 	self.dirty = true
 }
 
@@ -216,39 +216,4 @@ func (self *Polygon) Contains(x, y float32) bool {
 		}
 	}
 	return (intersects & 1) == 1
-}
-
-// Returns the x-coordinate of the polygon's position within the world.
-func (self *Polygon) getX() float32 {
-	return self.x
-}
-
-// Returns the y-coordinate of the polygon's position within the world.
-func (self *Polygon) getY() float32 {
-	return self.y
-}
-
-// Returns the x-coordinate of the polygon's origin point.
-func (self *Polygon) getOriginX() float32 {
-	return self.originX
-}
-
-// Returns the y-coordinate of the polygon's origin point.
-func (self *Polygon) getOriginY() float32 {
-	return self.originY
-}
-
-// Returns the total rotation applied to the polygon.
-func (self *Polygon) getRotation() float32 {
-	return self.rotation
-}
-
-// Returns the total horizontal scaling applied to the polygon.
-func (self *Polygon) getScaleX() float32 {
-	return self.scaleX
-}
-
-// Returns the total vertical scaling applied to the polygon.
-func (self *Polygon) getScaleY() float32 {
-	return self.scaleY
 }

@@ -7,6 +7,7 @@ package spike
 import (
 	"github.com/pyros2097/spike/g2d"
 	"github.com/pyros2097/spike/graphics"
+	"github.com/pyros2097/spike/math/shape"
 	"github.com/pyros2097/spike/utils"
 )
 
@@ -697,19 +698,19 @@ func (self *Actor) GetBounds() *shape.Rectangle {
 	return NewRectangle(self.X, self.Y, self.W, self.H)
 }
 
-// 	func (self *Actor) CollidesXY(x, y float32) bool {
-// 		if (Intersector.overlaps(self.GetBounds(), NewRectangle(x, y, 5, 5);)) {
-// 			return true
-// 		}
-// 		return false
-// 	}
+func (self *Actor) CollidesXY(x, y float32) bool {
+	if self.GetBounds().Overlaps(NewRectangle(x, y, 5, 5)) {
+		return true
+	}
+	return false
+}
 
-// 	func (self *Actor) Collides(other *Actor) bool {
-// 		if Intersector.overlaps(self.GetBounds(), other.GetBounds()) {
-// 			return true
-// 		}
-// 		return false
-// 	}
+func (self *Actor) Collides(other *Actor) bool {
+	if self.GetBounds().Overlaps(other.GetBounds()) {
+		return true
+	}
+	return false
+}
 
 func (self *Actor) String() string {
 	return self.Name
