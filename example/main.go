@@ -24,22 +24,33 @@ package main
 
 import (
 	"github.com/pyros2097/spike"
+	. "github.com/pyros2097/spike/actions"
 	"github.com/pyros2097/spike/graphics"
 )
 
 func main() {
-
+	vv := spike.NewAction()
+	vv.Act = func(self *spike.Action, delta float32) bool {
+		println("helo")
+		return true
+	}
 	menu := &spike.Scene{
 		Name:    "Menu",
 		BGColor: graphics.Color{0, 0, 1, 1},
-		Children: []*spike.Actor{
-			&spike.Actor{
-				X: 43,
-				OnInput: func(self *spike.Actor, event spike.InputEvent) {
-					println(event.Type.String())
-				},
-				OnAct: func(self *spike.Actor, delta float32) {
-					self.X = 111
+		Group: spike.Group{
+			Children: []*spike.Actor{
+				&spike.Actor{
+					X: 43,
+					Actions: []*spike.Action{
+						Sequence(Delay(10000, vv)),
+					},
+					OnInput: func(self *spike.Actor, event spike.InputEvent) {
+						// println(event.Type.String())
+					},
+					OnAct: func(self *spike.Actor, delta float32) {
+						// println(self.X)
+						self.X = 111
+					},
 				},
 			},
 		},

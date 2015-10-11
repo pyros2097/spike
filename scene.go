@@ -40,11 +40,9 @@ var (
 // 	public Scene.OnEventType onEvtType = Scene.OnEventType.DoEffect;
 // 	public String eventScene = "";
 type Scene struct {
-	Actor
+	Group
 	Name    string
 	BGColor graphics.Color
-
-	Children []*Actor
 
 	OnPause  func(self *Scene)
 	OnResume func(self *Scene)

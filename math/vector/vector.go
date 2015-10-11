@@ -5,7 +5,7 @@
 package vector
 
 import (
-	. "github.com/pyros2097/spike/math/interpolation"
+	. "github.com/pyros2097/spike/interpolation"
 )
 
 /** Encapsulates a general vector. Allows chaining operations by returning a reference to itself in all modification methods. See

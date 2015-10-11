@@ -23,9 +23,7 @@ var (
 	targetWidth  float32
 	targetHeight float32
 	PauseState   bool
-
-	Camera2d *Camera
-	Camera3d *Camera
+	// DebugColor Color{0, 1, 1, 1}
 
 	running   bool
 	fpsTicker *time.Ticker
@@ -69,7 +67,6 @@ func Init(title string, width, height float32) {
 	println("Initializing Gdx")
 	targetWidth = width
 	targetHeight = height
-	// camera2d = &Camera{}
 	allScenes = make(map[string]*Scene)
 	fpsTicker = time.NewTicker(1000 / 30 * time.Millisecond)
 	running = true

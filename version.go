@@ -5,8 +5,8 @@
 package spike
 
 // The version of gdx upstream 0be0b8125e79d6e5b84ced4415c5b44ca20247f5
-
+// TODO: check if cockroach does this
 const (
-	// the current version of gdx as a String in the major.minor.revision format
+	// the current version of spike as a String in the major.minor.revision format
 	VERSION = "0.0.0"
 )

@@ -43,15 +43,99 @@ const (
 // An {@link InputListener} can receive all the basic input events. More complex listeners (like {@link ClickListener} and
 // {@link ActorGestureListener}) can listen for and combine primitive events and recognize complex interactions like multi-touch
 // or pinch.
-type IActor interface {
-	Draw(batch *g2d.Batch, parentAlpha float32)
-	Act(delta float32)
-	RemoveActor()
-	AddAction(action Action)
-	RemoveAction(action Action)
-	GetActions() []*Action
-	HasActions() bool
-	ClearActions()
+// type IActor interface {
+// 	Draw(batch *g2d.Batch, parentAlpha float32)
+// 	Act(delta float32)
+// 	RemoveActor()
+// 	AddAction(action Action)
+// 	RemoveAction(action Action)
+// 	GetActions() []*Action
+// 	HasActions() bool
+// 	ClearActions()
+// }
+
+// func (self *Pool) Free(actor *Action) {
+// }
+
+type Action struct {
+	// The actor this action is attached to, or nil if it is not attached.
+	Actor *Actor
+
+	// The actor this action targets, or nil if a target has not been set.
+	// Sets the actor this action will manipulate. If no target actor is set, {@link #setActor(Actor)} will set the target actor
+	// when the action is added to an actor.
+	Target *Actor
+
+	// Updates the action based on time. Typically this is called each frame by {@link Actor#act(float)}.
+	// @param delta Time in seconds since the last frame.
+	// @return true if the action is done. This method may continue to be called after the action is done.
+	Act func(self *Action, delta float32) bool
+
+	// Sets the state of the action so it can be run again.
+	Restart func(self *Action)
+
+	// Resets the optional state of this action to as if it were newly created, allowing the action to be pooled and reused. State
+	// required to be set for every usage of this action or computed during the action does not need to be reset.
+	// <p>
+	// The default implementation calls {@link #restart()}.
+	// <p>
+	// If a subclass has optional state, it must override this method, call super, and reset the optional state. */
+	Reset func(self *Action)
+	// pool *Pool
+}
+
+/** Sets the actor this action is attached to. This also sets the {@link #setTarget(Actor) target} actor if it is nil. This
+ * method is called automatically when an action is added to an actor. This method is also called with nil when an action is
+ * removed from an actor.
+ * <p>
+ * When set to nil, if the action has a {@link #setPool(Pool) pool} then the action is {@link Pool#free(Object) returned} to
+ * the pool (which calls {@link #reset()}) and the pool is set to nil. If the action does not have a pool, {@link #reset()} is
+ * not called.
+ * <p>
+ * This method is not typically a good place for an action subclass to query the actor's state because the action may not be
+ * executed for some time, eg it may be {@link DelayAction delayed}. The actor's state is best queried in the first call to
+ * {@link #act(float)}. For a {@link TemporalAction}, use TemporalAction#begin(). */
+func (self *Action) SetActor(actor *Actor) {
+	self.Actor = actor
+	if self.Target == nil {
+		self.Target = actor
+	}
+	// if self.actor == nil {
+	// if self.pool != nil {
+	// self.pool.Put(self)
+	// self.pool = nil
+	// }
+	// }
+}
+
+// func (self *Action) GetPool() *Pool {
+// 	return self.pool
+// }
+
+/** Sets the pool that the action will be returned to when removed from the actor.
+ * @param pool May be null.
+ * @see #setActor(Actor) */
+// func (self *Action) SetPool(pool *Pool) {
+// 	self.pool = pool
+// }
+
+func (self *Action) String() string {
+	return "Action"
+}
+
+func NewAction() *Action {
+	return &Action{
+		Act: func(self *Action, delta float32) bool {
+			return false
+		},
+		Restart: func(self *Action) {},
+		Reset: func(self *Action) {
+			self.Actor = nil
+			self.Target = nil
+			// self.pool = nil
+			self.Restart(self)
+		},
+	}
 }
 
 type Actor struct {
@@ -109,14 +193,20 @@ func (self *Actor) act(delta float32) {
 	if len(self.Actions) > 0 {
 		for i := 0; i < len(self.Actions); i++ {
 			action := self.Actions[i]
-			if action.Act(delta) && i < len(self.Actions) {
+			if action.Act(action, delta) && i < len(self.Actions) {
 				current := self.Actions[i] // implement fast Array
 				actionIndex := i
 				if current != action {
-					// actionIndex = actions.indexOf(action, true)
+					for index, aa := range self.Actions {
+						if aa == action {
+							actionIndex = index
+						}
+						// actionIndex = indexOf(action, true)
+					}
 				}
 				if actionIndex != -1 {
-					// self.actions.removeIndex(actionIndex)
+					self.Actions = self.Actions[:actionIndex+copy(self.Actions[actionIndex:], self.Actions[actionIndex+1:])]
+					// self.Actions.removeIndex(actionIndex)
 					action.SetActor(nil)
 					i--
 				}
@@ -137,33 +227,38 @@ func (self *Actor) draw(batch g2d.Batch, parentAlpha float32) {
 // Removes self actor from its parent, if it has a parent.
 func (self *Actor) RemoveActor() bool {
 	if self.Parent == nil {
-		// self.parent.removeActor(self)
+		// self.Parent.RemoveActor(self)
 		return false
 	}
 	return true
 }
 
-func (self *Actor) AddAction(action Action) {
+func (self *Actor) AddAction(action *Action) {
 	action.SetActor(self)
-	// actions.add(action)
+	self.Actions = append(self.Actions, action)
 	// if (stage != null && stage.getActionsRequestRendering()) Gdx.graphics.requestRendering();
 }
 
-func (self *Actor) RemoveAction(action Action) {
-	// if (actions.removeValue(action, true)) action.setActor(null)
+func (self *Actor) RemoveAction(action *Action) {
+	for i, action := range self.Actions {
+		if action == action {
+			self.Actions, self.Actions[len(self.Actions)-1] = append(self.Actions[:i], self.Actions[i+1:]...), nil
+			action.SetActor(nil)
+		}
+	}
 }
 
-// Returns true if the actor has one or more actions.
+// Returns true if the actor has one or more
 func (self *Actor) HasActions() bool {
 	return len(self.Actions) > 0
 }
 
 // Removes all actions on self actor.
 func (self *Actor) ClearActions() {
-	for i := 0; i < len(self.Actions); i++ {
-		// actions.get(i).setActor(null);
+	for _, action := range self.Actions {
+		action.SetActor(nil)
 	}
-	// actions.clear()
+	self.Actions = make([]*Action, 0)
 }
 
 // Returns true if the actor's parent is not null.
@@ -695,11 +790,11 @@ func (self *Actor) GetZIndex() uint32 {
 //   }
 
 func (self *Actor) GetBounds() *shape.Rectangle {
-	return NewRectangle(self.X, self.Y, self.W, self.H)
+	return shape.NewRectangle(self.X, self.Y, self.W, self.H)
 }
 
 func (self *Actor) CollidesXY(x, y float32) bool {
-	if self.GetBounds().Overlaps(NewRectangle(x, y, 5, 5)) {
+	if self.GetBounds().Overlaps(shape.NewRectangle(x, y, 5, 5)) {
 		return true
 	}
 	return false

@@ -7,7 +7,7 @@ package vector
 import (
 	"math"
 
-	. "github.com/pyros2097/spike/math/interpolation"
+	. "github.com/pyros2097/spike/interpolation"
 	"github.com/pyros2097/spike/math/utils"
 )
 

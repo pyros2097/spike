@@ -52,92 +52,90 @@ type Camera struct {
 	// the zoom of the camera for Orthographic
 	Zoom float32
 	tmp  *Vector3
+
+	// Recalculates the projection and view matrix of this camera and the {@link Frustum} planes if <code>updateFrustum</code> is
+	// true. Use this after you've manipulated any of the attributes of the camera.
+	UpdateFrumstum func(self *Camera, updateFrustum bool)
 }
 
-// Constructs a new OrthographicCamera, using the given viewport width and height. For pixel perfect 2D rendering just supply
+// An OrthographicCamera, using the given viewport width and height. For pixel perfect 2D rendering just supply
 // the screen size, for other unit scales (e.g. meters for box2d) proceed accordingly. The camera will show the region
 // [-viewportWidth/2, -(viewportHeight/2-1)] - [(viewportWidth/2-1), viewportHeight/2]
-// func NewOrthographicCamera(viewportWidth, viewportHeight float32) *OrthographicCamera {
-//   cam := &OrthographicCamera{Zoom:1, Near: 0, ViewportWidth: viewportWidth, ViewportHeight: viewportHeight}
-//   cam.Update()
-// }
-//
-// func NewPerspectiveCameraEmpty() *PerspectiveCamera {
-//   return &PerspectiveCamera{FieldOfView: 67}
-// }
-// Constructs a new {@link PerspectiveCamera} with the given field of view and viewport size. The aspect ratio is derived from
-//the viewport size.
-//@param fieldOfViewY the field of view of the height, in degrees, the field of view for the width will be calculated
+var Camera2d = &Camera{
+	Position:          NewVector3Empty(),
+	Direction:         NewVector3(0, 0, -1),
+	Up:                NewVector3(0, 1, 0),
+	Projection:        NewMatrix4Empty(),
+	View:              NewMatrix4Empty(),
+	Combined:          NewMatrix4Empty(),
+	InvProjectionView: NewMatrix4Empty(),
+	Near:              0,
+	Far:               100,
+	ViewportWidth:     800, //viewportWidth,
+	ViewportHeight:    480, //viewportHeight,
+	tmpVec:            NewVector3Empty(),
+	tmp:               NewVector3Empty(),
+	Ray:               NewRay(NewVector3Empty(), NewVector3Empty()),
+	Zoom:              1,
+	FieldOfView:       67,
+	frustum:           NewFrustumEmpty(),
+	UpdateFrustum: func(updateFrustum bool) {
+		self.Projection.SetToOrtho2DNear(self.Zoom*-self.ViewportWidth/2, self.Zoom*(self.ViewportWidth/2), self.Zoom*-(self.ViewportHeight/2),
+			self.Zoom*self.ViewportHeight/2, self.Near, self.Far)
+		self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
+		self.Combined.SetM4(self.Projection)
+		// Matrix4.MulM4(combined.val, view.val)
+
+		if updateFrustum {
+			self.InvProjectionView.SetM4(self.Combined)
+			// Matrix4.inv(invProjectionView.val)
+			self.frustum.Update(self.InvProjectionView)
+		}
+	},
+}
+
+// A PerspectiveCamera with the given field of view and viewport size. The aspect ratio is derived from
+// the viewport size.
+// @param fieldOfViewY the field of view of the height, in degrees, the field of view for the width will be calculated
 //          according to the aspect ratio.
-//@param viewportWidth the viewport width
-//@param viewportHeight the viewport height
-func NewCamera(viewportWidth, viewportHeight float32) *Camera {
-	return &Camera{
-		Position:          NewVector3Empty(),
-		Direction:         NewVector3(0, 0, -1),
-		Up:                NewVector3(0, 1, 0),
-		Projection:        NewMatrix4Empty(),
-		View:              NewMatrix4Empty(),
-		Combined:          NewMatrix4Empty(),
-		InvProjectionView: NewMatrix4Empty(),
-		Near:              1, //Near = 0 if orthographic camera
-		Far:               100,
-		ViewportWidth:     viewportWidth,
-		ViewportHeight:    viewportHeight,
-		tmpVec:            NewVector3Empty(),
-		tmp:               NewVector3Empty(),
-		Ray:               NewRay(NewVector3Empty(), NewVector3Empty()),
-		Zoom:              1,
-		FieldOfView:       67,
-		frustum:           NewFrustumEmpty(),
-	}
+// @param viewportWidth the viewport width
+// @param viewportHeight the viewport height
+var Camera3d = &Camera{
+	Position:          NewVector3Empty(),
+	Direction:         NewVector3(0, 0, -1),
+	Up:                NewVector3(0, 1, 0),
+	Projection:        NewMatrix4Empty(),
+	View:              NewMatrix4Empty(),
+	Combined:          NewMatrix4Empty(),
+	InvProjectionView: NewMatrix4Empty(),
+	Near:              1, //Near = 0 if orthographic camera
+	Far:               100,
+	ViewportWidth:     800, //viewportWidth,
+	ViewportHeight:    480, //viewportHeight,
+	tmpVec:            NewVector3Empty(),
+	tmp:               NewVector3Empty(),
+	Ray:               NewRay(NewVector3Empty(), NewVector3Empty()),
+	Zoom:              1,
+	FieldOfView:       67,
+	frustum:           NewFrustumEmpty(),
+	UpdateFrustum: func(updateFrustum bool) {
+		aspect := self.ViewportWidth / self.ViewportHeight
+		self.Projection.SetToProjectionNear(float32(math.Abs(float64(self.Near))), float32(math.Abs(float64(self.Far))),
+			self.FieldOfView, aspect) // TODO: check this call overload
+		self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
+		self.Combined.SetM4(self.Projection)
+		// Matrix4.mul(combined.val, view.val)
+
+		if updateFrustum {
+			self.InvProjectionView.SetM4(self.Combined)
+			// Matrix4.inv(invProjectionView.val)
+			self.frustum.Update(self.InvProjectionView)
+		}
+	},
 }
 
-func NewPerspectiveCamera(fieldOfViewY, viewportWidth, viewportHeight float32) *Camera {
-	self := NewCamera(viewportWidth, viewportHeight)
-	self.FieldOfView = fieldOfViewY
-	self.Update()
-	return self
-}
-
-// Recalculates the projection and view matrix of this camera and the {@link Frustum} planes. Use this after you've manipulated
-// any of the attributes of the camera.
-func (self *Camera) Update() {
-	self.UpdateFrumstum(true)
-}
-
-// Recalculates the projection and view matrix of this camera and the {@link Frustum} planes if <code>updateFrustum</code> is
-// true. Use this after you've manipulated any of the attributes of the camera.
-func (self *Camera) UpdateFrumstum(updateFrustum bool) {}
-
-func (self *Camera) UpdateFrustumPerspective(updateFrustum bool) {
-	aspect := self.ViewportWidth / self.ViewportHeight
-	self.Projection.SetToProjectionNear(float32(math.Abs(float64(self.Near))), float32(math.Abs(float64(self.Far))),
-		self.FieldOfView, aspect) // TODO: check this call overload
-	self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
-	self.Combined.SetM4(self.Projection)
-	// Matrix4.mul(combined.val, view.val)
-
-	if updateFrustum {
-		self.InvProjectionView.SetM4(self.Combined)
-		// Matrix4.inv(invProjectionView.val)
-		self.frustum.Update(self.InvProjectionView)
-	}
-}
-
-func (self *Camera) UpdateFrustumOrtho(updateFrustum bool) {
-	self.Projection.SetToOrtho2DNear(self.Zoom*-self.ViewportWidth/2, self.Zoom*(self.ViewportWidth/2), self.Zoom*-(self.ViewportHeight/2),
-		self.Zoom*self.ViewportHeight/2, self.Near, self.Far)
-	self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
-	self.Combined.SetM4(self.Projection)
-	// Matrix4.MulM4(combined.val, view.val)
-
-	if updateFrustum {
-		self.InvProjectionView.SetM4(self.Combined)
-		// Matrix4.inv(invProjectionView.val)
-		self.frustum.Update(self.InvProjectionView)
-	}
-}
+// Camera2d.Update()
+// Camera3d.Update()
 
 // Recalculates the direction of the camera to look at the point (x, y, z). This function assumes the up vector is normalized.
 // param x the x-coordinate of the point to look at
@@ -803,15 +801,6 @@ func (self *Camera) GetPickRayXY(screenX, screenY float32) *Ray {
 // 		return Gdx.graphics.getHeight() - (screenY + screenHeight);
 // 	}
 // }
-
-// package scene2d;
-// import com.badlogic.gdx.Gdx;
-// import com.badlogic.gdx.graphics.OrthographicCamera;
-// import com.badlogic.gdx.math.Interpolation;
-// import com.badlogic.gdx.math.Vector3;
-// import com.badlogic.gdx.scenes.scene2d.Actor;
-// import com.badlogic.gdx.utils.Array;
-// import com.badlogic.gdx.math.Rectangle;
 
 // public class Camera extends OrthographicCamera {
 // 	private static Camera instance;
