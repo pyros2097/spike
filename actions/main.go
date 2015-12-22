@@ -5,10 +5,10 @@
 package actions
 
 import (
-	. "github.com/pyros2097/spike"
-	"github.com/pyros2097/spike/graphics"
-	. "github.com/pyros2097/spike/interpolation"
 	"sync"
+
+	. "github.com/pyros2097/spike"
+	. "github.com/pyros2097/spike/interpolation"
 )
 
 func superReset(self *Action) {
@@ -466,7 +466,7 @@ func RotateBy(rotationAmount, duration float32, interp Interpolation) {
 }
 
 // Transitions from the color at the time this action starts to the specified color.
-func Color(color graphics.Color, duration float32, interp Interpolation) {
+func ColorC(color Color, duration float32, interp Interpolation) {
 	// 		ColorAction action = action(ColorAction.class);
 	// 		action.setEndColor(color);
 	// 		action.setDuration(duration);
@@ -475,7 +475,7 @@ func Color(color graphics.Color, duration float32, interp Interpolation) {
 }
 
 // Transitions from the alpha at the time this action starts to the specified alpha.
-func Alpha(a, duration float32, interp Interpolation) {
+func AlphaC(a, duration float32, interp Interpolation) {
 	// 		AlphaAction action = action(AlphaAction.class);
 	// 		action.setAlpha(a);
 	// 		action.setDuration(duration);

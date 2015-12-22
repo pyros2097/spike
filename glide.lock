@@ -1,0 +1,20 @@
+hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+updated: 2015-12-20T23:47:14.554576374+05:30
+imports:
+- name: golang.org/x/mobile
+  version: ""
+  repo: https://github.com/golang/mobile.git
+  vcs: git
+  subpackages:
+  - app
+  - asset
+  - event/lifecycle
+  - event/paint
+  - event/size
+  - event/touch
+  - exp/app/debug
+  - exp/audio
+  - exp/f32
+  - exp/gl/glutil
+  - gl
+devImports: []

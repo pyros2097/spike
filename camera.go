@@ -55,7 +55,7 @@ type Camera struct {
 
 	// Recalculates the projection and view matrix of this camera and the {@link Frustum} planes if <code>updateFrustum</code> is
 	// true. Use this after you've manipulated any of the attributes of the camera.
-	UpdateFrumstum func(self *Camera, updateFrustum bool)
+	UpdateFrustum func(self *Camera, updateFrustum bool)
 }
 
 // An OrthographicCamera, using the given viewport width and height. For pixel perfect 2D rendering just supply
@@ -79,7 +79,7 @@ var Camera2d = &Camera{
 	Zoom:              1,
 	FieldOfView:       67,
 	frustum:           NewFrustumEmpty(),
-	UpdateFrustum: func(updateFrustum bool) {
+	UpdateFrustum: func(self *Camera, updateFrustum bool) {
 		self.Projection.SetToOrtho2DNear(self.Zoom*-self.ViewportWidth/2, self.Zoom*(self.ViewportWidth/2), self.Zoom*-(self.ViewportHeight/2),
 			self.Zoom*self.ViewportHeight/2, self.Near, self.Far)
 		self.View.SetToLookAtPos(self.Position, self.tmp.SetV(self.Position).AddV(self.Direction), self.Up)
@@ -118,7 +118,7 @@ var Camera3d = &Camera{
 	Zoom:              1,
 	FieldOfView:       67,
 	frustum:           NewFrustumEmpty(),
-	UpdateFrustum: func(updateFrustum bool) {
+	UpdateFrustum: func(self *Camera, updateFrustum bool) {
 		aspect := self.ViewportWidth / self.ViewportHeight
 		self.Projection.SetToProjectionNear(float32(math.Abs(float64(self.Near))), float32(math.Abs(float64(self.Far))),
 			self.FieldOfView, aspect) // TODO: check this call overload
@@ -269,7 +269,7 @@ func (self *Camera) SetToOrthoVW(yDown bool, viewportWidth, viewportHeight float
 	self.Position.Set(self.Zoom*viewportWidth/2.0, self.Zoom*viewportHeight/2.0, 0)
 	self.ViewportWidth = viewportWidth
 	self.ViewportHeight = viewportHeight
-	self.Update()
+	// self.Update()
 }
 
 func (self *Camera) RotateAngle(angle float32) {

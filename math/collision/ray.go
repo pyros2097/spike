@@ -26,7 +26,10 @@ func NewRayEmpty() *Ray {
 // param origin The starting position
 // param direction The direction
 func NewRay(origin, direction *Vector3) *Ray {
-	ray := &Ray{}
+	ray := &Ray{
+		Origin:    NewVector3Empty(),
+		Direction: NewVector3Empty(),
+	}
 	ray.Origin.SetV(origin)
 	ray.Direction.SetV(direction).Nor()
 	return ray

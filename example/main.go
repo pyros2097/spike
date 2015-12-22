@@ -25,7 +25,6 @@ package main
 import (
 	"github.com/pyros2097/spike"
 	. "github.com/pyros2097/spike/actions"
-	"github.com/pyros2097/spike/graphics"
 )
 
 func main() {
@@ -36,8 +35,8 @@ func main() {
 	}
 	menu := &spike.Scene{
 		Name:    "Menu",
-		BGColor: graphics.Color{0, 0, 1, 1},
-		Group: spike.Group{
+		BGColor: spike.Color{0, 0, 1, 1},
+		Actor: spike.Actor{
 			Children: []*spike.Actor{
 				&spike.Actor{
 					X: 43,
@@ -55,7 +54,7 @@ func main() {
 			},
 		},
 	}
-	options := &spike.Scene{Name: "Options", BGColor: graphics.Color{0, 0, 0, 1}}
+	options := &spike.Scene{Name: "Options", BGColor: spike.Color{0, 0, 0, 1}}
 	spike.Init("example", 800, 480)
 	spike.AddScene(menu)
 	spike.AddScene(options)

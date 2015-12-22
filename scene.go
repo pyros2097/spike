@@ -6,8 +6,6 @@ package spike
 
 import (
 	"time"
-
-	"github.com/pyros2097/spike/graphics"
 )
 
 var (
@@ -40,9 +38,9 @@ var (
 // 	public Scene.OnEventType onEvtType = Scene.OnEventType.DoEffect;
 // 	public String eventScene = "";
 type Scene struct {
-	Group
+	Actor
 	Name    string
-	BGColor graphics.Color
+	BGColor Color
 
 	OnPause  func(self *Scene)
 	OnResume func(self *Scene)
