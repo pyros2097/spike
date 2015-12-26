@@ -214,8 +214,8 @@ func appPaint(glctx gl.Context, sz size.Event, delta float32) {
 		child.draw(tempBatch, 1.0)
 		if len(InputChannel) > 0 {
 			for e := range InputChannel {
-				if child.OnInput != nil {
-					child.OnInput(child, e)
+				if child.Input != nil {
+					child.Input(child, e)
 				}
 				if len(InputChannel) == 0 {
 					break
