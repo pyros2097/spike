@@ -1,8 +1,11 @@
-hash: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-updated: 2015-12-20T23:47:14.554576374+05:30
+hash: 22f3e48f5bc1cb7d2fd4eef43addce12e1a7c6f3cd48c05a758918b4f406960b
+updated: 2015-12-23T13:47:42.360523574+05:30
 imports:
+- name: golang.org/x/image
+  version: baddd3465a05d84a6d8d3507547a91cb188c81ea
+  repo: https://golang.org/x/image
 - name: golang.org/x/mobile
-  version: ""
+  version: 4f51fe273b7361f36782e206b4e85443e5b0cba3
   repo: https://github.com/golang/mobile.git
   vcs: git
   subpackages:

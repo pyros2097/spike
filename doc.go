@@ -2,20 +2,20 @@
 //   Use of this source code is governed by the MIT
 //   license that can be found in the LICENSE file.
 //
-// Spike is a Game Framework built on top of golang mobile with all the batteries included. It is a lot similar to
-// libgdx but has lesser abstractions and easier integration and setup. It favors composition over inheritance and
-// also has a declarative interface something like React.
+// Spike Game Framework is a built on top of golang mobile with all the batteries included.
+// It is a lot similar to libgdx but has lesser abstractions and easier integration and setup.
+// It favors composition over inheritance and also has a declarative interface.
 // It has all configuration for assets, sound, music, textures, animations already setup.
 // You can directly start coding your game without initializing complicated things.
 // It follows the Rails design of convention over configuration.
 // It consists of Scenes and you can control which scenes are to displayed when.
-// Be sure to see the example source code as it can help you a lot in understanding the framework.
+// Be sure to see the examples source code as it can help you a lot in understanding the framework.
 //
 // # Requires
 //
 //   1.Go >= 1.5
 //   2.OpenGL >= 2.0
-//   3.libopenal-dev
+//   3.OpenAL >= 1.1
 //   4.Linux
 //
 // # Assets
@@ -38,7 +38,7 @@
 //     Name:    "Menu",
 //     BGColor: graphics.Color{0, 0, 1, 1},
 //     Children: []*spike.Actor{
-//       &spike.Actor{
+//       {
 //         X: 43,
 //         OnInput: func(self *spike.Actor, event spike.InputEvent) {
 //           println(event.Type.String())
